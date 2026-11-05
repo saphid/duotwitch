@@ -3,10 +3,11 @@
 This is a compiled development candidate. It is not an official-app parity
 pass and has not been uploaded to TestFlight.
 
-Latest source checkpoint: **61 tests passed**, with no failures, skipped tests,
-Swift compiler diagnostics or xcresult runtime warnings. Review 6 passed the
-preceding source checkpoint at 8.5/10; its small recovery/appearance findings
-are fixed and tested in checkpoint 7. See `docs/council/review-fixes-7.md`.
+Latest configured checkpoint: **61 tests passed**, with no failures, skipped
+tests, Swift compiler diagnostics or xcresult runtime warnings. The registered
+public Client ID and deployed player host are now configured. A real unsigned
+Release Simulator build also passed, with the config guard under sandbox-exec.
+See `docs/council/configured-checkpoint.md` for exact manifests and evidence.
 
 The preceding 57-test binary passed the owned-origin live player flow: host events
 **ONLINE → PLAYING → PAUSE → PLAYING**, native Pause and official resume, with
@@ -15,11 +16,14 @@ before and after. See `build/proof/host-events-current/REPORT.md`.
 
 This runtime check used the DEBUG player probe, not the full WatchView. Native
 authentication/chat, full-watch fold continuity, audible output, background
-recovery, system PiP, product parity and TestFlight remain unverified. Twitch
-SMS delivery still blocks Twitch's public-client prerequisite. Apple's
-authentication was subsequently completed through fresh SMS, and the separate
-App Store Connect app record was created and verified; see DELIVERY.md.
-The 61-test binary has not had a new runtime check or independent source review.
+recovery, system PiP, product parity and TestFlight remain unverified. Both
+Apple app-record and Twitch public-client prerequisites are now complete;
+see DELIVERY.md and docs/PUBLIC_CLIENT.md. Native runtime verification is
+pending. After Claude rate limiting stopped the first source-review attempt,
+Alex authorized a fresh Sol high review. That review passes at 8.5/10 with no
+new actionable findings; see docs/council/source-configured-review-sol.md.
+It is independent-session review without model diversity, and is a source
+score only.
 
 Sol's product checkpoint **withholds sign-off**, with high confidence. It
 independently verified all 44 source entries, all 10 bundle files and the actual

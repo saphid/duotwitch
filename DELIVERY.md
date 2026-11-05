@@ -16,6 +16,14 @@ User-authorized target: a native Swift iPhone/iPhone Duo app in TestFlight, with
 
 ## Prerequisite evidence, 5 November 2026
 
+**Current prerequisite status:** Apple app `6831008730` and Twitch's dedicated
+PUBLIC client are both created and verified. The Twitch registration name is
+Saphid Duo Viewer; the native app remains DuoTwitch. Public Client ID:
+`xuaoegs6v9yy1dw86gemt4gyuqtf1o`. See [public-client evidence](docs/PUBLIC_CLIENT.md).
+The source now contains the public configuration; 61 tests and an unsigned
+Release Simulator build pass. Native live integration and product/delivery
+gates remain open. The account-recovery attempts below are historical.
+
 At 2026-11-05 03:19 UTC, the dedicated bundle identifier `com.saphid.duotwitch` was registered as `DuoTwitch`, record `BXXWR6ZCZ7`, using the existing configuration for team `NJZUMEA4BN`. Fresh exact bundle and app queries first returned HTTP 200, total zero, with no next page. Registration returned HTTP 201; direct GET and a complete exact query then returned the matching bundle identity. The POST requested platform `IOS`; Apple returned `UNIVERSAL`. That discrepancy is recorded without further platform or capability changes.
 
 The App Store Connect prerequisite is now complete. On 5 November 2026 at 05:54:42 UTC, the supported New App UI created [DuoTwitch](https://appstoreconnect.apple.com/apps/6831008730/distribution/info), Apple app ID `6831008730`, for `com.saphid.duotwitch`, SKU `duotwitch-ios`, primary locale `en-US`, and iOS. Live App Information readback and HTTP 200 direct/exact app queries verified these persisted values. The exact query returned one record with no next page. The initial iOS 1.0 version is `PREPARE_FOR_SUBMISSION`; this is not a build upload, TestFlight availability or public submission.
@@ -42,7 +50,15 @@ Sharing authentication, superseding its earlier locked-screen boundary.
 
 Narrow 1Password title scans found the existing `saphid` Twitch account in the Games vault; they did not identify an existing developer registration in Common Web, Domains and Cloud stuff, Apps or Games. This is not an exhaustive claim of absence. `pa-memory` returned unrelated/older account integration references; that is incomplete evidence.
 
-Planned Twitch developer registration if none exists: DuoTwitch, public client, application integration, the existing `saphid` account. Use the supported public-client OAuth flow; never embed a client secret or reuse another application's client ID. Twitch describes Client IDs as public configuration: [Register an app](https://dev.twitch.tv/docs/authentication/register-app/). This record is a concrete plan, not a claim that registration has happened.
+Twitch registration is now verified under `saphid` as Saphid Duo Viewer,
+PUBLIC, Application Integration, with development redirect
+`https://saphid.app/apps/duotwitch/oauth-callback`. The console rejected the two
+earlier DuoTwitch-containing names; no precise cause was established. Reloaded
+Manage details and an inventory of exactly one application confirmed the
+saved public client. No secret was created and no callback implementation is
+claimed. Use the supported public-client Device Code Flow; never embed a client
+secret or reuse another application's Client ID. Twitch describes Client IDs
+as public configuration: [Register an app](https://dev.twitch.tv/docs/authentication/register-app/).
 
 An authenticated, complete group listing found the exact `t3crew` internal group on Duocord. Its related tester collection returned three testers, reported total three, with no next page: Nikolas Kitsios, Alex Jankowiak and Julius M. Alex is already part of the requested crew audience. Preserve those existing tester identities when preparing DuoTwitch's own internal group. Private tester IDs and membership readback are in ignored `build/t3crew-audience.json`; the sanitized group inventory is in `build/testflight-audience-preflight.json`. No invitations or membership changes have been sent.
 
