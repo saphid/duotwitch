@@ -45,5 +45,21 @@ actionable findings in the new regression or bounded signing diagnosis.
 It independently verified the 44 source entries, 12 bundle files and all
 three actual xcresults. This is independent-session review without model
 diversity under Alex's quota-recovery authorization. Report and T3 metadata:
-`source-signed-keychain-review-sol.md`. The signed normal-app retry remains
-pending; no save/restore or normal-app Keychain claim follows from the read test.
+`source-signed-keychain-review-sol.md`.
+
+The signed normal-app retry verified that the startup Keychain error is absent
+and that the production Account screen obtains a real device-code challenge.
+All 44 source and 12 candidate/installed bundle entries matched before and
+after. It stopped before authorization: Continue on Twitch was acknowledged,
+but observation failed; the advised snapshot retry failed with
+`regular iOS snapshot node escaped its cumulative clip`. No browser destination,
+account approval, token persistence, discovery, native chat or WatchView was
+verified. Report: `build/proof/native-configured-signed/REPORT.md`.
+
+The runtime task
+`node:delegated-task:command%3Amcp%3A01b949c1-9016-42f6-a4e4-fd3e90c5884d%3Adelegate-task%3Aduotwitch-signed-native-auth-semantic-url-20261105`
+completed as Codex / gpt-6-astra high. Owned app/Device resources were closed
+without Simulator shutdown or Keychain changes. Under the Device tool stop
+rule, no further GUI retry or alternative driver was used. The parent asked
+for explicit direction on the permitted SSH-based Simulator fallback; no
+dependent action is being taken while that choice is pending.

@@ -23,8 +23,14 @@ recovery, system PiP, product parity and TestFlight remain unverified. Both
 Apple app-record and Twitch public-client prerequisites are now complete;
 see DELIVERY.md and docs/PUBLIC_CLIENT.md. The first configured normal-app
 runtime check obtained a device code but stopped before browser authorization;
-it also exposed the unsigned-build Keychain failure described above. A signed
-runtime retry is pending. After Claude rate limiting stopped the source-review attempt,
+it also exposed the unsigned-build Keychain failure described above. The signed
+retry verified normal startup without that error and real device-code
+acquisition. Continue on Twitch then hit repeated Device observation failures
+(`regular iOS snapshot node escaped its cumulative clip`), so authorization and
+all dependent integration checks remain unverified. Report:
+`build/proof/native-configured-signed/REPORT.md`. The Device stop rule is being
+honored; explicit direction for its SSH fallback has been requested.
+After Claude rate limiting stopped the source-review attempt,
 Alex authorized a fresh Sol high review. That review passes at 8.5/10 with no
 new actionable findings; see docs/council/source-configured-review-sol.md.
 It is independent-session review without model diversity, and is a source
