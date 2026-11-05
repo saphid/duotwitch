@@ -2,7 +2,65 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Current internal TestFlight — 5 November 2026
+## Current internal TestFlight — 6 November 2026
+
+**0.1.0 (202611052215)** is available for existing internal testers. Apple API
+readback verifies `VALID`, `INTERNAL_ONLY`, and `IN_BETA_TESTING`, plus complete,
+explicit relationships to **Alex**, **t3crew**, and **DuoCrew**. The exact en-US
+What to Test notes were read back. Installation and inbox delivery are unverified.
+No public/external beta or App Store submission was made.
+
+This is a **diagnostics update**. Alex confirms the previous build
+202611051233 still stops video before one second with the phone open. The
+physical cause and its resolution remain unknown.
+
+After reproducing on the new build, tap the video **info circle -> Playback
+diagnostics -> Share playback logs**, or use **Account -> Playback diagnostics**.
+Share `DuoTwitch-playback.jsonl` with the developer. Logs survive relaunch;
+there is no automatic upload. Credentials, chat, account/channel identity,
+media URLs and full errors are excluded. Four rolling 256 KiB files and one
+bounded export copy are retained locally.
+
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/71e59bda-14bd-4ec1-af38-5df9ded5f89a).
+- Public source: [saphid/duotwitch](https://github.com/saphid/duotwitch).
+- Archived source: [2836abc](https://github.com/saphid/duotwitch/commit/2836abc73945897bc86bbb3b6c6651ed94fbde61).
+- Archive: `build/testflight/202611052215/DuoTwitch.xcarchive`.
+- Final private receipt: `build/testflight/diagnostics-delivery-final.json`.
+
+83 signed Simulator tests passed, zero failed/skipped, runtimeWarnings empty,
+actual command exit 0. The fresh Codex/GPT-6.1 Sol high recheck found no actionable
+findings after the accepted passive-video reattachment issue was fixed. It is an
+independent session using the author's model, not model diversity; see
+[review 2](docs/council/playback-diagnostics-review2.md). The existing AccountView
+compiler deprecation remains disclosed.
+
+Archive and export/upload exited 0; strict/deep archive signature exited 0.
+Archived identity verifies app/bundle/team/version/build and public player config.
+The Release executable contains the diagnostics recorder, export screen and
+reattachment-aware passive script. Source identity remains 47/47; the archived
+bundle's eight regular files have a private full hash manifest. No disk cleanup
+was needed (about 76 GiB free before upload).
+
+The initial 82-test instrumentation binary passed both native share routes,
+export creation and persistence across relaunch, and real passive observer receipt
+with 60 paused samples. No Play/audio was started. That evidence is explicitly
+attributed to the initial binary, before the small script lifecycle fix; current
+real-video detach/reuse and physical iOS file protection remain unverified.
+Report: `build/proof/playback-diagnostics/REPORT.md`.
+
+The diagnostic build details and public repo were sent through the
+[Discord history skill](https://github.com/saphid/discord-history-tool) Beeper
+route to **T3Code (dev) -> #txt** at **22:20:37 UTC on 5 November**. Exact normalized
+message, self-sender and no reply chain were verified by fresh Beeper readback.
+Beeper message 184836/sortKey296069 is a bridge receipt; native Discord ID and
+placement remain independently unverified. No attachment or broad mention was
+sent. Private receipt: `build/testflight/diagnostics-discord-receipt.json`.
+
+DuoCrew internal membership and Andy's pending Apple team invitation were not
+changed; the earlier limited-access prerequisite below still applies. Duocord
+source, builds and groups were preserved.
+
+## Previous internal TestFlight — 5 November 2026
 
 **0.1.0 (202611051233)** is available for internal testing. Fresh Apple API
 readback verifies `VALID`, `INTERNAL_ONLY`, and `IN_BETA_TESTING`, with explicit

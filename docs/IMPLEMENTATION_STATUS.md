@@ -16,8 +16,10 @@ See [diagnostics checkpoint](council/playback-diagnostics-checkpoint.md).
 The initial 82-test instrumentation binary passed both native share routes and
 retained prior-run logs after relaunch, with real passive iframe samples and no
 Play/audio started. That bounded proof precedes the small script lifecycle fix.
-It establishes neither physical playback nor a fixed cause. Updated internal
-TestFlight delivery is pending; [DELIVERY.md](../DELIVERY.md) remains authoritative.
+It establishes neither physical playback nor a fixed cause. Internal TestFlight
+**0.1.0 (202611052215)** now verifies VALID, INTERNAL_ONLY, IN_BETA_TESTING with
+explicit Alex/t3crew/DuoCrew relationships; [DELIVERY.md](../DELIVERY.md) remains
+authoritative.
 
 ## Previous delivered source checkpoint
 
