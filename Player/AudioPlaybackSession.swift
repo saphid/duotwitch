@@ -1,7 +1,7 @@
 import AVFAudio
 import Foundation
 
-enum AudioDeactivation: Sendable { case app, system }
+enum AudioDeactivation: Sendable { case app, system, systemIdle }
 
 enum AudioPlaybackSession {
     static func inactivityEvents() -> AsyncStream<AudioDeactivation> {
@@ -10,12 +10,20 @@ enum AudioPlaybackSession {
                 for await notification in NotificationCenter.default.notifications(named: AVAudioSession.didBecomeInactiveNotification) {
                     guard !Task.isCancelled else { return }
                     guard let context = notification.userInfo?[AVAudioSession.deactivationContextKey] as? AVAudioSession.DeactivationContext else { continue }
-                    continuation.yield(context.source == .system ? .system : .app)
+                    continuation.yield(deactivationEvent(isSystem: context.source == .system,
+                                                        wasInterrupted: context.interruptionContext != nil))
                 }
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    static func deactivationEvent(isSystem: Bool, wasInterrupted: Bool) -> AudioDeactivation {
+        // System inactivity alone is not an interruption. In particular,
+        // WebKit may own media playback while the native session is idle.
+        guard isSystem else { return .app }
+        return wasInterrupted ? .system : .systemIdle
     }
 
     /// Category changes can block too. Configure off the main thread, then use

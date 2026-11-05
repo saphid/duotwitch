@@ -7,6 +7,48 @@ import XCTest
 /// physical hinge tests and do not imply live Twitch continuity.
 @MainActor
 final class MountedWatchLayoutTests: XCTestCase {
+    func testProductionPanelDoesNotPauseItselfAfterPlay() async throws {
+        let channel = WatchedChannel(channel: TwitchChannel(id: "lofi", broadcasterLogin: "lofigirl", displayName: "LofiGirl", gameName: "Music", title: "A live stream with a title that wraps in smaller video panes", thumbnailUrl: "", isLive: true))
+        var testedSizes = 0
+        for width in [402.0, 420.0, 500.0, 600.0] {
+            for height in [364.0, 384.0, 420.0, 480.0, 560.0] {
+                var nonce: String?
+                var pauses = 0
+                let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+                    loadRequest: { _, request in nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value },
+                    activateAudio: {}, deactivateAudio: {}, pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
+                let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel, toggleFullVideo: {}).ignoresSafeArea())
+                let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+                let window = UIWindow(windowScene: scene)
+                let container = UIViewController()
+                window.rootViewController = container
+                window.makeKeyAndVisible()
+                container.addChild(host)
+                container.view.addSubview(host.view)
+                host.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+                host.didMove(toParent: container)
+                try await Task.sleep(for: .milliseconds(100))
+                host.view.layoutIfNeeded()
+                if let nonce {
+                    session.handleHostMessage(["session": nonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+                    try await Task.sleep(for: .milliseconds(40))
+                    if session.canPlay {
+                        testedSizes += 1
+                        let before = pauses
+                        await session.play()
+                        session.handleHostMessage(["session": nonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+                        try await Task.sleep(for: .milliseconds(150))
+                        XCTAssertTrue(session.isPlaying, "Playback stopped at \(width)×\(height): \(session.status)")
+                        XCTAssertEqual(pauses, before, "Panel issued a Pause after Play at \(width)×\(height)")
+                    }
+                }
+                window.isHidden = true
+                window.rootViewController = nil
+            }
+        }
+        XCTAssertEqual(testedSizes, 20, "Every supported panel size must load a playable player, including the compact allocation")
+    }
+
     func testMountedPanesFollowBookTabletopAndSidePreferences() async throws {
         let model = LayoutHarnessModel()
         let mounted = try MountedHarness(model: model)

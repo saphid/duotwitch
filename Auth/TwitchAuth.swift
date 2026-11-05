@@ -11,6 +11,10 @@ struct SignInChallenge: Identifiable {
     let userCode: String
     let verificationURL: URL
     let expiresAt: Date
+    var includesCodeInURL: Bool {
+        URLComponents(url: verificationURL, resolvingAgainstBaseURL: false)?.queryItems?
+            .contains { $0.name == "device-code" && $0.value == userCode } == true
+    }
 }
 
 private struct DeviceCodeResponse: Decodable {
@@ -55,11 +59,13 @@ final class TwitchAuth {
     private(set) var challenge: SignInChallenge?
     private(set) var isRestoring = false
     private(set) var isAuthorizing = false
+    private(set) var authorizationNotice: String?
     private(set) var errorMessage: String?
     private(set) var persistenceWarning: String?
     private(set) var canRetryRestore = false
     @ObservationIgnored private let store: any CredentialStoring
     @ObservationIgnored private let http: TwitchHTTP
+    @ObservationIgnored private let authorizationNow: @MainActor () -> Date
     @ObservationIgnored private let authorizationSleep: @MainActor (Duration) async throws -> Void
     @ObservationIgnored private var credentials: TwitchCredentials?
     @ObservationIgnored private var lastValidated: Date?
@@ -72,11 +78,13 @@ final class TwitchAuth {
 
     init(clientId: String = Bundle.main.object(forInfoDictionaryKey: "TwitchClientID") as? String ?? "",
          store: any CredentialStoring = KeychainCredentialStore(), http: TwitchHTTP? = nil,
+         authorizationNow: @escaping @MainActor () -> Date = { Date() },
          authorizationSleep: @escaping @MainActor (Duration) async throws -> Void = { try await Task.sleep(for: $0) }) {
         self.clientId = clientId.trimmingCharacters(in: .whitespacesAndNewlines)
         self.store = store
         self.http = http ?? TwitchHTTP()
         self.authorizationSleep = authorizationSleep
+        self.authorizationNow = authorizationNow
     }
 
     var isConfigured: Bool { !clientId.isEmpty && !clientId.hasPrefix("$(") }
@@ -106,6 +114,7 @@ final class TwitchAuth {
         guard !isRestoring, refreshTask == nil, account == nil else { return }
         cancelSignIn()
         errorMessage = nil
+        authorizationNotice = nil
         guard isConfigured else { errorMessage = TwitchError.notConfigured.localizedDescription; return }
         let ticket = authorizationId
         isAuthorizing = true
@@ -115,6 +124,7 @@ final class TwitchAuth {
                 if self.authorizationId == ticket {
                     self.isAuthorizing = false
                     self.challenge = nil
+                    self.authorizationNotice = nil
                     self.authorizationTask = nil
                 }
             }
@@ -126,26 +136,33 @@ final class TwitchAuth {
                       code.expiresIn > 0, !code.deviceCode.isEmpty, !code.userCode.isEmpty else { throw TwitchError.invalidResponse }
                 try Task.checkCancellation()
                 guard self.authorizationId == ticket else { return }
-                let deadline = Date().addingTimeInterval(TimeInterval(code.expiresIn))
+                let deadline = self.authorizationNow().addingTimeInterval(TimeInterval(code.expiresIn))
                 self.challenge = SignInChallenge(id: ticket, userCode: code.userCode, verificationURL: url, expiresAt: deadline)
+                self.authorizationNotice = "Approve access on Twitch. We’ll finish connecting automatically."
                 var interval = max(1, code.interval)
-                while Date() < deadline {
+                while authorizationNow() < deadline {
                     try await self.authorizationSleep(.seconds(interval))
                     try Task.checkCancellation()
                     guard self.authorizationId == ticket else { return }
-                    guard Date() < deadline else { throw TwitchError.authorizationExpired }
+                    guard self.authorizationNow() < deadline else { throw TwitchError.authorizationExpired }
                     let result: (Data, HTTPURLResponse)
                     do { result = try await self.oauth(path: "token", fields: [
                         "client_id": self.clientId, "device_code": code.deviceCode,
                         "scopes": Self.requestedScopes.joined(separator: " "),
                         "grant_type": "urn:ietf:params:oauth:grant-type:device_code"]) }
                     catch let error as URLError where [.networkConnectionLost, .notConnectedToInternet, .timedOut, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed].contains(error.code) {
+                        self.authorizationNotice = "Connection interrupted. Retrying your sign-in…"
                         continue // Authorization remains valid until its deadline.
                     }
-                    if (500..<600).contains(result.1.statusCode) { continue }
+                    if (500..<600).contains(result.1.statusCode) {
+                        self.authorizationNotice = "Twitch is taking a moment. Your sign-in is still in progress."
+                        continue
+                    }
+                    if result.1.statusCode == 429 { interval += 5; continue }
                     if (200..<300).contains(result.1.statusCode) {
                         let tokens = try TwitchHTTP.decode(TokenResponse.self, from: result.0)
-                        let value = try await self.validatedCredentials(tokens)
+                        self.authorizationNotice = "Twitch approved. Finishing your connection…"
+                        let value = try await self.validateAuthorization(tokens)
                         try Task.checkCancellation()
                         guard self.authorizationId == ticket else { return }
                         self.credentials = value
@@ -180,6 +197,7 @@ final class TwitchAuth {
         cancelled?.cancel()
         authorizationTask = nil
         challenge = nil
+        authorizationNotice = nil
         isAuthorizing = false
         return cancelled
     }
@@ -368,5 +386,24 @@ final class TwitchAuth {
         return TwitchCredentials(clientId: clientId, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken,
                                  expiresAt: Date().addingTimeInterval(TimeInterval(min(tokens.expiresIn, validated.expiresIn))),
                                  userId: validated.userId, login: validated.login, scopes: validated.scopes)
+    }
+
+    /// The device code is consumed at exchange. Keep its returned tokens while
+    /// retrying temporary validation failures instead of making people approve again.
+    private func validateAuthorization(_ tokens: TokenResponse) async throws -> TwitchCredentials {
+        // Approval consumed the challenge. Its expiry no longer limits token validation.
+        let deadline = authorizationNow().addingTimeInterval(60)
+        while authorizationNow() < deadline {
+            do { return try await validatedCredentials(tokens) }
+            catch let error as URLError where [.networkConnectionLost, .notConnectedToInternet, .timedOut, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed].contains(error.code) {
+                try await authorizationSleep(.seconds(2))
+            } catch TwitchError.serviceUnavailable {
+                try await authorizationSleep(.seconds(2))
+            } catch TwitchError.rateLimited(let until) {
+                try await authorizationSleep(.seconds(max(1, min(30, until.timeIntervalSinceNow))))
+            }
+            try Task.checkCancellation()
+        }
+        throw TwitchError.serviceUnavailable
     }
 }

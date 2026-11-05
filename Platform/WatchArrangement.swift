@@ -33,7 +33,9 @@ struct WatchPaneGeometry {
             video = chatLeading ? right : left
             chat = chatLeading ? left : right
         } else if compact {
-            let height = min(size.height * 0.52, max(360, size.width * 9 / 16 + 76))
+            // Reserve the supported 300 pt player plus its 64 pt native controls.
+            // Leave room for usable chat instead of offering an undersized embed.
+            let height = max(0, min(size.height - 241, max(364, size.width * 9 / 16 + 64)))
             video = CGRect(x: 0, y: 0, width: size.width, height: max(0, height))
             chat = CGRect(x: 0, y: height + 1, width: size.width, height: max(0, size.height - height - 1))
         } else {

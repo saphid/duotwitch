@@ -3,6 +3,50 @@ import XCTest
 
 @MainActor
 final class AuthTests: XCTestCase {
+    func testApprovedDeviceCodeSurvivesExpiryDuringTemporaryValidationFailure() async throws {
+        let store = MemoryCredentialStore()
+        let polls = RequestCounter()
+        let validations = RequestCounter()
+        let scopes = TwitchAuth.requestedScopes
+        StubTwitchProtocol.install { request in
+            if request.url!.path.hasSuffix("/device") {
+                return (200, ["device_code": "fixture", "user_code": "TEST", "verification_uri": "https://www.twitch.tv/activate?public=true&device-code=TEST", "expires_in": 600, "interval": 1])
+            }
+            if request.url!.path.hasSuffix("/token") {
+                polls.increment()
+                return (200, ["access_token": "fixture-access", "refresh_token": "fixture-refresh", "expires_in": 3600, "scope": scopes])
+            }
+            validations.increment()
+            if validations.count == 1 { return (503, [:]) }
+            return (200, ["client_id": "test-client", "user_id": "user", "login": "viewer", "expires_in": 3600, "scopes": scopes])
+        }
+        var now = Date()
+        var sleeps = 0
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubTwitchProtocol.self]
+        let auth = TwitchAuth(clientId: "test-client", store: store,
+            http: TwitchHTTP(session: URLSession(configuration: configuration)),
+            authorizationNow: { now }, authorizationSleep: { _ in
+                sleeps += 1
+                now = now.addingTimeInterval(sleeps == 1 ? 599 : 2)
+                await Task.yield()
+            })
+        auth.beginSignIn()
+        try await waitUntil { !auth.isAuthorizing }
+        XCTAssertEqual(auth.account?.login, "viewer")
+        XCTAssertEqual(polls.count, 1, "A consumed code must not be exchanged again")
+        XCTAssertEqual(validations.count, 2)
+        XCTAssertNil(auth.errorMessage)
+        XCTAssertNotNil(store.value)
+    }
+
+    func testAuthorizationLinkOnlyClaimsPrefillForTheMatchingCode() {
+        let make = { (url: String) in SignInChallenge(id: UUID(), userCode: "TEST", verificationURL: URL(string: url)!, expiresAt: .now) }
+        XCTAssertTrue(make("https://www.twitch.tv/activate?public=true&device-code=TEST").includesCodeInURL)
+        XCTAssertFalse(make("https://www.twitch.tv/activate").includesCodeInURL)
+        XCTAssertFalse(make("https://www.twitch.tv/activate?device-code=OTHER").includesCodeInURL)
+    }
+
     func testRealKeychainReadIsAvailableToTheApp() {
         // Read only: exercise the application's real signing/Keychain boundary
         // without clearing a saved session or printing credential contents.

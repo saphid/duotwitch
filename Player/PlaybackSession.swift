@@ -2,11 +2,13 @@ import AVFAudio
 import Observation
 import WebKit
 import UIKit
+import OSLog
 
 /// The watch session owns this one browser. Layout changes only move its host;
 /// they must never replace the browser or reload the current channel.
 @MainActor @Observable
 final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    private static let log = Logger(subsystem: "com.saphid.duotwitch", category: "Playback")
     private(set) var channel = ""
     private(set) var status = "Choose a channel"
     private(set) var mediaState = "No video element reported"
@@ -95,7 +97,13 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         interruptionTask = Task { [weak self] in
             for await source in events {
                 guard !Task.isCancelled else { return }
-                guard source == .system, let self, self.audioReady, self.isPlaying, self.failure == nil else { continue }
+                guard let self else { return }
+                Self.log.info("Audio event: \(String(describing: source), privacy: .public); playing=\(self.isPlaying)")
+                if source == .systemIdle {
+                    self.audioReady = false
+                    continue
+                }
+                guard source == .system, self.isPlaying, self.failure == nil else { continue }
                 self.audioReady = false // The system already deactivated it.
                 await self.pause(reason: "Audio interrupted. Tap Play to continue.")
             }
@@ -207,6 +215,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     /// confirms success and activates audio; a JavaScript return value does not.
     func play() async {
         guard canPlay else { return }
+        Self.log.info("Native Play requested")
         let ticket = bridgeSession
         let pauseTicket = pauseTransaction
         let event = hostEvent
@@ -224,6 +233,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     func pause(reason: String = "Paused") async {
         // Keep Play disabled through both the WebKit callback and this
         // request's state updates, so an older Pause cannot undo a new Play.
+        Self.log.info("Native Pause requested: \(reason, privacy: .public)")
         pendingPauses += 1
         defer { pendingPauses -= 1 }
         let ticket = bridgeSession
@@ -241,6 +251,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         let paused = await pauseWithDeadline()
         guard bridgeSession == ticket, pauseTransaction == transaction else { return }
         guard paused else {
+            Self.log.info("Native Pause timed out")
             recordPauseTimeout()
             return
         }
@@ -452,6 +463,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         case "ENDED": status = "This broadcast has ended."; setPlaying(false)
         default: return false
         }
+        Self.log.info("Host event: \(event, privacy: .public); playing=\(self.isPlaying); fits=\(self.videoFits)")
         hostEvent = event
         return true
     }

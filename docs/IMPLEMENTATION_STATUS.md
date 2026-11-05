@@ -1,4 +1,51 @@
-# Implementation checkpoint — 5 November 2026
+# Current implementation checkpoint — 5 November 2026
+
+The latest frozen source passes **74 signed Simulator tests**, zero failed or skipped,
+command exit 0, with no xcresult runtime warnings. The AccountView presentation-anchor
+fallback has a disclosed compiler deprecation; this is not a warning-free build claim.
+All 44 source entries and all 12 candidate files are frozen in
+`docs/council/playback-account-delivery-source-sha256.json` and
+`build/verification/playback-account-delivery-bundle-sha256.json`.
+A fresh Codex / GPT-6.1 Sol high independent-session review found no actionable
+P0–P3 findings; see [review 3](council/playback-account-review3-sol.md).
+The reviewer used the same model as the implementation author; no model diversity is claimed.
+
+The source now distinguishes ordinary system audio inactivity from genuine
+interruption, instead of pausing on every system deactivation. A recorded failing
+regression and the current green run cover this path, including a real interruption
+following inactivity. This is a demonstrated source defect and correction, **not a
+confirmed diagnosis or resolution of the physical Duo OPEN-mode one-second-stop**.
+Nonsecret native command/audio/host-event logs support the next runtime check.
+
+Account connection uses a non-ephemeral system Twitch approval browser, the
+provider-returned prefilled activation link when available, resumable cancellation,
+and progressive code fallback. Validation after exchange has a separate retry window
+from the consumed device code. Runtime on the earlier 73-test candidate verified
+handoff/prefill/cancel/reopen, but not successful new approval or credential persistence.
+
+Playback controls stay visible, channel metadata moves to a details sheet, and
+portrait layout reserves the supported 400×300 embed plus its native rail where
+sufficient room exists. Mounted tests include all production controls and require
+all 20 tested sizes to play, using synthetic events and 150 ms observation. They
+remain default-text-size layout tests, not sustained live playback/fold proof.
+
+The earlier 73-test runtime recorded about 70 seconds of changing content and stable
+Pause UI, but sustained resume failed. An unintended external Safari handoff means
+that entire historical run cannot be certified silent. Its report remains
+`build/proof/playback-account/REPORT.md`; it must not be relabeled as current evidence.
+Current muted playback/resume verification is pending. Physical fold continuity,
+PiP, background recovery and the complete accessibility journey remain unproven.
+
+The existing internal TestFlight **0.1.0 (202611050949)** remains available; it does
+not include these changes. [DELIVERY.md](../DELIVERY.md) is the current delivery authority.
+A replacement has not yet been uploaded.
+
+## Historical checkpoints
+
+The earlier dated material below is retained for provenance. Current source, test,
+account-configuration and delivery statements above supersede its old blockers.
+
+# Earlier implementation checkpoint — 5 November 2026
 
 This is a compiled development candidate. It is not an official-app parity
 pass and has not been uploaded to TestFlight.

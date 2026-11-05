@@ -16,6 +16,15 @@ struct DuoTwitchApp: App {
         #if DEBUG
         if PlayerConfiguration.current.probeEnabled {
             PlayerProbeView(session: model.player)
+        } else if let login = UserDefaults.standard.string(forKey: "DuoTwitchWatchChannel"),
+                  let valid = PlaybackSession.validChannel(login) {
+            // DEBUG-only entry to the real watch surface, without a fake
+            // account, chat data, or any change to Release authorization.
+            NavigationStack {
+                WatchView(app: model, channel: WatchedChannel(user: TwitchUser(
+                    id: valid, login: valid, displayName: valid,
+                    description: "", profileImageUrl: "", offlineImageUrl: "")))
+            }
         } else {
             MainView(app: model)
         }

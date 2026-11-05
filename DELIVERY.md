@@ -2,6 +2,14 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
+## Playback/account replacement in preparation
+
+The reviewed 74-test source adds the audio-inactivity classification correction,
+persistent native controls, portrait player allocation and a clearer system-hosted
+Twitch connection flow. It has not replaced the build below. Muted sustained
+pause/resume verification remains pending; the physical Duo one-second-stop is
+not yet confirmed fixed. No new tester or invitation is implied by a source pass.
+
 ## Current delivery — 5 November 2026
 
 **Internal TestFlight is available to the authorized audience.** Version

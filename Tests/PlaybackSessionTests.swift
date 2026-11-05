@@ -4,6 +4,27 @@ import WebKit
 
 @MainActor
 final class PlaybackSessionTests: XCTestCase {
+    func testSystemInactivityWithoutAnInterruptionDoesNotStopTheVideo() async throws {
+        let events = AsyncStream<AudioDeactivation>.makeStream()
+        var activations = 0
+        var pauses = 0
+        let (session, nonce) = makeBridgeSession(activate: { activations += 1 }, events: events.stream,
+                                               pause: { _ in pauses += 1 })
+        for _ in 0..<3 {
+            let expected = activations + 1
+            emit("PLAYING", session: session, nonce: nonce)
+            try await waitUntil { activations == expected }
+            events.continuation.yield(AudioPlaybackSession.deactivationEvent(isSystem: true, wasInterrupted: false))
+            try await Task.sleep(for: .milliseconds(40))
+            XCTAssertTrue(session.isPlaying, "A system deactivation without interruption context must not pause WebKit video")
+        }
+        XCTAssertEqual(pauses, 0)
+        events.continuation.yield(.system)
+        try await waitUntil { !session.isPlaying }
+        XCTAssertEqual(pauses, 1, "A real interruption must still pause after system inactivity cleared audio readiness")
+        events.continuation.finish()
+    }
+
     func testRefitCannotPlayUntilOlderPauseCompletes() async throws {
         var completion: CheckedContinuation<Void, Never>?
         var requests = 0

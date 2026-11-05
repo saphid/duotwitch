@@ -3,6 +3,17 @@ import SwiftUI
 @testable import DuoTwitch
 
 final class WatchGeometryTests: XCTestCase {
+    func testEligiblePortraitReservesPlayerAndChromeWithoutEliminatingChat() {
+        for mode in [WatchMode.balanced, .slim] {
+            for height in [604.0, 605.0, 740.0] {
+                let panes = WatchPaneGeometry(size: CGSize(width: 402, height: height), compact: true,
+                                              division: nil, mode: mode, chatLeading: false)
+                XCTAssertEqual(panes.video.height, height < 605 ? 363 : 364)
+                XCTAssertGreaterThanOrEqual(panes.chat.height, 240)
+            }
+        }
+    }
+
     func testBookKeepsEitherChatSideAndVideoOutOfDivision() {
         let size = CGSize(width: 1000, height: 750)
         let hinge = CGRect(x: 494, y: 0, width: 12, height: 750)
