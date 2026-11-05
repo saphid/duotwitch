@@ -1,143 +1,227 @@
 # Automatic playback diagnostics
 
-Internal TestFlight 0.1.0 (202611052312) enables automatic diagnostic upload
-attempts by default, without a Share action, configuration screen or bundled
-secret. Receiver acceptance remains blocked as described below. The preceding
-0.1.0 (202611052215) build was local/export-only.
+The next source build attempts automatic upload by default to
+`https://lxso1.tail4e5636.ts.net/duotwitch-diagnostics`, without a Share action,
+configuration screen, bundled secret or analytics SDK. This is Alex’s private
+DuoTwitch JSON record receiver: validated JSON lines are stored in SQLite on
+owned local-network storage. It is **not Loki or PostHog**.
 
-## Destination and current blocker
+**Deployment is staged, not operationally verified.** No lxso1 service has been
+installed/started and no Serve handler changed by this implementation. Parent
+review, deployment, synthetic HTTPS 204 and exact SSH readback are prerequisites
+for claiming collection works. The already distributed 0.1.0 (202611052312)
+client still targets lxso2’s unavailable Loki. Its volume was 98.8% full, above
+Loki’s 90% WAL threshold; the final synthetic push/readback failed. That
+installation, route and ingester remain untouched. PostHog’s scoped access
+returned 401, so this implementation uses owned storage instead.
 
-The configured client endpoint is
-`https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics`. It is HTTPS within Alex’s
-Tailscale network, not Mac loopback, a foreground development server, PostHog or
-a public Internet receiver. The physical phone needs an approved Tailscale
-connection and any permissions iOS requests. There is no prompt bypass, ATS
-exception or third-party fallback.
+The phone needs an approved Tailscale connection and any permissions iOS
+requests. There is no prompt bypass, ATS exception or third-party fallback.
+Offline upload records remain bounded; the independent local export works as
+before. Automatic default does not guarantee continuous execution while iOS
+suspends or terminates the app.
 
-This uses the existing network-observability Loki container on `lxso2`, owned by
-`/home/saphid/services/network-observability/docker-compose.yml`, exposed locally
-on port 3100. A single additive Tailscale Serve handler maps the exact ingest
-prefix to `http://127.0.0.1:3100/loki/api/v1/push`. All pre-existing Serve settings,
-including Funnel settings, were compared before/after and remained identical.
-The handler runs under Tailscale’s existing daemon and survives shell exit. No
-receiver service, account or analytics project was created during the initial
-route deployment; Loki was not then restarted or reconfigured. The later
-receiver diagnostic incident is disclosed below.
+## Ownership and storage
 
-**The endpoint is not usable for collection yet.** The receiver diagnosis found
-its root volume 98.8% full, above Loki's active 90% WAL threshold. Its generic
-HTTP 500 text, `Ingester is shutting down`, also covers this capacity throttle;
-`/ready` alone misleadingly reports ready. A final synthetic push failed and its
-exact query returned zero lines. Approximately 80.6 GiB must be recovered merely
-to cross the threshold; unrelated data was not removed, and the threshold/WAL
-were not bypassed. The service's own data is only about 367 MiB.
+Source lives in this repository at `services/diagnostics-receiver/`, owned by
+[personal-ops #208](https://github.com/saphid/personal-ops/issues/208). A fresh
+issue read confirmed that owner. The available `pa-memory` query and the parent’s
+prior-work receipt were incomplete lookup evidence, not proof of absence. Fresh
+lxso1 listener/unit/service-source checks identified Codex’s file-based usage
+collector, an agent-session proxy, and a disabled Kindle-specific SLOP collector;
+none is a generic ingest receiver with this privacy boundary. The streaming
+archive and media hub own different datasets and are not reused.
 
-One diagnostic GET to Loki's shutdown endpoint caused an unintended restart;
-its existing supervisor restarted the same container. This did not restore
-ingestion. No app/receiver configuration or Serve/Funnel route changed during
-the repair attempt. See the private operational report and real exits at
-`build/proof/automatic-receiver/REPORT.md` and `receipt.json`.
+The staged canonical host layout follows lxso1’s existing service/data split:
 
-Capacity recovery followed by synthetic HTTP 204 and exact readback remains a
-service prerequisite. Persistence/readback and phone collection are unverified.
-The separate Loki on port 3105 belongs to the T3 performance stack and was not
-used. The app will make bounded automatic attempts, but this receiver currently
-accepts no diagnostics. Manual local export remains the available fallback.
+- Source: `/home/saphid/services/duotwitch-diagnostics/receiver.py`.
+- State: `/home/saphid/pa-agent-data/duotwitch-diagnostics/records.sqlite3`.
+- User unit: `/home/saphid/.config/systemd/user/duotwitch-diagnostics.service`.
+- Loopback: `127.0.0.1:18792`, unused in the fresh inventory. The installer
+  rechecks it rather than stopping anything to free it.
 
-Evidence is in `build/verification/automatic-diagnostics/`: endpoint receipt,
-Serve before/after snapshots, deployment log/exit, test log/exit and iOS build
-log/exit/result bundle. These private local artifacts are ignored by Git.
+The host had 32,071,262,208 free bytes (about 29.9 GiB); user lingering was already
+enabled. No changes to lingering, other workloads, lxso2, accounts or purchases
+are part of this implementation. Private lookup/inventory and verification
+receipts live under ignored `build/verification/local-diagnostics-receiver/`.
 
-## Privacy and ownership evidence
+## Privacy boundary and limits
 
-The prior-work lookup found other apps’ PostHog integrations but no suitable
-DuoTwitch project; this partial result does not prove no other receiver exists.
-Portfolio validation passed; its current capability catalogue has no generic
-playback-diagnostic ingest route. The canonical network-infra repository and
-service-map documentation identify owned LGTM on `lxso2`; live container labels,
-HTTPS and the push response refreshed that evidence. The existing owning work
-remains [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
-GitHub issue readback was rate-limited during this work; the issue identity comes
-from `DELIVERY.md`, not a claim of a fresh issue read.
+The unchanged Swift upload projection and the independent receiver both allow
+only fixed events, booleans, finite bounded numbers, fixed text classifications,
+public numeric version/build/OS strings, and ephemeral run/session/command/
+appearance UUIDs. The receiver rejects unknown fields/types/strings, invalid
+UUIDs, duplicate JSON keys, mismatched labels/timestamps and arbitrary lines.
+The Python suite compares event/key/enum lists with the Swift source to catch
+drift. No credentials, account/channel identity, device/installation identifier,
+chat, media URLs, freeform errors or private attachments/app data are accepted.
 
-Only fixed native event names, finite bounded numeric state/counters, booleans,
-public version/build/OS numbers, fixed error/audio classifications and ephemeral
-run/session/command/appearance UUIDs may be uploaded. The uploader applies a
-second typed allowlist and revalidates restored spool entries. Unknown event
-names, keys, string values, types, corrupt spool content and full errors cannot
-pass it. Account/channel identity, chat, credentials, device/installation IDs,
-port names/UIDs, media URLs, and raw WebKit data are excluded. The receiver sees
-normal network source metadata and the diagnostic event timestamps.
+HTTP headers, source IPs, peer identity and raw request bodies are never stored
+or logged by the receiver. Tailscale necessarily handles network metadata;
+existing daemon behavior is outside this receiver. No public query, metrics or
+HTTP health endpoint exists. Native `systemctl --user is-active` is a liveness
+probe; acceptance plus SSH readback is the ingestion health test.
 
-The upload client sends only to this owned endpoint with platform TLS validation.
-It has no SDK, cookies, credential storage, authentication UI, redirect following,
-response-body collection or third-party fallback. Tailnet membership is the
-access boundary; no admin/API key is bundled. The app’s diagnostic footer names
-the destination and default upload behavior. The standard local-network purpose
-string describes this use if iOS requests permission. Before any new external
-release, the parent must reconcile the store privacy disclosure for this change.
+The receiver accepts only POST at the exact `/duotwitch-diagnostics` path, with
+`application/json`, a single positive Content-Length, and no transfer/content
+encoding. A batch may have at most 32 records, 24 KiB of record JSON and a
+64 KiB body; each record is at most 4096 UTF-8 bytes. It retains the existing
+Loki-shaped wire envelope solely for client compatibility. Wrong methods,
+paths, query strings, schemas and framing fail closed. Headers are bounded to
+8 KiB, the listen backlog to eight, concurrent handlers to four, and each
+connection to a five-second absolute deadline, including slow trickle reads.
+A global token bucket permits 120 connections/minute with a burst of 20; it
+stores no per-peer rate-limit identities. Overload returns 429 when possible.
 
-## Queue, bandwidth and lifecycle
+The SQLite directory is 0700 and files are 0600. It uses DELETE journaling,
+secure deletion and synchronous EXTRA commits (fsync plus directory sync),
+never a growing WAL. HTTP 204 is emitted only after the transaction’s durable
+commit. Retry identity is `(run UUID, sequence)` with matching stable timestamp
+and canonical JSON line. An identical retry is accepted without duplication or
+extending retention; conflicting reuse returns 409 and rolls back the batch.
+A crash or lost response can cause a retry but cannot overwrite an accepted
+record. Deduplication lasts within bounded retention, not forever.
 
-- Local export remains four rolling 256 KiB JSONL files plus one bounded export
-  copy. Upload acknowledgement, failure, expiry or eviction cannot delete them.
-  Existing pre-update logs are not retrospectively uploaded.
-- The independent upload queue retains at most 512 records and 512 KiB of encoded
-  record payload, for at most 24 hours. The atomic spool also stores validation
-  metadata and a second representation of the record, so its file can exceed
-  512 KiB; loading rejects any file larger than 2 MiB. Disk/network work runs on a
-  serial utility queue. Files use protection until first authentication on iOS
-  and are excluded from backup. Oldest records are evicted on overflow.
-- Each batch has at most 32 records, 24 KiB of record JSON and a 64 KiB HTTP body.
-  Uploads are single-flight, no more often than once per 30 seconds. The initial
-  window collects a batch; new samples do not postpone an already scheduled send.
-  High event rates or prolonged outages can lose upload records; local export is
-  independent and bounded too.
-- Retryable failures are network errors, 408, 429 and 5xx. The delay starts at
-  60 seconds, doubles to an hour, and has bounded jitter; numeric Retry-After is
-  respected up to an hour. The attempt count and next eligible time are saved
-  before sending. Relaunch cannot reset the budget. After eight reserved attempts,
-  or on a permanent HTTP rejection, that batch is dropped from the upload queue.
-  A successful upload requires Loki’s exact HTTP 204, not an arbitrary 2xx page.
-- Retries retain the same serialized line and timestamp. Fixed app/component
-  labels plus the ephemeral app-run label separate concurrently used apps and
-  allow Loki to deduplicate identical timestamp/line retries. There is no
-  persistent person or device identifier. A lost acknowledgement remains
-  best-effort delivery rather than an exactly-once guarantee.
-- The ephemeral HTTP session has 15-second request and 20-second resource
-  deadlines. Response bodies and redirects are rejected. There is no busy loop,
-  background-audio ownership, playback command or new background execution mode.
-  iOS may suspend execution; queued data is retried when app execution resumes or
-  on a later launch, within its bounds. Continuous collection while the app is
-  suspended/terminated is not promised.
+Records expire 24 hours after first acceptance, with maintenance at startup,
+every accepted batch, and at most 60-second idle intervals. Maximums are 10,000
+records, 128 distinct runs and 4 MiB of canonical JSON payload. Older batches
+are evicted for record/payload capacity; the incoming batch is never evicted
+before its acknowledgement. Run overflow returns 429. SQLite has an 8 MiB page
+cap; its temporary rollback journal can approximately double this, leaving
+total normal state below 32 MiB. A 1 GiB filesystem headroom floor rejects writes
+with 503. Full disks, SQLite/commit/retention failures also reject with 503;
+these conditions can delay deletion until storage recovers. Data is never
+silently acknowledged on a storage failure. The systemd unit bounds memory,
+CPU, tasks and file descriptors, disables core dumps/output, and restricts
+filesystem writes to this service’s data directory.
 
-## Verification and integration
+## Client queue and local export
 
-Run `DEVELOPER_DIR=/Applications/Xcode-27.2.0.app/Contents/Developer /bin/sh
-scripts/test-diagnostic-upload.sh` from the repository. It copies the actual
-Foundation-only sources into an isolated temporary Swift package and runs XCTest,
-with a fake transport or an intercept-all URLProtocol. It cannot fall through to
-the network. It starts no audio, browser, device or Simulator and takes no Xcode
-build lease. Real command exits and test counts are required; Swift Testing’s
-separate zero-test footer is not the XCTest result.
+Local export remains four rolling 256 KiB JSONL files plus one bounded export
+copy. Upload acknowledgement, failure, expiry or eviction cannot delete them;
+pre-update local logs are not retrospectively uploaded. The separate persistent
+upload queue retains at most 512 records and 512 KiB of encoded record payload
+for 24 hours. Its atomic spool also holds validation metadata and a second
+representation; loading rejects files larger than 2 MiB. It revalidates restored
+entries and works on a serial utility queue. iOS files are protected until first
+authentication and excluded from backup.
 
-The final-source checks passed 15 XCTest cases with zero failures and
-actual exit 0. The generic iOS Debug build also exited 0 through the Xcode hygiene
-wrapper’s non-T3 lease, with private DerivedData removed and lease released. It
-was unsigned and did not run iOS tests. The existing AccountView deprecation and
-AppIntents metadata warning remain. No GUI, Play/audio, private physical trace,
-phone installation, beta delivery or announcement was used for verification.
+Uploads remain single-flight, no more often than once per 30 seconds. New
+samples do not postpone an existing scheduled send. Network errors, 408, 429
+and 5xx retry with persisted exponential backoff, bounded jitter and numeric
+Retry-After (up to an hour). After eight reserved attempts, or a permanent
+rejection, that batch is dropped. A retry never extends the queue’s TTL.
+Only exact HTTP 204 counts as success. The same serialized line and timestamp
+are reused after retry/relaunch. The ephemeral URLSession has 15-second request
+and 20-second resource deadlines, platform TLS validation, no cookies,
+credentials, redirect following, response-body collection or external fallback.
+There is no new background mode, playback command or audio ownership.
 
-Parent integration should apply the worker commit into the parent-owned branch,
-run the existing/full iOS tests alongside these focused tests, and obtain the
-fresh source-shipping review. Any new native event classifications added by the
-parent need explicit additions to `PlaybackDiagnosticUploadProjection`; unknown
-names fail closed. The parent also owns the receiver repair/readback decision,
-physical-phone network/permission verification through its Astra/device route,
-and any separately authorized TestFlight delivery. No merge/cherry-pick into the
-parent branch was performed by this worker.
+The app footer names this default destination. Its existing local-network
+purpose string remains accurate. The parent must reconcile App Store privacy
+disclosures before any external release.
 
-For route rollback, remove only the handler this task added:
-`tailscale serve --https=443 --set-path=/duotwitch-diagnostics off` on `lxso2`.
-Do not run a root-level `serve off` or reset, which would affect unrelated routes.
-Compare the resulting settings to the saved `serve-before.json`.
+## Verification and parent handoff
+
+Run with the explicit Xcode toolchain (no device, Simulator, GUI or build lease):
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode-27.2.0.app/Contents/Developer /bin/sh scripts/test-diagnostic-upload.sh
+DEVELOPER_DIR=/Applications/Xcode-27.2.0.app/Contents/Developer /bin/sh scripts/test-diagnostic-receiver.sh
+```
+
+The first runs the existing 15 Foundation XCTest cases with an intercept-all
+URLProtocol/fake transport. The second compiles the actual Swift projection,
+queue and transport types with a synthetic fixture generator, then sends that
+actual wire body to an isolated temporary Mac loopback receiver. Python tests
+cover exact SQL readback, duplicate/conflict atomicity, SIGKILL/restart durability,
+malformed requests, schema/type/batch limits, slow connections, concurrency/rate
+limits, retention (including idle maintenance), headroom/page exhaustion and
+failed writes/deletion. No tests contact the tailnet endpoint or private app data.
+
+The parent owns fresh independent source review, full signed integration tests,
+production deployment using the following runbook, synthetic HTTPS acceptance
+and SSH readback, phone network/permission checks, and any beta delivery.
+Implementation itself makes no operational collection claim.
+
+## Deployment after parent review only
+
+Read `~/AGENTS.md` on lxso1 before host work. Copy only the reviewed
+`services/diagnostics-receiver/` files to a protected temporary staging directory
+there. Do not run from this Mac with a remote wrapper. On lxso1 as `saphid`, run:
+
+```sh
+python3 /path/to/reviewed-staging/install.py install
+systemctl --user is-active duotwitch-diagnostics.service
+```
+
+The installer refuses existing unowned service/data paths, an occupied port,
+source drift or a different installed release. Repeating the same installation
+is safe. Partial installs fail closed and need ownership inspection; do not
+remove unknown paths to retry. It installs/enables only this user unit; lingering
+is already enabled. The source, ownership manifest and data are protected. It
+never invokes Tailscale. If the host denies a unit hardening feature, stop and
+review that exact limitation rather than relaxing unrelated settings.
+
+Capture **fresh** Serve JSON immediately before adding the handler. The saved
+implementation inventory is evidence, not a deploy-time comparison baseline:
+
+```sh
+tailscale serve status --json > serve-before.json
+python3 /path/to/reviewed-staging/serve_config.py preflight serve-before.json
+tailscale serve --bg --https=443 --set-path=/duotwitch-diagnostics http://127.0.0.1:18792/duotwitch-diagnostics
+tailscale serve status --json > serve-after.json
+python3 /path/to/reviewed-staging/serve_config.py added serve-before.json serve-after.json
+```
+
+The guard rejects public Funnel on 443 and compares the **entire** configuration:
+443 root, all existing handlers, other TCP listeners and `AllowFunnel` must be
+identical except the one expected diagnostics handler. Existing Funnel on 8443
+must remain as it was. Do not enable Funnel, replace the root, run global
+`serve off`, or reset Serve. The backend target includes the exact path so
+Tailscale’s prefix forwarding resolves to the receiver’s narrow POST path.
+
+Send a synthetic, allowlisted record with a new UUID to the HTTPS endpoint.
+Require exact 204 and verify its full `(run, sequence, timestamp, line)` through
+SSH with Python’s `sqlite3` module in read-only mode. Retry the identical body
+and require one row. Do not use lxso1’s sqlite CLI shim or query over HTTP.
+For example, run locally on lxso1 with the synthetic run ID:
+
+```sh
+python3 - SYNTHETIC-RUN-UUID <<'PY'
+import json, sqlite3, sys
+from contextlib import closing
+with closing(sqlite3.connect('file:/home/saphid/pa-agent-data/duotwitch-diagnostics/records.sqlite3?mode=ro', uri=True)) as db:
+    rows = db.execute('SELECT run,sequence,timestamp,line FROM records WHERE run=? ORDER BY sequence', (sys.argv[1].lower(),)).fetchall()
+    print(json.dumps(rows))
+PY
+```
+
+Keep sanitized actual exit/status/readback receipts. A native active service,
+local loopback success or a 200 login page alone does not verify HTTPS collection.
+
+## Rollback
+
+On lxso1, save current Serve state, remove **only** this exact handler, then
+compare it with the saved current state using the guard:
+
+```sh
+tailscale serve status --json > serve-rollback-before.json
+python3 /path/to/reviewed-staging/serve_config.py preflight serve-rollback-before.json
+tailscale serve --https=443 --set-path=/duotwitch-diagnostics off
+tailscale serve status --json > serve-rollback-after.json
+python3 /path/to/reviewed-staging/serve_config.py removed serve-rollback-before.json serve-rollback-after.json
+python3 /path/to/reviewed-staging/install.py rollback
+```
+
+First verify the current diagnostics target matches this service; the guard
+refuses an unrelated target. The installer verifies its ownership hashes before
+stopping/disabling/removing its own unit and source. It retains protected data
+for SSH readback, never recursively deletes, and does not touch other units or
+routes. Repeating rollback is safe. Reinstallation after rollback requires an
+explicit ownership decision for the retained data directory; it is not silently
+adopted. A failed Serve comparison requires stopping and inspecting drift, not
+resetting or replaying an old whole configuration. The previous lxso2 route is
+not part of either deployment or rollback. Reverting the source destination
+requires a new app build; clients without an lxso1 receiver simply use their
+existing bounded queue/retry and local export.

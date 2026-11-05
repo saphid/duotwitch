@@ -51,7 +51,7 @@ final class PlaybackDiagnosticHTTPTransportTests: XCTestCase {
         XCTAssertEqual(configuration.timeoutIntervalForRequest, 15)
         XCTAssertEqual(configuration.timeoutIntervalForResource, 20)
         XCTAssertEqual(PlaybackDiagnosticDestination.endpoint.absoluteString,
-                       "https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics")
+                       "https://lxso1.tail4e5636.ts.net/duotwitch-diagnostics")
     }
 
     func testRealSessionReturnsServerRateLimitWithoutReadingBody() async throws {

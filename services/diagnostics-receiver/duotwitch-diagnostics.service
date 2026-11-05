@@ -1,0 +1,33 @@
+[Unit]
+Description=DuoTwitch bounded playback diagnostics receiver
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=%h/services/duotwitch-diagnostics
+ExecStart=/usr/bin/python3 -B %h/services/duotwitch-diagnostics/receiver.py --data-dir %h/pa-agent-data/duotwitch-diagnostics --port 18792
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/pa-agent-data/duotwitch-diagnostics
+RestrictAddressFamilies=AF_INET AF_UNIX
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+MemoryMax=96M
+CPUQuota=20%
+TasksMax=16
+LimitNOFILE=64
+LimitCORE=0
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=default.target

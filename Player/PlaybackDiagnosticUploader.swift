@@ -68,7 +68,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
                   let data = try? Self.encoder.encode(record), data.count <= 4096,
                   let line = String(data: data, encoding: .utf8) else { return }
             let now = clock().timeIntervalSince1970
-            // Keep Loki timestamps stable across retry/relaunch. The ephemeral
+            // Keep wire timestamps stable across retry/relaunch. The ephemeral
             // run label separates concurrently used phones and application runs.
             let timestamp = String(Int64(record.wallTime * 1_000_000_000))
             state.entries.append(Entry(record: record, line: line, timestamp: timestamp, enqueued: now))
@@ -182,7 +182,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
         queue.asyncAfter(deadline: .now() + max(1, deadline - now), execute: work)
     }
 
-    private struct LokiPayload: Encodable {
+    private struct DiagnosticPayload: Encodable {
         struct Stream: Encodable {
             let stream: [String: String]
             let values: [[String]]
@@ -215,8 +215,8 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
             return
         }
         let runs = Dictionary(grouping: batch, by: { $0.record.run })
-        let payload = LokiPayload(streams: runs.keys.sorted().map { run in
-            LokiPayload.Stream(stream: ["app": "duotwitch", "component": "playback", "run": run],
+        let payload = DiagnosticPayload(streams: runs.keys.sorted().map { run in
+            DiagnosticPayload.Stream(stream: ["app": "duotwitch", "component": "playback", "run": run],
                                values: runs[run]!.map { [$0.timestamp, $0.line] })
         })
         guard let body = try? Self.encoder.encode(payload), body.count <= 64 * 1024 else {

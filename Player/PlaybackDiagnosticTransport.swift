@@ -2,15 +2,15 @@ import Foundation
 
 enum PlaybackDiagnosticDestination {
     // Public client ingest metadata, not an admin credential. This route is
-    // private to Alex's tailnet and proxies only the existing Loki push path.
-    static let endpoint = URL(string: "https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics")!
-    static let disclosure = "Alex’s private Loki log storage at lxso2.tail4e5636.ts.net over HTTPS and Tailscale"
+    // private to Alex's tailnet and accepts only validated DuoTwitch records.
+    static let endpoint = URL(string: "https://lxso1.tail4e5636.ts.net/duotwitch-diagnostics")!
+    static let disclosure = "Alex’s private DuoTwitch JSON log storage at lxso1.tail4e5636.ts.net over HTTPS and Tailscale"
 }
 
 struct PlaybackDiagnosticUploadResponse: Sendable {
     let status: Int?
     var retryAfter: TimeInterval? = nil
-    var accepted: Bool { status == 204 } // Loki's acknowledgement; never accept a login page's 200.
+    var accepted: Bool { status == 204 } // Durable receiver acknowledgement; never accept a login page's 200.
     var retryable: Bool { status == nil || status == 408 || status == 429 || (500...599).contains(status ?? 0) }
 }
 

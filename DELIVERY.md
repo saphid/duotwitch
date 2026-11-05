@@ -57,6 +57,14 @@ completed and Simulator data/Keychain were preserved.
 
 ## Automatic collection operational limit
 
+Next-source change (not yet deployed/distributed): automatic upload now targets
+Alex’s dedicated DuoTwitch JSON/SQLite receiver at
+`https://lxso1.tail4e5636.ts.net/duotwitch-diagnostics`. Receiver source, bounded
+storage, hardened unit and additive-route comparison guard are staged for parent
+review. No production service or route was changed by this implementation;
+HTTPS 204 plus exact SSH readback remain required. The existing lxso2 setup is
+untouched. Deployment and rollback are documented in the linked runbook below.
+
 The current internal build enables automatic, privacy-filtered upload by
 default to Alex’s existing private Loki receiver over Tailscale HTTPS at
 `https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics`, while retaining local logs
