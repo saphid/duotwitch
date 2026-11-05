@@ -68,6 +68,7 @@ struct WatchVideoPanel: View {
                     }
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height)
+                .onGeometryChange(for: CGSize.self) { $0.size } action: { session.recordVideoGeometry($0) }
                 .task(id: "\(fits)|\(channel.login)") {
                     playerFits = fits
                     await session.videoAreaChanged(fits: fits, channel: channel.login)
@@ -153,6 +154,11 @@ struct WatchVideoPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     Text(channel.name).font(.title.bold())
+                    NavigationLink {
+                        PlaybackDiagnosticsView(diagnostics: session.diagnostics)
+                    } label: {
+                        Label("Playback diagnostics", systemImage: "waveform.path.ecg")
+                    }.frame(minHeight: 44)
                     Label(session.audioWarning ?? session.status, systemImage: "play.rectangle")
                         .foregroundStyle(.secondary)
                     if !channel.title.isEmpty { Text(channel.title).font(.title3) }

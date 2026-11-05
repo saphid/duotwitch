@@ -3,12 +3,16 @@ import SwiftUI
 @main
 struct DuoTwitchApp: App {
     @State private var model = AppModel()
+    @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
             root
                 .preferredColorScheme(.dark)
                 .tint(AppTheme.accent)
+                .onChange(of: phase, initial: true) { _, value in
+                    model.player.recordDiagnostic("app.scene", values: ["phase": .text(String(describing: value))])
+                }
         }
     }
 

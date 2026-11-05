@@ -20,6 +20,7 @@
 		49E77639E143FEFE6860FB8F /* TwitchHTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDA391EC4A5FA0BC1139E71 /* TwitchHTTP.swift */; };
 		5FA2EB2ED21936E7CF664851 /* PlayerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2BFEE3138AE29B724C7D12 /* PlayerConfiguration.swift */; };
 		64591D64CF86539737FF9065 /* PlayerProbeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FF6394CBDECFBF134CD52B3 /* PlayerProbeView.swift */; };
+		6EB705B7711C58A20661AC48 /* PlaybackDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36BA5AD0AF150866F2F537F /* PlaybackDiagnosticsTests.swift */; };
 		6ECF901A174E75BD06F6BC61 /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769AEF3A8907313F97215197 /* ChatModels.swift */; };
 		71E8C1D06D924ADD15E20500 /* PlaybackSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149E49E98385E126BA3AA6F0 /* PlaybackSessionTests.swift */; };
 		741552AEF51845D6275B387B /* DuoTwitchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493B70097D52AA78E59D9E0 /* DuoTwitchApp.swift */; };
@@ -28,6 +29,7 @@
 		8E426F32FB689187895C3EA4 /* TwitchAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE207ABF75AA7BF30495789 /* TwitchAuth.swift */; };
 		938198EEEF8EB77D52F442A6 /* WatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42A9754685C342DA3D3B46F4 /* WatchView.swift */; };
 		991D34EB555F403D5D4C670F /* ChatBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A8488983963FF5EB2A70A3 /* ChatBufferTests.swift */; };
+		997B258B9C5CF399A95ED56D /* PlaybackDiagnosticScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAD0DFE8C41E9F166F0D793 /* PlaybackDiagnosticScript.swift */; };
 		AB7639C31918DAB904E5BD44 /* MountedWatchLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1D5DBDA34E0EC895260370 /* MountedWatchLayoutTests.swift */; };
 		B96AD9714B3871F431BE23BC /* PlayerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22B908128D7C8F09B3157317 /* PlayerHost.swift */; };
 		C39CDDFDBDE3CB2EBFB3C097 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102995E3223632BA1C0E648A /* AppModel.swift */; };
@@ -36,6 +38,7 @@
 		D64366CD66F61079E8539996 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52409A6B647F5E14D4AFAC7 /* LibraryModel.swift */; };
 		DAD52532FD3F5DF6072B4F4F /* WatchGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5923EAFC3E8BAD56F4B146 /* WatchGeometryTests.swift */; };
 		DDE70D6653C6FBA6D6A9B555 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F0FDFB6F94FB28129912D /* MainView.swift */; };
+		DFEDAD64DA2D3A4A75A30F62 /* PlaybackDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C81706BF4CD5C38417B56B8A /* PlaybackDiagnostics.swift */; };
 		E9116AD1DD31A87E7277B16A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A327F84010CFAB8ADA4303C0 /* Models.swift */; };
 		FF1EA9C55A2CE3B89F01F7A2 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1373C28BC9F55F5A30EDE03F /* AccountView.swift */; };
 /* End PBXBuildFile section */
@@ -74,11 +77,14 @@
 		769AEF3A8907313F97215197 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		7D5923EAFC3E8BAD56F4B146 /* WatchGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchGeometryTests.swift; sourceTree = "<group>"; };
 		A327F84010CFAB8ADA4303C0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AAAD0DFE8C41E9F166F0D793 /* PlaybackDiagnosticScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnosticScript.swift; sourceTree = "<group>"; };
 		AD529E96F51ED8B0277BC696 /* FoldState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldState.swift; sourceTree = "<group>"; };
 		B01E4C192B882AC81E46145C /* PlaybackSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSession.swift; sourceTree = "<group>"; };
 		B1D842313AA41BDF90E6CC39 /* ChatSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSession.swift; sourceTree = "<group>"; };
 		B2BF13CE1A877F90B8A5AD8A /* ChatSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSocket.swift; sourceTree = "<group>"; };
 		BEDA391EC4A5FA0BC1139E71 /* TwitchHTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwitchHTTP.swift; sourceTree = "<group>"; };
+		C36BA5AD0AF150866F2F537F /* PlaybackDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnosticsTests.swift; sourceTree = "<group>"; };
+		C81706BF4CD5C38417B56B8A /* PlaybackDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnostics.swift; sourceTree = "<group>"; };
 		CBE207ABF75AA7BF30495789 /* TwitchAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwitchAuth.swift; sourceTree = "<group>"; };
 		D403C8A054775F6335176065 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		E9A8488983963FF5EB2A70A3 /* ChatBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBufferTests.swift; sourceTree = "<group>"; };
@@ -105,6 +111,8 @@
 			isa = PBXGroup;
 			children = (
 				2413A1D5318AD0C4D37DF238 /* AudioPlaybackSession.swift */,
+				C81706BF4CD5C38417B56B8A /* PlaybackDiagnostics.swift */,
+				AAAD0DFE8C41E9F166F0D793 /* PlaybackDiagnosticScript.swift */,
 				B01E4C192B882AC81E46145C /* PlaybackSession.swift */,
 				2C2BFEE3138AE29B724C7D12 /* PlayerConfiguration.swift */,
 				22B908128D7C8F09B3157317 /* PlayerHost.swift */,
@@ -186,6 +194,7 @@
 				E9A8488983963FF5EB2A70A3 /* ChatBufferTests.swift */,
 				5EE1CEF33D2D82BF4EB288B4 /* ChatSessionTests.swift */,
 				6B1D5DBDA34E0EC895260370 /* MountedWatchLayoutTests.swift */,
+				C36BA5AD0AF150866F2F537F /* PlaybackDiagnosticsTests.swift */,
 				149E49E98385E126BA3AA6F0 /* PlaybackSessionTests.swift */,
 				7D5923EAFC3E8BAD56F4B146 /* WatchGeometryTests.swift */,
 			);
@@ -335,6 +344,8 @@
 				DDE70D6653C6FBA6D6A9B555 /* MainView.swift in Sources */,
 				E9116AD1DD31A87E7277B16A /* Models.swift in Sources */,
 				8BB23E59A07594072CFDE61E /* NativeChatView.swift in Sources */,
+				997B258B9C5CF399A95ED56D /* PlaybackDiagnosticScript.swift in Sources */,
+				DFEDAD64DA2D3A4A75A30F62 /* PlaybackDiagnostics.swift in Sources */,
 				179F0B0A2DBEAEEFCC69CA03 /* PlaybackSession.swift in Sources */,
 				5FA2EB2ED21936E7CF664851 /* PlayerConfiguration.swift in Sources */,
 				B96AD9714B3871F431BE23BC /* PlayerHost.swift in Sources */,
@@ -355,6 +366,7 @@
 				991D34EB555F403D5D4C670F /* ChatBufferTests.swift in Sources */,
 				7431BD77993FD1E622958CC0 /* ChatSessionTests.swift in Sources */,
 				AB7639C31918DAB904E5BD44 /* MountedWatchLayoutTests.swift in Sources */,
+				6EB705B7711C58A20661AC48 /* PlaybackDiagnosticsTests.swift in Sources */,
 				71E8C1D06D924ADD15E20500 /* PlaybackSessionTests.swift in Sources */,
 				DAD52532FD3F5DF6072B4F4F /* WatchGeometryTests.swift in Sources */,
 			);

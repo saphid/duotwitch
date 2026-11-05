@@ -50,6 +50,7 @@ final class AppModel {
 
     @discardableResult
     func watch(_ channel: WatchedChannel, appearance: UUID = UUID()) -> UUID {
+        player.recordDiagnostic("watch.enter", values: ["appearance": .text(appearance.uuidString), "sameChannel": .flag(selectedChannel?.id == channel.id)])
         watchAppearance = appearance
         isWatching = true
         let changed = selectedChannel?.id != channel.id
@@ -73,7 +74,9 @@ final class AppModel {
     }
 
     func leaveWatch(_ channel: WatchedChannel, appearance: UUID) {
-        guard selectedChannel?.id == channel.id, watchAppearance == appearance else { return }
+        let accepted = selectedChannel?.id == channel.id && watchAppearance == appearance
+        player.recordDiagnostic("watch.leave", values: ["appearance": .text(appearance.uuidString), "accepted": .flag(accepted)])
+        guard accepted else { return }
         watchAppearance = nil
         isWatching = false
         drafts[channel.id] = chat.draft

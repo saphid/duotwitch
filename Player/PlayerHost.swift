@@ -5,7 +5,8 @@ struct PlayerHost: UIViewRepresentable {
     let session: PlaybackSession
 
     func makeUIView(context: Context) -> UIView {
-        let host = UIView()
+        let host = DiagnosticPlayerContainer()
+        host.onWindowChange = { [weak session] in session?.recordDiagnostic("web.window.changed") }
         host.backgroundColor = .black
         attach(to: host)
         return host
@@ -17,6 +18,7 @@ struct PlayerHost: UIViewRepresentable {
 
     private func attach(to host: UIView) {
         guard session.webView.superview !== host else { return }
+        session.recordDiagnostic("web.host.attach")
         session.webView.removeFromSuperview()
         session.webView.translatesAutoresizingMaskIntoConstraints = false
         host.addSubview(session.webView)
@@ -26,5 +28,13 @@ struct PlayerHost: UIViewRepresentable {
             session.webView.topAnchor.constraint(equalTo: host.topAnchor),
             session.webView.bottomAnchor.constraint(equalTo: host.bottomAnchor)
         ])
+    }
+}
+
+private final class DiagnosticPlayerContainer: UIView {
+    var onWindowChange: (() -> Void)?
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        onWindowChange?()
     }
 }

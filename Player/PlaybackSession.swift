@@ -1,4 +1,4 @@
-import AVFAudio
+import AVFoundation
 import Observation
 import WebKit
 import UIKit
@@ -8,6 +8,7 @@ import OSLog
 /// they must never replace the browser or reload the current channel.
 @MainActor @Observable
 final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    @ObservationIgnored let diagnostics: PlaybackDiagnostics
     private static let log = Logger(subsystem: "com.saphid.duotwitch", category: "Playback")
     private(set) var channel = ""
     private(set) var status = "Choose a channel"
@@ -46,6 +47,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     @ObservationIgnored private var interruptionTask: Task<Void, Never>?
     @ObservationIgnored private var audioTask: Task<Void, Never>?
     @ObservationIgnored private var audioReady = false
+    @ObservationIgnored private var diagnosticTasks: [Task<Void, Never>] = []
     @ObservationIgnored private(set) var webView: WKWebView!
     var isConfigured: Bool { configuration.hostURL != nil || configuration.probeEnabled }
 
@@ -56,7 +58,9 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
          inactivityEvents: AsyncStream<AudioDeactivation>? = nil,
          pauseMedia: (@MainActor (WKWebView) async -> Void)? = nil,
          pauseTimeout: Duration = .seconds(2),
-         requestPlay: (@MainActor (WKWebView, String) async throws -> Bool)? = nil) {
+         requestPlay: (@MainActor (WKWebView, String) async throws -> Bool)? = nil,
+         diagnostics: PlaybackDiagnostics? = nil) {
+        self.diagnostics = diagnostics ?? .shared
         self.configuration = configuration
         self.loadRequest = loadRequest ?? { view, request in view.load(request) }
         self.activateAudio = activateAudio ?? { try await AudioPlaybackSession.activate() }
@@ -79,6 +83,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         config.allowsAirPlayForMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.userContentController.add(WeakMediaHandler(self), name: "mediaState")
+        config.userContentController.add(WeakMediaHandler(self), name: "playbackDiagnostic")
         #if DEBUG
         if configuration.probeEnabled {
             config.userContentController.addUserScript(WKUserScript(
@@ -93,12 +98,15 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         webView.backgroundColor = .black
         webView.scrollView.isScrollEnabled = false
         webView.accessibilityIdentifier = "twitchPlayer"
+        recordDiagnostic("player.created")
+        observeDiagnosticNotifications()
         let events = inactivityEvents ?? AudioPlaybackSession.inactivityEvents()
         interruptionTask = Task { [weak self] in
             for await source in events {
                 guard !Task.isCancelled else { return }
                 guard let self else { return }
                 Self.log.info("Audio event: \(String(describing: source), privacy: .public); playing=\(self.isPlaying)")
+                self.recordDiagnostic("audio.deactivation", values: ["source": .text(String(describing: source))])
                 if source == .systemIdle {
                     self.audioReady = false
                     continue
@@ -110,13 +118,14 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
     }
 
-    deinit { interruptionTask?.cancel(); loadTask?.cancel() }
+    deinit { interruptionTask?.cancel(); loadTask?.cancel(); diagnosticTasks.forEach { $0.cancel() } }
 
     func open(channel input: String, forceReload: Bool = false) {
         guard let login = Self.validChannel(input) else {
             status = "Enter a Twitch channel name using letters, numbers, or underscores."
             return
         }
+        recordDiagnostic("channel.open", values: ["forceReload": .flag(forceReload), "sameChannel": .flag(channel == login)])
         guard forceReload || channel != login || needsLoad else { return }
         let mustPausePrevious = isPlaying || audioReady || loadTask != nil
         loadTask?.cancel()
@@ -151,7 +160,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
             let ticket = bridgeSession
             loadTask = Task { [weak self] in
                 guard let self else { return }
-                let paused = await self.pauseWithDeadline()
+                let paused = await self.pauseWithDeadline(cause: "channelSwitch")
                 guard !Task.isCancelled, self.bridgeSession == ticket else { return }
                 guard paused else {
                     self.loadTask = nil
@@ -161,17 +170,18 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
                 self.setPlaying(false)
                 self.needsLoad = false
                 self.loadCount += 1
-                self.loadRequest(self.webView, request)
+                self.sendLoad(request)
                 self.loadTask = nil
             }
         } else {
             needsLoad = false
             loadCount += 1
-            loadRequest(webView, request)
+            sendLoad(request)
         }
     }
 
     private func setPlaying(_ playing: Bool) {
+        recordDiagnostic("playback.state", values: ["requestedPlaying": .flag(playing)])
         isPlaying = playing
         guard audioTask == nil else { return }
         audioTask = Task { [weak self] in
@@ -180,11 +190,14 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
             while self.audioReady != self.isPlaying {
                 let activating = self.isPlaying
                 do {
+                    self.recordDiagnostic("audio.transition.begin", values: ["activating": .flag(activating)])
                     if activating { try await self.activateAudio() }
                     else { try await self.deactivateAudio() }
                     self.audioReady = activating
                     self.audioWarning = nil
+                    self.recordDiagnostic("audio.transition.complete", values: ["activating": .flag(activating)])
                 } catch {
+                    self.recordDiagnosticError("audio.transition.failed", error: error)
                     self.audioWarning = "Audio could not be updated. Try the player again."
                     break
                 }
@@ -214,6 +227,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     /// Requests playback through Twitch's public embed API. Only PLAYING
     /// confirms success and activates audio; a JavaScript return value does not.
     func play() async {
+        let command = UUID().uuidString
+        recordDiagnostic("native.play.requested", values: ["command": .text(command), "allowed": .flag(canPlay)])
         guard canPlay else { return }
         Self.log.info("Native Play requested")
         let ticket = bridgeSession
@@ -225,6 +240,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         let view = webView!
         let request = requestPlay
         let accepted = await mediaCommandWithDeadline { (try? await request(view, ticket)) == true }
+        recordDiagnostic("native.play.result", values: ["command": .text(command), "accepted": .flag(accepted), "stale": .flag(bridgeSession != ticket || pauseTransaction != pauseTicket)])
         guard bridgeSession == ticket, pauseTransaction == pauseTicket, videoFits,
               failure == nil, hostEvent == event, !isPlaying else { return }
         if !accepted { status = "Could not start video. Try Play again or use the Twitch player." }
@@ -233,6 +249,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     func pause(reason: String = "Paused") async {
         // Keep Play disabled through both the WebKit callback and this
         // request's state updates, so an older Pause cannot undo a new Play.
+        recordDiagnostic("native.pause.requested", values: ["cause": .text(Self.pauseCause(reason))])
         Self.log.info("Native Pause requested: \(reason, privacy: .public)")
         pendingPauses += 1
         defer { pendingPauses -= 1 }
@@ -248,7 +265,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         pauseReason = reason
         // Use WebKit's public pause API without relying on the host script.
         // Cross-origin/offscreen behavior still requires runtime verification.
-        let paused = await pauseWithDeadline()
+        let paused = await pauseWithDeadline(cause: Self.pauseCause(reason))
+        recordDiagnostic("native.pause.result", values: ["confirmed": .flag(paused), "stale": .flag(bridgeSession != ticket || pauseTransaction != transaction)])
         guard bridgeSession == ticket, pauseTransaction == transaction else { return }
         guard paused else {
             Self.log.info("Native Pause timed out")
@@ -261,6 +279,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     }
 
     func hideVideo() {
+        recordDiagnostic("video.hidden")
         videoFits = false
         let ticket = bridgeSession
         Task { [weak self] in
@@ -284,6 +303,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     }
 
     func videoAreaChanged(fits: Bool, channel: String) async {
+        recordDiagnostic("video.fit", values: ["newFits": .flag(fits)])
         videoFits = fits
         if fits && isConfigured {
             if pauseReason == Self.insufficientSpace {
@@ -296,17 +316,22 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
     }
 
-    private func pauseWithDeadline() async -> Bool {
+    private func pauseWithDeadline(cause: String) async -> Bool {
+        let command = UUID().uuidString
+        recordDiagnostic("media.pause.begin", values: ["command": .text(command), "cause": .text(cause)])
         let view = webView!
         let pause = pauseMedia
         pendingPauses += 1
-        return await mediaCommandWithDeadline {
+        let confirmed = await mediaCommandWithDeadline {
             // Timing out stops waiting; it does not cancel WebKit's command.
             // A new Play must still wait for that command's actual callback.
             defer { self.pendingPauses -= 1 }
             await pause(view)
+            self.recordDiagnostic("media.pause.callback", values: ["command": .text(command), "cause": .text(cause)])
             return true
         }
+        recordDiagnostic("media.pause.result", values: ["command": .text(command), "confirmed": .flag(confirmed)])
+        return confirmed
     }
 
     private func mediaCommandWithDeadline(_ command: @escaping @MainActor () async -> Bool) async -> Bool {
@@ -358,22 +383,26 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        recordDiagnostic("web.navigation.finished")
         if failure == nil && status == "Loading Twitch player…" {
             status = "Twitch player loaded. Tap its Play control to start."
         }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        recordDiagnosticError("web.navigation.provisionalFailed", error: error)
         guard failure == nil, (error as NSError).code != NSURLErrorCancelled else { return }
         fail("Could not load Twitch: \(error.localizedDescription)")
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        recordDiagnosticError("web.navigation.failed", error: error)
         guard failure == nil, (error as NSError).code != NSURLErrorCancelled else { return }
         fail("Player connection failed: \(error.localizedDescription)")
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        recordDiagnostic("web.process.terminated")
         fail("The video player stopped. Retry to reconnect.")
     }
 
@@ -423,6 +452,10 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         let origin = message.frameInfo.securityOrigin
+        if message.name == "playbackDiagnostic" {
+            handleDiagnosticMessage(message.body, scheme: origin.protocol, host: origin.host, port: origin.port)
+            return
+        }
         if handleHostMessage(message.body, scheme: origin.protocol, host: origin.host,
                              port: origin.port, isMainFrame: message.frameInfo.isMainFrame) { return }
         #if DEBUG
@@ -445,6 +478,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
               (port == 0 ? 443 : port) == (expected.port ?? 443),
               let data = body as? [String: Any], data["session"] as? String == bridgeSession,
               let event = data["event"] as? String else { return false }
+        guard ["READY", "PLAYING", "PAUSE", "ONLINE", "OFFLINE", "PLAYBACK_BLOCKED", "ENDED"].contains(event) else { return false }
+        recordDiagnostic("host.received", values: ["event": .text(event)])
         switch event {
         case "READY": playerReady = true; status = "Ready. Tap Play to watch."
         case "PLAYING":
@@ -465,7 +500,106 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
         Self.log.info("Host event: \(event, privacy: .public); playing=\(self.isPlaying); fits=\(self.videoFits)")
         hostEvent = event
+        recordDiagnostic("host.applied", values: ["event": .text(event)])
         return true
+    }
+
+    private func sendLoad(_ request: URLRequest) {
+        let controller = webView.configuration.userContentController
+        controller.removeAllUserScripts()
+        controller.addUserScript(WKUserScript(source: PlaybackDiagnosticScript.source(session: bridgeSession),
+            injectionTime: .atDocumentEnd, forMainFrameOnly: false))
+        #if DEBUG
+        if configuration.probeEnabled {
+            controller.addUserScript(WKUserScript(source: Self.observerScript,
+                injectionTime: .atDocumentEnd, forMainFrameOnly: false))
+        }
+        #endif
+        recordDiagnostic("web.load.sent")
+        loadRequest(webView, request)
+    }
+
+    func recordDiagnostic(_ event: String, values: [String: PlaybackDiagnosticValue] = [:]) {
+        var state: [String: PlaybackDiagnosticValue] = [
+            "playerSession": .text(bridgeSession), "playing": .flag(isPlaying),
+            "requestingPlay": .flag(isRequestingPlay), "audioReady": .flag(audioReady),
+            "fits": .flag(videoFits), "hostReady": .flag(playerReady), "needsLoad": .flag(needsLoad),
+            "pendingPauses": .number(Double(pendingPauses)), "loadCount": .number(Double(loadCount)),
+            "failed": .flag(failure != nil), "appState": .number(Double(UIApplication.shared.applicationState.rawValue))
+        ]
+        if let view = webView {
+            state["windowAttached"] = .flag(view.window != nil)
+            state["webWidth"] = .number(Double(view.bounds.width))
+            state["webHeight"] = .number(Double(view.bounds.height))
+        }
+        state.merge(values) { _, new in new }
+        diagnostics.record(event, state)
+    }
+
+    func recordVideoGeometry(_ size: CGSize) {
+        guard size.width.isFinite, size.height.isFinite else { return }
+        recordDiagnostic("video.geometry", values: ["width": .number(Double(size.width)), "height": .number(Double(size.height))])
+    }
+
+    private static func pauseCause(_ reason: String) -> String {
+        switch reason {
+        case "Paused": return "user"
+        case insufficientSpace: return "insufficientSpace"
+        case "Video paused. Tap Play to continue.": return "watchHidden"
+        case "Audio interrupted. Tap Play to continue.": return "audioInterruption"
+        default: return "other" // Never write arbitrary reason/error text.
+        }
+    }
+
+    private func recordDiagnosticError(_ event: String, error: Error) {
+        let value = error as NSError
+        let domain = [NSURLErrorDomain, WKErrorDomain, AVFoundationErrorDomain, NSOSStatusErrorDomain].contains(value.domain) ? value.domain : "other"
+        recordDiagnostic(event, values: ["errorDomain": .text(domain), "errorCode": .number(Double(value.code))])
+    }
+
+    @discardableResult
+    func handleDiagnosticMessage(_ body: Any, scheme: String, host: String, port: Int) -> Bool {
+        guard scheme == "https", host == "player.twitch.tv", [0, 443].contains(port),
+              let data = body as? [String: Any], data["session"] as? String == bridgeSession,
+              let kind = data["kind"] as? String,
+              ["observerReady", "attached", "detached", "sample", "play", "playing", "pause", "waiting", "stalled", "ended", "error", "emptied", "loadedmetadata", "visibility"].contains(kind) else { return false }
+        var fields: [String: PlaybackDiagnosticValue] = ["kind": .text(kind)]
+        for key in ["video", "time", "volume", "ready", "network", "rate", "width", "height", "error", "decoded", "dropped"] {
+            if let number = data[key] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+               number.doubleValue.isFinite, abs(number.doubleValue) <= 1e12 { fields[key] = .number(number.doubleValue) }
+        }
+        for key in ["paused", "ended", "muted", "hidden"] {
+            if let number = data[key] as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() { fields[key] = .flag(number.boolValue) }
+        }
+        recordDiagnostic("media.observed", values: fields)
+        return true // Diagnostic data never changes playback state.
+    }
+
+    private func observeDiagnosticNotifications() {
+        let names: [Notification.Name] = [AVAudioSession.didBecomeInactiveNotification,
+            AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification,
+            AVAudioSession.mediaServicesWereLostNotification, AVAudioSession.mediaServicesWereResetNotification]
+        diagnosticTasks = names.map { name in
+            Task { [weak self] in
+                for await note in NotificationCenter.default.notifications(named: name) {
+                    guard !Task.isCancelled, let self else { return }
+                    var fields: [String: PlaybackDiagnosticValue] = [:]
+                    if let context = note.userInfo?[AVAudioSession.deactivationContextKey] as? AVAudioSession.DeactivationContext {
+                        fields["systemSource"] = .flag(context.source == .system)
+                        fields["hasInterruption"] = .flag(context.interruptionContext != nil)
+                        if let interruption = context.interruptionContext { fields["reason"] = .number(Double(interruption.reason.rawValue)) }
+                    }
+                    for (key, field) in [(AVAudioSessionInterruptionTypeKey, "type"), (AVAudioSessionInterruptionReasonKey, "reason"), (AVAudioSessionRouteChangeReasonKey, "routeReason")] {
+                        if let value = note.userInfo?[key] as? NSNumber { fields[field] = .number(value.doubleValue) }
+                    }
+                    let audio = AVAudioSession.sharedInstance()
+                    fields["category"] = .text(audio.category.rawValue)
+                    fields["mode"] = .text(audio.mode.rawValue)
+                    fields["outputPorts"] = .text(audio.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ","))
+                    self.recordDiagnostic("audio.notification", values: fields.merging(["notification": .text(name.rawValue)]) { _, new in new })
+                }
+            }
+        }
     }
 
     #if DEBUG

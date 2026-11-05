@@ -1,3 +1,26 @@
+# Playback diagnostics update — 6 November 2026
+
+Alex confirms TestFlight 0.1.0 (202611051233) still stops video before one second
+in open mode. The physical symptom is unresolved; the previous audio classification
+correction did not resolve it.
+
+The new instrumentation candidate records persistent, bounded, local playback
+command/event, video-progress, layout, lifecycle and audio diagnostics. Account and
+channel Info expose **Playback diagnostics -> Share playback logs**. No automatic
+upload exists. Credentials, chat, channel/account identity and media URLs are excluded.
+The reattachment fix passes **83 signed Simulator tests**, zero failed/skipped, exit0,
+empty xcresult runtimeWarnings; the existing AccountView compiler deprecation remains.
+A fresh Sol high independent-session recheck found no actionable findings.
+See [diagnostics checkpoint](council/playback-diagnostics-checkpoint.md).
+
+The initial 82-test instrumentation binary passed both native share routes and
+retained prior-run logs after relaunch, with real passive iframe samples and no
+Play/audio started. That bounded proof precedes the small script lifecycle fix.
+It establishes neither physical playback nor a fixed cause. Updated internal
+TestFlight delivery is pending; [DELIVERY.md](../DELIVERY.md) remains authoritative.
+
+## Previous delivered source checkpoint
+
 # Current implementation checkpoint — 5 November 2026
 
 The latest frozen source passes **74 signed Simulator tests**, zero failed or skipped,

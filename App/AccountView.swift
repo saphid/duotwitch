@@ -40,6 +40,11 @@ struct AccountView: View {
                             Button("Save this sign-in again") { Task { await app.auth.maintainSession() } }
                         }
                     }
+                    NavigationLink {
+                        PlaybackDiagnosticsView(diagnostics: app.player.diagnostics)
+                    } label: {
+                        Label("Playback diagnostics", systemImage: "waveform.path.ecg")
+                    }.frame(minHeight: 44)
                     DisclosureGroup("About your connection") {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("DuoTwitch connects to your Twitch account for discovery, following and chat. Your password stays with Twitch.")
