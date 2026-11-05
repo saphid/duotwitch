@@ -2,22 +2,60 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Automatic collection source candidate — not yet delivered
+## Current internal TestFlight — WebKit audio ownership candidate
 
-The implementation candidate enables automatic, privacy-filtered upload by
+**0.1.0 (202611052312)** is available to the existing internal **Alex**, **t3crew**
+and **DuoCrew** groups. Apple readback verifies `VALID`, `INTERNAL_ONLY`,
+`IN_BETA_TESTING` and each complete explicit group/build relationship. Notification
+was requested; inbox delivery, tester installation and physical playback recovery
+remain unverified. The exact en-US What to Test notes were read back.
+
+The supplied physical log shows native audio activation beginning immediately
+before both short playback attempts stop. This build removes competing native
+audio category/activation/deactivation writes and leaves media audio ownership
+with WebKit. It retains native media controls and genuine interruption handling.
+This is a trace-supported candidate fix, not a confirmed physical resolution.
+
+Automatic allowlisted diagnostic upload attempts are enabled by default. The
+owned receiver currently rejects writes because its disk is full; **working
+automatic collection is not claimed**. Local export remains independent. The
+phone also needs existing Tailscale connectivity and any requested iOS permission.
+
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/200d7a68-cfc5-4682-9ed3-1c2369fa1328).
+- Public source: [saphid/duotwitch](https://github.com/saphid/duotwitch).
+- Archived source: [940748c](https://github.com/saphid/duotwitch/commit/940748c92934a24044f390e9554cdee57f00ef67).
+- Archive: `build/testflight/202611052312/DuoTwitch.xcarchive`; archive/upload exits 0,
+  archived identity and strict/deep signature exit 0. Complete eight-file hash
+  manifest is retained beside the archive.
+- Receipt: `build/testflight/webkit-audio-delivery-final.json`.
+- Frozen source: 54/54 match; signed Simulator candidate: 12/12 match.
+- 98 signed Simulator tests pass, zero failed/skipped, exit 0 and empty
+  runtimeWarnings. The separate 15-test uploader execution repeats those tests;
+  it is not an additional distinct count. Existing compiler deprecation remains.
+- Fresh Codex / GPT-6.1 Sol high independent-session review completed with no
+  actionable P0–P3 source findings. Same author/reviewer model; no diversity claim.
+  [Review artifact](docs/council/webkit-audio-upload-review-sol.md).
+
+No public/external beta, App Store release, physical fix, PiP or fold-continuity
+claim. Earlier runtime proof below remains attributed to its original build.
+
+## Automatic collection operational limit
+
+The current internal build enables automatic, privacy-filtered upload by
 default to Alex’s existing private Loki receiver over Tailscale HTTPS at
 `https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics`, while retaining local logs
 and Share. It requires no manual export or app configuration. The bounded queue,
 retry policy and destination are disclosed in the app.
 
 **Collection is not operationally verified:** a synthetic push reaches the owned
-network Loki but returns HTTP 500 (`Ingester is shutting down`). No persistence
-or ingestion readback has been verified. The existing receiver must be repaired,
+network Loki but returns HTTP 500: its volume is 98.8% full, above the 90% WAL
+threshold. Approximately 80.6 GiB capacity recovery is required; unrelated data
+has not been deleted. No ingestion readback has been verified. The receiver must recover,
 then pass synthetic write/readback, before claiming working automatic collection.
 The physical phone’s tailnet access and any iOS permission remain unverified.
-No new beta has been uploaded. See [implementation and prerequisite details](docs/automatic-playback-diagnostics.md).
+See [implementation and prerequisite details](docs/automatic-playback-diagnostics.md).
 
-## Current internal TestFlight — 6 November 2026
+## Previous internal TestFlight — diagnostics-only build
 
 **0.1.0 (202611052215)** is available for existing internal testers. Apple API
 readback verifies `VALID`, `INTERNAL_ONLY`, and `IN_BETA_TESTING`, plus complete,

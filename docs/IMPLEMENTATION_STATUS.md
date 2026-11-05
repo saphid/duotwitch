@@ -9,7 +9,10 @@ trace-supported hypothesis; physical causation and recovery remain unconfirmed.
 The candidate also enables automatic allowlisted, bounded diagnostic uploads to
 Alex’s existing private Loki receiver over Tailscale, retaining local export.
 Receiver repair and phone reachability remain separate operational gates.
-The delivered build below remains local/export-only until a new build is verified.
+Internal TestFlight 0.1.0 (202611052312) is verified VALID / INTERNAL_ONLY /
+IN_BETA_TESTING with explicit Alex, t3crew and DuoCrew relationships. It includes
+this candidate and default upload attempts; receiver acceptance and physical
+recovery remain unverified. Earlier delivered material below is historical.
 
 All **98 signed Simulator tests pass**, zero failed/skipped, exit 0; the real
 xcresult has empty runtimeWarnings. The isolated uploader suite separately passed

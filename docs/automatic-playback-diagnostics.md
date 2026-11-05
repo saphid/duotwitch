@@ -1,8 +1,9 @@
 # Automatic playback diagnostics
 
-This source candidate enables automatic diagnostic upload by default, without a
-Share action, configuration screen or bundled secret. It has **not** been shipped
-in TestFlight. Build 0.1.0 (202611052215) remains the local/export-only build.
+Internal TestFlight 0.1.0 (202611052312) enables automatic diagnostic upload
+attempts by default, without a Share action, configuration screen or bundled
+secret. Receiver acceptance remains blocked as described below. The preceding
+0.1.0 (202611052215) build was local/export-only.
 
 ## Destination and current blocker
 
@@ -19,16 +20,29 @@ on port 3100. A single additive Tailscale Serve handler maps the exact ingest
 prefix to `http://127.0.0.1:3100/loki/api/v1/push`. All pre-existing Serve settings,
 including Funnel settings, were compared before/after and remained identical.
 The handler runs under Tailscale’s existing daemon and survives shell exit. No
-receiver service, account or analytics project was created, and Loki was not
-restarted or reconfigured.
+receiver service, account or analytics project was created during the initial
+route deployment; Loki was not then restarted or reconfigured. The later
+receiver diagnostic incident is disclosed below.
 
-**The endpoint is not usable for collection yet.** HTTPS reaches Loki, but a
-synthetic, non-private push returned HTTP 500 with the fixed classification
-`Ingester is shutting down`. Its `/ready` response alone misleadingly reports
-ready. Ingestion persistence and readback have **not** been verified. Repairing
-the existing network Loki ingester and then obtaining a synthetic 204 plus exact
-readback is the remaining service prerequisite. A second Loki on port 3105
-belongs to a separate T3 performance stack and was deliberately not used.
+**The endpoint is not usable for collection yet.** The receiver diagnosis found
+its root volume 98.8% full, above Loki's active 90% WAL threshold. Its generic
+HTTP 500 text, `Ingester is shutting down`, also covers this capacity throttle;
+`/ready` alone misleadingly reports ready. A final synthetic push failed and its
+exact query returned zero lines. Approximately 80.6 GiB must be recovered merely
+to cross the threshold; unrelated data was not removed, and the threshold/WAL
+were not bypassed. The service's own data is only about 367 MiB.
+
+One diagnostic GET to Loki's shutdown endpoint caused an unintended restart;
+its existing supervisor restarted the same container. This did not restore
+ingestion. No app/receiver configuration or Serve/Funnel route changed during
+the repair attempt. See the private operational report and real exits at
+`build/proof/automatic-receiver/REPORT.md` and `receipt.json`.
+
+Capacity recovery followed by synthetic HTTP 204 and exact readback remains a
+service prerequisite. Persistence/readback and phone collection are unverified.
+The separate Loki on port 3105 belongs to the T3 performance stack and was not
+used. The app will make bounded automatic attempts, but this receiver currently
+accepts no diagnostics. Manual local export remains the available fallback.
 
 Evidence is in `build/verification/automatic-diagnostics/`: endpoint receipt,
 Serve before/after snapshots, deployment log/exit, test log/exit and iOS build
