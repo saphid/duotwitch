@@ -31,6 +31,23 @@ chain. Its private receipt is `build/discord-delivery-receipt.json`.
 Beeper message identifiers are not native Discord identifiers; native message
 ID and Discord-side placement were not independently read back.
 
+## DuoCrew and renewed Alex invitation
+
+On 5 November 2026, Alex requested a new **DuoCrew** group containing Andy
+Neggles. The external group was created and its complete member readback
+confirmed exactly Andy at the supplied address. The address is retained only
+in ignored private receipts. His state is **NOT_INVITED**: no external build
+is assigned. Build `202611050949` is `INTERNAL_ONLY`; making it available to
+external testers requires a separate upload and Apple Beta App Review.
+
+A fresh invitation for account holder Alexander Southwell was explicitly
+submitted to Apple. `POST /v1/betaTesterInvitations`, with this app and his
+verified tester identity, returned **HTTP 201** and a new invitation record.
+Readback still shows **INVITED**, with existing internal build access. The
+recipient address was privately matched to the account-holder record; inbox
+delivery and acceptance are not claimed. Private evidence:
+`build/testflight/duocrew-alex-invitation-receipt.json` and matching API receipts.
+
 ## Identity and signed artifact
 
 - Product/display name: **DuoTwitch**.
