@@ -1,0 +1,76 @@
+name: DuoTwitch
+options:
+  bundleIdPrefix: com.saphid
+  deploymentTarget:
+    iOS: "27.1"
+  createIntermediateGroups: true
+settings:
+  base:
+    DEVELOPMENT_TEAM: NJZUMEA4BN
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  DuoTwitch:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Player
+      - Platform
+      - Auth
+      - Twitch
+      - Chat
+    preBuildScripts:
+      - name: Validate Release Twitch Configuration
+        script: /bin/sh "$SRCROOT/scripts/validate-release-config.sh"
+        inputFiles:
+          - $(SRCROOT)/scripts/validate-release-config.sh
+        basedOnDependencyAnalysis: false
+    configFiles:
+      Debug: Config/App.xcconfig
+      Release: Config/App.xcconfig
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: DuoTwitch
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIBackgroundModes: [audio]
+        UIApplicationSupportsMultipleScenes: false
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        TwitchClientID: $(TWITCH_CLIENT_ID)
+        TwitchPlayerHost: $(TWITCH_PLAYER_HOST)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.saphid.duotwitch
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+  DuoTwitchTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: DuoTwitch
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  DuoTwitch:
+    build:
+      targets:
+        DuoTwitch: all
+    test:
+      targets: [DuoTwitchTests]
+    run:
+      config: Debug
+    archive:
+      config: Release

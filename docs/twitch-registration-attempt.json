@@ -1,0 +1,25 @@
+{
+  "observed_at_utc": "2026-11-05T01:09:43.788370+00:00",
+  "status": "blocked_secure_clipboard_paste_unavailable",
+  "requested_url": "https://dev.twitch.tv/console/apps",
+  "verified_login_origin": "https://www.twitch.tv",
+  "account": "saphid",
+  "verification": {
+    "clipboard_test_value": "nonsecret username saphid",
+    "clipboard_stage_exit_code": 0,
+    "preview_meta_v_paste_succeeded": false,
+    "preview_control_v_paste_succeeded": false,
+    "focused_field": "Enter your username",
+    "field_empty_after_paste": true
+  },
+  "secrets_retrieved": false,
+  "login_submitted": false,
+  "human_challenge_encountered": false,
+  "registered_apps_inspected": false,
+  "public_client_id": null,
+  "registration_properties": null,
+  "source_edits": false,
+  "registration_changes": false,
+  "cleanup": "Closed the sole owned preview tab.",
+  "required_next_step": "Provide a working protected clipboard-to-focused-field paste route before retrieving credentials."
+}

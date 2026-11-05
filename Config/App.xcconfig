@@ -1,0 +1,6 @@
+// Public Twitch application ID and owned HTTPS embed page. Never add a secret.
+// URLs must escape the double slash: https:/$()/player.example.com/index.html
+// Release archives fail if either value is missing or invalid.
+TWITCH_CLIENT_ID =
+TWITCH_PLAYER_HOST =
+#include? "Local.xcconfig"

@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig, then supply the public client ID and YOUR deployed host.
+TWITCH_CLIENT_ID =
+// The empty expansion prevents xcconfig from reading // as a comment.
+TWITCH_PLAYER_HOST = https:/$()/YOUR_OWNED_HOST/index.html

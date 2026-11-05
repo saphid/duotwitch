@@ -1,0 +1,36 @@
+{
+  "observed_at_utc": "2026-11-05T00:27:57.196976+00:00",
+  "owning_issue": "https://github.com/saphid/personal-ops/issues/208",
+  "provider": "Codex",
+  "model": "gpt-6-astra",
+  "reasoning": "high",
+  "requested_url": "https://dev.twitch.tv/console/apps",
+  "console_redirect": "https://dev.twitch.tv/login",
+  "login_origin": "https://www.twitch.tv/login",
+  "observed_login": "Empty Username and Password fields; Log In disabled; Continue with Google, Amazon, Apple offered.",
+  "registration_inventory": "Not accessible: preview signed out. Existence and ownership of a dedicated DuoTwitch public client remain unverified.",
+  "public_client_id": null,
+  "missing_action": "Complete Twitch sign-in as saphid in the authorized preview, including any security challenge actually presented, then revisit Developer Console Applications. No credentials entered and no challenge or OAuth consent reached.",
+  "documented_registration_prerequisites": [
+    "Verified Twitch email",
+    "Enabled account 2FA",
+    "Authenticated developer console",
+    "Unique application name",
+    "OAuth Redirect URL added",
+    "Application category",
+    "I am not a robot check",
+    "Create then Manage to retrieve dedicated public Client ID"
+  ],
+  "duotwitch_required_configuration": {
+    "name": "DuoTwitch, subject to global name availability",
+    "client_type": "Public",
+    "category_plan": "Application Integration; exact live form not accessible",
+    "redirect_url": "Must be chosen for the app and confirmed in live form; no owned callback established by this preflight"
+  },
+  "public_client_documentation": "Public clients use device authorization grant only; no client secret required for authorization or refresh.",
+  "sources": [
+    "https://dev.twitch.tv/docs/authentication/register-app/",
+    "https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/"
+  ],
+  "cleanup": "Closed the sole preview tab opened for this preflight; no source edits, registrations, grants, deployment, builds, simulators, messages or invitations."
+}
