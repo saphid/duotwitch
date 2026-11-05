@@ -28,6 +28,18 @@ Twitch remains blocked by its live “Error encountered when sending SMS. Please
 
 Sanitized receipts: `build/asc-app-record-prerequisite.json` and `build/mac-auth-recovery-20261105.json` (ignored). Prior attempts remain in the prerequisite receipt's history. This recovery ran personally as OpenAI `gpt-6-astra`, high reasoning, through Codex/T3 Code with no delegation. The owned System Settings window was closed and its absence verified. Existing ASC and Twitch tabs and unrelated windows/profiles were preserved, original selected tabs restored, and the owned secret clipboard cleared conditionally and verified. Only this delivery note and sanitized receipts were edited. No app source, builds, Simulator, uploads, invitations, publication, or other app changes occurred. The app still needs its Twitch public client and native auth/chat/live playback/PiP/parity evidence before TestFlight delivery.
 
+After Alex confirmed the Air was unlocked, fresh session metadata showed an
+active console login without a locked flag. Scoped CUA checks still found no
+usable Air driver. The existing Screen Sharing service responded, but required
+the Air's macOS login password; scoped 1Password metadata checks found no
+matching credential. Astra cancelled the owned connection and verified zero
+remaining Screen Sharing windows. No browser session, credentials or SMS were
+accessed in this attempt. Receipt:
+`build/mac-air-twitch-recovery-20261105.json`. A subsequent parent-issued
+private Mac login password card timed out without a value or secret file.
+No further credential card is queued. The current Air blocker is Screen
+Sharing authentication, superseding its earlier locked-screen boundary.
+
 Narrow 1Password title scans found the existing `saphid` Twitch account in the Games vault; they did not identify an existing developer registration in Common Web, Domains and Cloud stuff, Apps or Games. This is not an exhaustive claim of absence. `pa-memory` returned unrelated/older account integration references; that is incomplete evidence.
 
 Planned Twitch developer registration if none exists: DuoTwitch, public client, application integration, the existing `saphid` account. Use the supported public-client OAuth flow; never embed a client secret or reuse another application's client ID. Twitch describes Client IDs as public configuration: [Register an app](https://dev.twitch.tv/docs/authentication/register-app/). This record is a concrete plan, not a claim that registration has happened.
