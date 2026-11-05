@@ -31,22 +31,36 @@ chain. Its private receipt is `build/discord-delivery-receipt.json`.
 Beeper message identifiers are not native Discord identifiers; native message
 ID and Discord-side placement were not independently read back.
 
-## DuoCrew and renewed Alex invitation
+## Internal DuoCrew on both apps
 
-On 5 November 2026, Alex requested a new **DuoCrew** group containing Andy
-Neggles. The external group was created and its complete member readback
-confirmed exactly Andy at the supplied address. The address is retained only
-in ignored private receipts. His state is **NOT_INVITED**: no external build
-is assigned. Build `202611050949` is `INTERNAL_ONLY`; making it available to
-external testers requires a separate upload and Apple Beta App Review.
+Following Alex's explicit request, **DuoCrew is internal on DuoTwitch and
+Duocord**. Direct group readbacks confirm `isInternalGroup=true` on both.
+The assigned existing builds are DuoTwitch `202611050949` and Duocord
+`202611050134`; both are `VALID`. No new upload or external review is needed
+for these internal groups.
 
-A fresh invitation for account holder Alexander Southwell was explicitly
-submitted to Apple. `POST /v1/betaTesterInvitations`, with this app and his
-verified tester identity, returned **HTTP 201** and a new invitation record.
-Readback still shows **INVITED**, with existing internal build access. The
-recipient address was privately matched to the account-holder record; inbox
-delivery and acceptance are not claimed. Private evidence:
-`build/testflight/duocrew-alex-invitation-receipt.json` and matching API receipts.
+Apple does not allow changing `isInternalGroup` after group creation. The
+unused external DuoTwitch group was therefore preserved as **DuoCrew External
+(unused)**, and a new internal DuoCrew was created. Its external Andy tester
+record remains intact and has no build assigned.
+
+Andy Neggles was sent an **App Store Connect user invitation**, accepted by
+Apple with HTTP 201, for the limited `MARKETING` role. Readback verifies exactly
+DuoTwitch and Duocord in the invitation's visible-app relationship. His supplied
+email was matched privately and is not published here. Acceptance is pending.
+Both internal groups currently have zero members: Apple returned HTTP 409
+“Tester(s) cannot be assigned” when adding Andy's existing tester identity
+while that user invitation is pending. After he accepts, his internal tester
+membership still needs to be added and verified on both apps. A user invitation
+is not yet a TestFlight invitation or proof of inbox delivery.
+
+A fresh DuoTwitch **TestFlight invitation for Alexander Southwell** was also
+explicitly submitted earlier. The app-and-tester invitation POST returned
+HTTP 201 and a new invitation record. Readback shows **INVITED**, with his
+existing internal build access; inbox delivery and acceptance are unverified.
+
+Private evidence: `build/testflight/duocrew-internal-both-receipt.json`,
+`build/testflight/duocrew-alex-invitation-receipt.json`, and matching API receipts.
 
 ## Identity and signed artifact
 
