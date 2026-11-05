@@ -92,13 +92,13 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
     func testProjectionRetainsOnlyPublicMetadataEnumsNumbersFlagsAndEphemeralUUIDs() throws {
         let safe = try XCTUnwrap(PlaybackDiagnosticUploadProjection.record(record(event: "audio.notification", values: [
             "version": .text("0.1.0"), "build": .text("202611052215"), "os": .text("27.1"),
-            "source": .text("systemIdle"), "phase": .text("background"), "cause": .text("audioInterruption"),
+            "audioOwner": .text("webKit"), "source": .text("systemIdle"), "phase": .text("background"), "cause": .text("audioInterruption"),
             "category": .text("AVAudioSessionCategoryPlayback"), "mode": .text("AVAudioSessionModeMoviePlayback"),
             "notification": .text("AVAudioSessionInterruptionNotification"), "outputPorts": .text("BuiltInSpeaker,AirPlay"),
             "command": .text(UUID().uuidString), "appearance": .text(UUID().uuidString),
             "errorDomain": .text("NSOSStatusErrorDomain"), "errorCode": .number(-50), "systemSource": .flag(true)
         ])))
-        XCTAssertEqual(safe.values.count, 15)
+        XCTAssertEqual(safe.values.count, 16)
     }
 
     func testBoundedBatchOffMainAndOnlyLoki204Acknowledges() async throws {

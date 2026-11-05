@@ -111,7 +111,7 @@ struct WatchVideoPanel: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(playbackHeadline)
                         .font(.subheadline.weight(.semibold)).lineLimit(1)
-                    Text(!playerFits ? "Focus on video for more space." : session.audioWarning ?? session.status).font(.caption).foregroundStyle(.secondary)
+                    Text(!playerFits ? "Focus on video for more space." : session.status).font(.caption).foregroundStyle(.secondary)
                         .lineLimit(1).accessibilityIdentifier("playbackStatus")
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 if session.failure != nil && playerFits {
@@ -159,7 +159,7 @@ struct WatchVideoPanel: View {
                     } label: {
                         Label("Playback diagnostics", systemImage: "waveform.path.ecg")
                     }.frame(minHeight: 44)
-                    Label(session.audioWarning ?? session.status, systemImage: "play.rectangle")
+                    Label(session.status, systemImage: "play.rectangle")
                         .foregroundStyle(.secondary)
                     if !channel.title.isEmpty { Text(channel.title).font(.title3) }
                     if !channel.category.isEmpty { Label(channel.category, systemImage: "square.grid.2x2").foregroundStyle(.secondary) }

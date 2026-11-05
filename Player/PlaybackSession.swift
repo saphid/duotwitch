@@ -20,15 +20,12 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     private(set) var pipSupported = false
     private(set) var isPlaying = false
     private(set) var isRequestingPlay = false
-    private(set) var audioWarning: String?
     private(set) var failure: String?
     private(set) var needsLoad = true
     var hasCurrentPage: Bool { !needsLoad && !channel.isEmpty }
     @ObservationIgnored private let configuration: PlayerConfiguration
     @ObservationIgnored private var bridgeSession = UUID().uuidString
     @ObservationIgnored private let loadRequest: @MainActor (WKWebView, URLRequest) -> Void
-    @ObservationIgnored private let activateAudio: @MainActor () async throws -> Void
-    @ObservationIgnored private let deactivateAudio: @MainActor () async throws -> Void
     @ObservationIgnored private let pauseMedia: @MainActor (WKWebView) async -> Void
     @ObservationIgnored private let requestPlay: @MainActor (WKWebView, String) async throws -> Bool
     @ObservationIgnored private let pauseTimeout: Duration
@@ -45,16 +42,12 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     @ObservationIgnored private var pauseTransaction = UUID()
     @ObservationIgnored private var pauseTimedOut = false
     @ObservationIgnored private var interruptionTask: Task<Void, Never>?
-    @ObservationIgnored private var audioTask: Task<Void, Never>?
-    @ObservationIgnored private var audioReady = false
     @ObservationIgnored private var diagnosticTasks: [Task<Void, Never>] = []
     @ObservationIgnored private(set) var webView: WKWebView!
     var isConfigured: Bool { configuration.hostURL != nil || configuration.probeEnabled }
 
     init(configuration: PlayerConfiguration = .current,
          loadRequest: (@MainActor (WKWebView, URLRequest) -> Void)? = nil,
-         activateAudio: (@MainActor () async throws -> Void)? = nil,
-         deactivateAudio: (@MainActor () async throws -> Void)? = nil,
          inactivityEvents: AsyncStream<AudioDeactivation>? = nil,
          pauseMedia: (@MainActor (WKWebView) async -> Void)? = nil,
          pauseTimeout: Duration = .seconds(2),
@@ -63,8 +56,6 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         self.diagnostics = diagnostics ?? .shared
         self.configuration = configuration
         self.loadRequest = loadRequest ?? { view, request in view.load(request) }
-        self.activateAudio = activateAudio ?? { try await AudioPlaybackSession.activate() }
-        self.deactivateAudio = deactivateAudio ?? { try await AudioPlaybackSession.deactivate() }
         self.pauseMedia = pauseMedia ?? { view in await view.pauseAllMediaPlayback() }
         self.pauseTimeout = pauseTimeout
         self.requestPlay = requestPlay ?? { view, session in
@@ -107,12 +98,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
                 guard let self else { return }
                 Self.log.info("Audio event: \(String(describing: source), privacy: .public); playing=\(self.isPlaying)")
                 self.recordDiagnostic("audio.deactivation", values: ["source": .text(String(describing: source))])
-                if source == .systemIdle {
-                    self.audioReady = false
-                    continue
-                }
+                if source == .systemIdle { continue }
                 guard source == .system, self.isPlaying, self.failure == nil else { continue }
-                self.audioReady = false // The system already deactivated it.
                 await self.pause(reason: "Audio interrupted. Tap Play to continue.")
             }
         }
@@ -127,7 +114,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
         recordDiagnostic("channel.open", values: ["forceReload": .flag(forceReload), "sameChannel": .flag(channel == login)])
         guard forceReload || channel != login || needsLoad else { return }
-        let mustPausePrevious = isPlaying || audioReady || loadTask != nil
+        let mustPausePrevious = isPlaying || loadTask != nil
         loadTask?.cancel()
         loadTask = nil
         channel = login
@@ -182,28 +169,9 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
 
     private func setPlaying(_ playing: Bool) {
         recordDiagnostic("playback.state", values: ["requestedPlaying": .flag(playing)])
+        // The WKWebView media process owns audio. Activating or deactivating a
+        // second AVAudioSession here can interrupt a video that just started.
         isPlaying = playing
-        guard audioTask == nil else { return }
-        audioTask = Task { [weak self] in
-            guard let self else { return }
-            // Serialize transitions, including a Pause arriving during activation.
-            while self.audioReady != self.isPlaying {
-                let activating = self.isPlaying
-                do {
-                    self.recordDiagnostic("audio.transition.begin", values: ["activating": .flag(activating)])
-                    if activating { try await self.activateAudio() }
-                    else { try await self.deactivateAudio() }
-                    self.audioReady = activating
-                    self.audioWarning = nil
-                    self.recordDiagnostic("audio.transition.complete", values: ["activating": .flag(activating)])
-                } catch {
-                    self.recordDiagnosticError("audio.transition.failed", error: error)
-                    self.audioWarning = "Audio could not be updated. Try the player again."
-                    break
-                }
-            }
-            self.audioTask = nil
-        }
     }
 
     private func fail(_ message: String) {
@@ -225,7 +193,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     }
 
     /// Requests playback through Twitch's public embed API. Only PLAYING
-    /// confirms success and activates audio; a JavaScript return value does not.
+    /// confirms success; WebKit owns audio, not a second native session.
     func play() async {
         let command = UUID().uuidString
         recordDiagnostic("native.play.requested", values: ["command": .text(command), "allowed": .flag(canPlay)])
@@ -522,7 +490,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     func recordDiagnostic(_ event: String, values: [String: PlaybackDiagnosticValue] = [:]) {
         var state: [String: PlaybackDiagnosticValue] = [
             "playerSession": .text(bridgeSession), "playing": .flag(isPlaying),
-            "requestingPlay": .flag(isRequestingPlay), "audioReady": .flag(audioReady),
+            "requestingPlay": .flag(isRequestingPlay), "audioOwner": .text("webKit"),
             "fits": .flag(videoFits), "hostReady": .flag(playerReady), "needsLoad": .flag(needsLoad),
             "pendingPauses": .number(Double(pendingPauses)), "loadCount": .number(Double(loadCount)),
             "failed": .flag(failure != nil), "appState": .number(Double(UIApplication.shared.applicationState.rawValue))
@@ -623,7 +591,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
 }
 
 /// A WebKit callback may arrive after the deadline. Resolve exactly once.
-/// Command dispatch never confirms playback or releases audio on a timeout.
+/// Command dispatch never confirms that media has stopped on a timeout.
 @MainActor
 private final class MediaCommandResult {
     private var continuation: CheckedContinuation<Bool, Never>?

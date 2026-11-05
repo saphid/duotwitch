@@ -66,6 +66,7 @@ enum PlaybackDiagnosticUploadProjection {
     ]
     private static let textEnums: [String: Set<String>] = [
         "source": ["app", "system", "systemIdle"],
+        "audioOwner": ["webKit"],
         "phase": ["active", "inactive", "background"],
         "cause": ["user", "insufficientSpace", "watchHidden", "audioInterruption", "other"],
         "event": ["READY", "PLAYING", "PAUSE", "ONLINE", "OFFLINE", "PLAYBACK_BLOCKED", "ENDED"],
@@ -82,7 +83,7 @@ enum PlaybackDiagnosticUploadProjection {
                  "AVAudioSessionModeGameChat", "AVAudioSessionModeVideoRecording", "AVAudioSessionModeVoicePrompt"]
     ]
     private static let ports: Set<String> = [
-        "AirPlay", "BluetoothA2DPOutput", "BluetoothHFP", "BluetoothLE", "BuiltInReceiver", "BuiltInSpeaker",
+        "Speaker", "Receiver", "MicrophoneBuiltIn", "AirPlay", "BluetoothA2DPOutput", "BluetoothHFP", "BluetoothLE", "BuiltInReceiver", "BuiltInSpeaker",
         "BuiltInMic", "CarAudio", "DisplayPort", "HDMIOutput", "Headphones", "HeadsetMic", "LineIn", "LineOut",
         "USBAudio", "Virtual", "AVB", "PCI", "FireWire", "Thunderbolt", "ContinuityCaptureMicrophone"
     ]

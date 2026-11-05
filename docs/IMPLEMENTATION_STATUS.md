@@ -1,3 +1,31 @@
+# WebKit audio ownership and automatic diagnostics candidate — 6 November 2026
+
+The physical export from TestFlight 202611052215 shows two stops after native
+AVAudioSession activation begins, with no preceding native Pause, geometry change,
+media error or system interruption. The candidate removes those competing native
+audio writes and leaves audio ownership with WebKit. This is the strongest
+trace-supported hypothesis; physical causation and recovery remain unconfirmed.
+
+The candidate also enables automatic allowlisted, bounded diagnostic uploads to
+Alex’s existing private Loki receiver over Tailscale, retaining local export.
+Receiver repair and phone reachability remain separate operational gates.
+The delivered build below remains local/export-only until a new build is verified.
+
+All **98 signed Simulator tests pass**, zero failed/skipped, exit 0; the real
+xcresult has empty runtimeWarnings. The isolated uploader suite separately passed
+15 tests; those are included in the 98 distinct tests. Strict signature verification
+exits 0. A fresh Codex / GPT-6.1 Sol high independent-session review found no
+actionable P0–P3 findings in the frozen combined candidate; no model diversity is
+claimed. The existing AccountView compiler deprecation remains. See
+[audio checkpoint](council/webkit-audio-ownership-checkpoint.md) and
+[review](council/webkit-audio-upload-review-sol.md).
+
+No physical playback, resumed live media, phone auto-upload or interruption-delivery
+claim follows from these synthetic tests. Earlier runtime evidence below remains
+attributed to its original binary.
+
+## Previous delivered diagnostics checkpoint
+
 # Playback diagnostics update — 6 November 2026
 
 Alex confirms TestFlight 0.1.0 (202611051233) still stops video before one second

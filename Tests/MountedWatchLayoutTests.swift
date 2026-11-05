@@ -16,7 +16,7 @@ final class MountedWatchLayoutTests: XCTestCase {
                 var pauses = 0
                 let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
                     loadRequest: { _, request in nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value },
-                    activateAudio: {}, deactivateAudio: {}, pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
+                    pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
                 let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel, toggleFullVideo: {}).ignoresSafeArea())
                 let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
                 let window = UIWindow(windowScene: scene)

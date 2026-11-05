@@ -117,8 +117,7 @@ final class PlaybackDiagnosticsTests: XCTestCase {
         var completion: CheckedContinuation<Void, Never>?
         var returned = false
         let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
-            loadRequest: { _, _ in }, activateAudio: {}, deactivateAudio: {},
-            inactivityEvents: AsyncStream { $0.finish() }, pauseMedia: { _ in
+            loadRequest: { _, _ in }, inactivityEvents: AsyncStream { $0.finish() }, pauseMedia: { _ in
                 await withCheckedContinuation { completion = $0 }
                 returned = true
             }, pauseTimeout: .milliseconds(30), diagnostics: recorder)
@@ -189,8 +188,7 @@ final class PlaybackDiagnosticsTests: XCTestCase {
     private func makeSession(_ recorder: PlaybackDiagnostics) -> (PlaybackSession, String) {
         var url: URL?
         let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
-            loadRequest: { _, request in url = request.url }, activateAudio: {}, deactivateAudio: {},
-            inactivityEvents: AsyncStream { $0.finish() }, pauseMedia: { _ in }, requestPlay: { _, _ in true }, diagnostics: recorder)
+            loadRequest: { _, request in url = request.url }, inactivityEvents: AsyncStream { $0.finish() }, pauseMedia: { _ in }, requestPlay: { _, _ in true }, diagnostics: recorder)
         session.open(channel: "example")
         let nonce = URLComponents(url: url!, resolvingAgainstBaseURL: false)!.queryItems!.first { $0.name == "session" }!.value!
         return (session, nonce)

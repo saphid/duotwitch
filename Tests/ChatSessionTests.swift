@@ -183,7 +183,7 @@ final class ChatSessionTests: XCTestCase {
     }
 
     func testAppModelReconcilesConfirmedSendsAndDropsWithSavedChannelDrafts() {
-        let player = PlaybackSession(loadRequest: { _, _ in }, activateAudio: {}, deactivateAudio: {}, pauseMedia: { _ in })
+        let player = PlaybackSession(loadRequest: { _, _ in }, pauseMedia: { _ in })
         let app = AppModel(player: player)
         let a = WatchedChannel(channel: TwitchChannel(id: "a", broadcasterLogin: "a", displayName: "A", gameName: "", title: "", thumbnailUrl: "", isLive: true))
         let b = WatchedChannel(channel: TwitchChannel(id: "b", broadcasterLogin: "b", displayName: "B", gameName: "", title: "", thumbnailUrl: "", isLive: true))
