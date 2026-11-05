@@ -6,13 +6,14 @@ import json
 import os
 from pathlib import Path
 import socket
+import stat
 import subprocess
 
 NAME = 'duotwitch-diagnostics.service'
 
 
 def run(*args):
-    subprocess.run(args, check=True)
+    subprocess.run(args, check=True, timeout=30)
 
 
 def write(path, content, mode):
@@ -29,17 +30,91 @@ def fail(message):
     raise ValueError(message)
 
 
+def systemd_unit_paths():
+    result = subprocess.run(('systemd-analyze', '--user', 'unit-paths'),
+                            check=True, capture_output=True, text=True, timeout=10)
+    paths = [Path(line) for line in result.stdout.splitlines() if line]
+    if not paths or any(not path.is_absolute() for path in paths):
+        fail('invalid systemd search path response')
+    return paths
+
+
+def systemd_snapshot():
+    keys = ('LoadState', 'ActiveState', 'FragmentPath', 'DropInPaths', 'SourcePath')
+    result = subprocess.run(('systemctl', '--user', 'show', NAME, '--no-pager',
+                             *('--property=' + key for key in keys)),
+                            check=True, capture_output=True, text=True, timeout=10)
+    values = {}
+    for line in result.stdout.splitlines():
+        key, separator, value = line.partition('=')
+        if not separator or key not in keys or key in values:
+            fail('invalid systemd unit response')
+        values[key] = value
+    if set(values) != set(keys):
+        fail('incomplete systemd unit response')
+    return values
+
+
+def check_paths(home, directories, files):
+    if not home.is_absolute() or home.resolve() != home:
+        fail('home must be an absolute path without symlink ancestors')
+    for directory in directories:
+        relative = directory.relative_to(home)
+        current = home
+        for part in (None, *relative.parts):
+            if part is not None:
+                current = current / part
+            if current.is_symlink():
+                fail('symlink directory ancestor; refusing mutation')
+            if current.exists():
+                info = current.stat()
+                if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+                    fail('directory ownership or type changed; refusing mutation')
+                if info.st_mode & 0o022:
+                    fail('writable directory ancestor; refusing mutation')
+    for path in files:
+        if path.is_symlink():
+            fail('symlink at owned file; refusing mutation')
+        if path.exists():
+            info = path.stat()
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+                fail('owned file ownership or type changed; refusing mutation')
+
+
+def check_systemd(unit, owned):
+    # Search-path collisions include lower-priority units and type/prefix drop-ins.
+    for directory in systemd_unit_paths():
+        candidate = directory / NAME
+        if candidate.exists() or candidate.is_symlink():
+            if candidate != unit or not owned:
+                fail('unowned unit in systemd search path')
+        for dropin in (NAME + '.d', 'duotwitch-.service.d', 'service.d'):
+            path = directory / dropin
+            if path.is_symlink() or (path.exists() and (
+                    not path.is_dir() or any(path.glob('*.conf')))):
+                fail('applicable systemd drop-in; refusing mutation')
+    state = systemd_snapshot()
+    if state['DropInPaths'] or state['SourcePath']:
+        fail('effective systemd overrides or generated source; refusing mutation')
+    if owned:
+        if state['LoadState'] != 'loaded' or state['FragmentPath'] != str(unit):
+            fail('effective systemd unit is not the owned fragment')
+    elif (state['LoadState'] != 'not-found' or state['FragmentPath'] or
+          state['ActiveState'] != 'inactive'):
+        fail('pre-existing effective systemd unit; refusing mutation')
+
+
 def manage(action, home, source):
     os.umask(0o077)
     root = home / 'services/duotwitch-diagnostics'
     data = home / 'pa-agent-data/duotwitch-diagnostics'
     unit = home / '.config/systemd/user' / NAME
     manifest = root / 'install-manifest.json'
-    if root.is_symlink() or data.is_symlink() or manifest.is_symlink():
-        fail('symlink at an owned path; refusing mutation')
+    check_paths(home, (root, data, unit.parent), (manifest, root / 'receiver.py', unit))
     desired = {root / 'receiver.py': (source / 'receiver.py').read_bytes(),
                unit: (source / NAME).read_bytes()}
     hashes = {str(p): hashlib.sha256(b).hexdigest() for p, b in desired.items()}
+    check_systemd(unit, manifest.exists())
     if action == 'install':
         if manifest.exists():
             if json.loads(manifest.read_text()) != hashes:
@@ -60,6 +135,8 @@ def manage(action, home, source):
                 write(path, body, 0o600)
             write(manifest, (json.dumps(hashes, sort_keys=True) + '\n').encode(), 0o600)
         run('systemctl', '--user', 'daemon-reload')
+        check_paths(home, (root, data, unit.parent), (manifest, root / 'receiver.py', unit))
+        check_systemd(unit, True)
         run('systemctl', '--user', 'enable', '--now', NAME)
         run('systemctl', '--user', 'is-active', '--quiet', NAME)
     else:
@@ -73,6 +150,8 @@ def manage(action, home, source):
         for path in desired:
             if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != installed[str(path)]:
                 fail('installed source drift; refusing rollback')
+        check_paths(home, (root, data, unit.parent), (manifest, root / 'receiver.py', unit))
+        check_systemd(unit, True)
         run('systemctl', '--user', 'disable', '--now', NAME)
         unit.unlink()
         (root / 'receiver.py').unlink()

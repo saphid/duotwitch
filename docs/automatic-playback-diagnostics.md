@@ -156,7 +156,11 @@ systemctl --user is-active duotwitch-diagnostics.service
 ```
 
 The installer refuses existing unowned service/data paths, an occupied port,
-source drift or a different installed release. Repeating the same installation
+source drift or a different installed release. It checks the effective systemd
+fragment and all unit search paths, including exact, prefix and type-wide
+drop-ins. Ancestor directories must remain real, owned directories without
+group/world write access. These checks repeat before enable/disable, so rollback
+refuses externally changed service behavior. Repeating the same installation
 is safe. Partial installs fail closed and need ownership inspection; do not
 remove unknown paths to retry. It installs/enables only this user unit; lingering
 is already enabled. The source, ownership manifest and data are protected. It

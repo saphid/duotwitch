@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """DuoTwitch-only validated JSON records in bounded SQLite. No HTTP read API."""
 import argparse
+from contextlib import contextmanager
 import http.client
 import http.server
 import json
@@ -178,16 +179,27 @@ class Store:
         now = self.clock()
         self.db.execute('DELETE FROM records WHERE received <= ? OR received > ?', (now - TTL, now + 3600))
 
+    @contextmanager
+    def transaction(self):
+        # Explicit cleanup also covers Python versions whose connection context
+        # manager leaves a transaction open when COMMIT itself is rejected.
+        try:
+            yield
+            self.db.commit()
+        except BaseException:
+            self.db.rollback()
+            raise
+
     def prune(self):
         with self.lock:
             self.available()
-            with self.db:
+            with self.transaction():
                 self.expire()
 
     def append(self, records):
         with self.lock:
             self.available()
-            with self.db:
+            with self.transaction():
                 self.expire()
                 for run, sequence, stamp, line in records:
                     old = self.db.execute('SELECT timestamp,line FROM records WHERE run=? AND sequence=?',

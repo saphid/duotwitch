@@ -1,5 +1,5 @@
 """Synthetic-only real HTTP, storage, rejection and crash/restart checks."""
-from contextlib import closing
+from contextlib import closing, contextmanager
 import http.client
 import json
 import os
@@ -167,7 +167,9 @@ class HTTPTests(unittest.TestCase):
         try:
             self.assertEqual(self.post(body(record(2)))[0], 503)
         finally:
-            self.store.db.set_authorizer(None)
+            # Python 3.9 does not support clearing this callback with None.
+            self.store.db.set_authorizer(lambda *arguments: sqlite3.SQLITE_OK)
+        self.assertFalse(self.store.db.in_transaction, 'failed commit must close its transaction')
         self.assertEqual(len(rows(self.store.path)), 1)
         self.store.db.execute("CREATE TRIGGER refuse_delete BEFORE DELETE ON records BEGIN SELECT RAISE(ABORT,'failure'); END")
         with patch.object(self.store, 'clock', return_value=time.time() + r.TTL + 1):
@@ -237,7 +239,10 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(r.FLAGS, literals('let flags:', 'private static let numbers:'))
         self.assertEqual(r.NUMBERS, literals('let numbers:', 'private static let textEnums:'))
         self.assertEqual(r.PORTS, literals('let ports:', 'static func record'))
-        self.assertEqual(set(r.ENUMS) | set().union(*r.ENUMS.values()), literals('let textEnums:', 'private static let ports:'))
+        enum_source = source.split('let textEnums:', 1)[1].split('private static let ports:', 1)[0]
+        swift_enums = {key: set(re.findall(r'"([^"\n]+)"', values))
+                       for key, values in re.findall(r'"([^"\n]+)"\s*:\s*\[([^]]*)\]', enum_source)}
+        self.assertEqual(r.ENUMS, swift_enums)
 
 
 class StorageTests(unittest.TestCase):
@@ -366,17 +371,119 @@ class ServeGuardTests(unittest.TestCase):
 
 
 class InstallerTests(unittest.TestCase):
+    @contextmanager
+    def manager(self, home):
+        import install
+        unit = home / '.config/systemd/user' / install.NAME
+        def state():
+            return {'LoadState': 'loaded' if unit.exists() else 'not-found',
+                    'ActiveState': 'inactive', 'FragmentPath': str(unit) if unit.exists() else '',
+                    'DropInPaths': '', 'SourcePath': ''}
+        with patch.object(install, 'systemd_unit_paths', return_value=[unit.parent], create=True), \
+             patch.object(install, 'systemd_snapshot', side_effect=state, create=True), \
+             patch.object(install, 'run') as command, patch.object(install.socket, 'socket'):
+            yield command
+
+    def prepare(self, home):
+        (home / 'services').mkdir()
+        (home / 'pa-agent-data').mkdir()
+        (home / '.config/systemd/user').mkdir(parents=True)
+
+    def test_systemd_cli_parsers_use_bounded_commands_and_reject_bad_output(self):
+        import install
+        with tempfile.TemporaryDirectory() as temp:
+            executable = Path(temp) / 'systemctl'
+            executable.write_text('#!' + sys.executable + '\nprint("LoadState=not-found\\nActiveState=inactive\\nFragmentPath=\\nDropInPaths=\\nSourcePath=")\n')
+            executable.chmod(0o700)
+            paths = Path(temp) / 'systemd-analyze'
+            paths.write_text('#!' + sys.executable + '\nprint("/tmp/units\\n/etc/systemd/user")\n')
+            paths.chmod(0o700)
+            with patch.dict(os.environ, {'PATH': temp}):
+                self.assertEqual(install.systemd_snapshot()['LoadState'], 'not-found')
+                self.assertEqual(install.systemd_unit_paths(), [Path('/tmp/units'), Path('/etc/systemd/user')])
+                executable.write_text('#!' + sys.executable + '\nprint("LoadState=loaded\\nLoadState=not-found")\n')
+                with self.assertRaises(ValueError): install.systemd_snapshot()
+                paths.write_text('#!' + sys.executable + '\nprint("relative/path")\n')
+                with self.assertRaises(ValueError): install.systemd_unit_paths()
+                executable.write_text('#!' + sys.executable + '\nraise SystemExit(1)\n')
+                with self.assertRaises(subprocess.CalledProcessError): install.systemd_snapshot()
+
+    def test_effective_foreign_unit_is_refused_before_install(self):
+        import install
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp).resolve(); self.prepare(home)
+            with self.manager(home) as command, patch.object(install, 'systemd_snapshot', return_value={
+                    'LoadState': 'loaded', 'ActiveState': 'active', 'FragmentPath': '/etc/systemd/user/foreign.service',
+                    'DropInPaths': '', 'SourcePath': ''}, create=True):
+                with self.assertRaises(ValueError): install.manage('install', home, Path(r.__file__).parent)
+                command.assert_not_called()
+                self.assertFalse((home / 'services/duotwitch-diagnostics').exists())
+
+    def test_dropin_and_lower_priority_unit_are_refused(self):
+        import install
+        for collision in ['exact-dropin', 'prefix-dropin', 'type-dropin', 'other-unit']:
+            with self.subTest(collision=collision), tempfile.TemporaryDirectory() as temp:
+                home = Path(temp).resolve(); self.prepare(home)
+                units = home / '.config/systemd/user'; extra = home / 'extra-units'; extra.mkdir()
+                if collision == 'other-unit': (extra / install.NAME).write_text('foreign')
+                else:
+                    directory = units / {'exact-dropin': install.NAME + '.d', 'prefix-dropin': 'duotwitch-.service.d', 'type-dropin': 'service.d'}[collision]
+                    directory.mkdir(); (directory / 'override.conf').write_text('[Service]\nExecStart=/bin/false')
+                with self.manager(home) as command, patch.object(install, 'systemd_unit_paths', return_value=[units, extra], create=True):
+                    with self.assertRaises(ValueError): install.manage('install', home, Path(r.__file__).parent)
+                    command.assert_not_called()
+
+    def test_new_effective_override_blocks_rollback(self):
+        import install
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp).resolve(); self.prepare(home)
+            with self.manager(home) as command:
+                install.manage('install', home, Path(r.__file__).parent)
+                command.reset_mock()
+                with patch.object(install, 'systemd_snapshot', return_value={
+                        'LoadState': 'loaded', 'ActiveState': 'active',
+                        'FragmentPath': str(home / '.config/systemd/user' / install.NAME),
+                        'DropInPaths': '/run/user/1000/systemd/user/override.conf', 'SourcePath': ''}, create=True):
+                    with self.assertRaises(ValueError): install.manage('rollback', home, Path(r.__file__).parent)
+                command.assert_not_called()
+                self.assertTrue((home / '.config/systemd/user' / install.NAME).exists())
+
+    def test_symlink_ancestors_are_refused_before_install(self):
+        import install
+        for relative in ['services', 'pa-agent-data', '.config', '.config/systemd', '.config/systemd/user']:
+            with self.subTest(path=relative), tempfile.TemporaryDirectory() as temp:
+                home = Path(temp).resolve(); self.prepare(home)
+                target = home / relative
+                moved = home / 'moved-parent'; target.rename(moved); target.symlink_to(moved, target_is_directory=True)
+                with self.manager(home) as command:
+                    with self.assertRaises(ValueError): install.manage('install', home, Path(r.__file__).parent)
+                    command.assert_not_called()
+                    self.assertFalse((home / 'services/duotwitch-diagnostics').exists())
+
+    def test_changed_ancestor_is_refused_before_rollback(self):
+        import install
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp).resolve(); self.prepare(home)
+            with self.manager(home) as command:
+                install.manage('install', home, Path(r.__file__).parent)
+                parent = home / 'services'; moved = home / 'moved-services'
+                parent.rename(moved); parent.symlink_to(moved, target_is_directory=True)
+                command.reset_mock()
+                with self.assertRaises(ValueError): install.manage('rollback', home, Path(r.__file__).parent)
+                command.assert_not_called()
+                self.assertTrue((moved / 'duotwitch-diagnostics/receiver.py').exists())
+
     def test_install_idempotency_rollback_and_owned_paths_only(self):
         import install
         with tempfile.TemporaryDirectory() as temp:
-            home = Path(temp)
+            home = Path(temp).resolve()
             (home / 'services').mkdir()
             (home / 'pa-agent-data').mkdir()
             other = home / '.config/systemd/user/other.service'
             other.parent.mkdir(parents=True)
             other.write_text('untouched')
             source = Path(r.__file__).parent
-            with patch.object(install, 'run') as command, patch.object(install.socket, 'socket'):
+            with self.manager(home) as command:
                 install.manage('install', home, source)
                 install.manage('install', home, source)
                 data = home / 'pa-agent-data/duotwitch-diagnostics'
@@ -394,14 +501,14 @@ class InstallerTests(unittest.TestCase):
     def test_preexisting_paths_and_drift_fail_closed(self):
         import install
         with tempfile.TemporaryDirectory() as temp:
-            home = Path(temp)
+            home = Path(temp).resolve()
             (home / 'services').mkdir()
             (home / 'pa-agent-data').mkdir()
             source = Path(r.__file__).parent
             unit = home / '.config/systemd/user' / install.NAME
             unit.parent.mkdir(parents=True)
             unit.write_text('unowned')
-            with patch.object(install, 'run') as command, patch.object(install.socket, 'socket'):
+            with self.manager(home) as command:
                 with self.assertRaises(ValueError):
                     install.manage('install', home, source)
                 command.assert_not_called()
