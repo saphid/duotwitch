@@ -8,7 +8,7 @@ Browse live channels and categories, connect through a system-hosted Twitch appr
 
 The current source passes **74 signed Simulator tests** and a fresh independent-session source review. Production authentication, discovery, received chat, authenticated relaunch, draft continuity and native Play/Pause/resume have runtime evidence on the preceding candidate. This is a development beta; no overall Twitch-parity or final product-council pass is claimed.
 
-The latest source separates system audio inactivity from genuine interruptions, keeps playback controls visible, and gives Twitch approval a prefilled browser handoff with resumable cancellation. These changes have source/test evidence; sustained resume and the reported physical Duo one-second stop still require runtime confirmation.
+The latest source separates system audio inactivity from genuine interruptions, keeps playback controls visible, and gives Twitch approval a prefilled browser handoff with resumable cancellation. These changes have source/test evidence; the reported physical Duo one-second stop remains unconfirmed. The current muted runtime verified controls and portrait layout, but its nearly static captures did not establish sustained moving video or resume. Internal TestFlight 0.1.0 (202611051233) contains the reviewed changes.
 
 ## Current limits
 

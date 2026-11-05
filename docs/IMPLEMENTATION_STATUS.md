@@ -33,12 +33,10 @@ The earlier 73-test runtime recorded about 70 seconds of changing content and st
 Pause UI, but sustained resume failed. An unintended external Safari handoff means
 that entire historical run cannot be certified silent. Its report remains
 `build/proof/playback-account/REPORT.md`; it must not be relabeled as current evidence.
-Current muted playback/resume verification is pending. Physical fold continuity,
+The current muted runtime verified native controls and portrait eligibility, but nearly static real-content captures did not demonstrate sustained motion or resume. No native automatic Pause/audio event followed Play. An alternative-channel check stopped before Play when mute could not be verified. Physical fold continuity,
 PiP, background recovery and the complete accessibility journey remain unproven.
 
-The existing internal TestFlight **0.1.0 (202611050949)** remains available; it does
-not include these changes. [DELIVERY.md](../DELIVERY.md) is the current delivery authority.
-A replacement has not yet been uploaded.
+Internal TestFlight **0.1.0 (202611051233)** now contains archived source 679bdf0. Apple API readback verifies VALID, INTERNAL_ONLY, IN_BETA_TESTING and explicit Alex/t3crew/DuoCrew relationships. [DELIVERY.md](../DELIVERY.md) is the current delivery authority. The physical Duo fix remains unconfirmed.
 
 ## Historical checkpoints
 
