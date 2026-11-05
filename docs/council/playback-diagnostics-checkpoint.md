@@ -5,6 +5,16 @@ second in open mode. The earlier audio classification change did not resolve
 that physical symptom. This delta adds observation and export; it does not
 claim a cause or a physical-device fix.
 
+## Automatic collection follow-up source
+
+The later implementation candidate defaults to automatic, allowlisted upload to
+Alex’s existing network Loki over tailnet HTTPS, while preserving export. It is
+not yet a delivered build. The receiver currently returns HTTP 500
+(`Ingester is shutting down`); ingestion persistence and readback are unverified.
+See [automatic collection contract and remaining prerequisite](../automatic-playback-diagnostics.md).
+The no-upload statements below describe the earlier delivered instrumentation
+candidate, not the automatic collection source.
+
 ## Current reattachment-fix target
 
 This section supersedes the initial frozen target below. Only the passive script

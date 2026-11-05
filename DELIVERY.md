@@ -2,6 +2,21 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
+## Automatic collection source candidate — not yet delivered
+
+The implementation candidate enables automatic, privacy-filtered upload by
+default to Alex’s existing private Loki receiver over Tailscale HTTPS at
+`https://lxso2.tail4e5636.ts.net/duotwitch-diagnostics`, while retaining local logs
+and Share. It requires no manual export or app configuration. The bounded queue,
+retry policy and destination are disclosed in the app.
+
+**Collection is not operationally verified:** a synthetic push reaches the owned
+network Loki but returns HTTP 500 (`Ingester is shutting down`). No persistence
+or ingestion readback has been verified. The existing receiver must be repaired,
+then pass synthetic write/readback, before claiming working automatic collection.
+The physical phone’s tailnet access and any iOS permission remain unverified.
+No new beta has been uploaded. See [implementation and prerequisite details](docs/automatic-playback-diagnostics.md).
+
 ## Current internal TestFlight — 6 November 2026
 
 **0.1.0 (202611052215)** is available for existing internal testers. Apple API
@@ -17,7 +32,7 @@ physical cause and its resolution remain unknown.
 After reproducing on the new build, tap the video **info circle -> Playback
 diagnostics -> Share playback logs**, or use **Account -> Playback diagnostics**.
 Share `DuoTwitch-playback.jsonl` with the developer. Logs survive relaunch;
-there is no automatic upload. Credentials, chat, account/channel identity,
+this delivered build has no automatic upload. Credentials, chat, account/channel identity,
 media URLs and full errors are excluded. Four rolling 256 KiB files and one
 bounded export copy are retained locally.
 

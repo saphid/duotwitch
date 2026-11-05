@@ -2,47 +2,20 @@ import Foundation
 import SwiftUI
 import UIKit
 
-enum PlaybackDiagnosticValue: Codable, Sendable {
-    case text(String), number(Double), flag(Bool)
-
-    func encode(to encoder: Encoder) throws {
-        var value = encoder.singleValueContainer()
-        switch self {
-        case .text(let text): try value.encode(text)
-        case .number(let number): try value.encode(number)
-        case .flag(let flag): try value.encode(flag)
-        }
-    }
-
-    init(from decoder: Decoder) throws {
-        let value = try decoder.singleValueContainer()
-        if let flag = try? value.decode(Bool.self) { self = .flag(flag) }
-        else if let number = try? value.decode(Double.self) { self = .number(number) }
-        else { self = .text(try value.decode(String.self)) }
-    }
-}
-
-struct PlaybackDiagnosticRecord: Encodable, Sendable {
-    let schema = 1
-    let run: String
-    let sequence: Int
-    let wallTime: Double
-    let uptime: Double
-    let event: String
-    let values: [String: PlaybackDiagnosticValue]
-}
-
 /// All disk work is serialized off the main actor. Four bounded JSONL files
-/// survive relaunch; no network upload, account data or raw WebKit payloads.
+/// survive relaunch. A separate bounded uploader receives only projected records.
 final class PlaybackDiagnosticStore: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.saphid.duotwitch.playback-diagnostics", qos: .utility)
     private let directory: URL
     private let maximumBytes: Int
     private let fileCount: Int
+    private let uploader: PlaybackDiagnosticUploader?
     private var writeFailed = false
 
-    init(directory: URL, maximumBytes: Int = 256 * 1024, fileCount: Int = 4) {
+    init(directory: URL, maximumBytes: Int = 256 * 1024, fileCount: Int = 4,
+         uploader: PlaybackDiagnosticUploader? = nil) {
         self.directory = directory
+        self.uploader = uploader
         self.maximumBytes = max(1024, maximumBytes)
         self.fileCount = max(1, min(8, fileCount))
     }
@@ -83,6 +56,7 @@ final class PlaybackDiagnosticStore: @unchecked Sendable {
                     try handle.write(contentsOf: data)
                 }
             } catch { writeFailed = true }
+            uploader?.enqueue(record)
         }
     }
 
@@ -111,8 +85,14 @@ final class PlaybackDiagnosticStore: @unchecked Sendable {
 
 @MainActor
 final class PlaybackDiagnostics {
-    static let shared = PlaybackDiagnostics(store: PlaybackDiagnosticStore(directory:
-        URL.applicationSupportDirectory.appendingPathComponent("PlaybackDiagnostics", isDirectory: true)))
+    static let shared: PlaybackDiagnostics = {
+        let directory = URL.applicationSupportDirectory.appendingPathComponent("PlaybackDiagnostics", isDirectory: true)
+        // Hosted unit tests must never send synthetic app events to the receiver.
+        let testing = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || NSClassFromString("XCTestCase") != nil || NSClassFromString("XCTest.XCTestCase") != nil
+        let uploader = testing ? nil : PlaybackDiagnosticUploader(directory: directory.appendingPathComponent("Upload", isDirectory: true))
+        return PlaybackDiagnostics(store: PlaybackDiagnosticStore(directory: directory, uploader: uploader))
+    }()
     private let store: PlaybackDiagnosticStore
     private let run = UUID().uuidString
     private var sequence = 0
@@ -150,7 +130,7 @@ struct PlaybackDiagnosticsView: View {
     var body: some View {
         Form {
             Section {
-                Text("Reproduce the playback stop, then share these logs so we can trace what happened.")
+                Text("Playback diagnostics are saved automatically. You can also share a local copy to help trace a playback stop.")
                 Button {
                     preparing = true
                     Task {
@@ -163,7 +143,7 @@ struct PlaybackDiagnosticsView: View {
                         .frame(minHeight: 44)
                 }.disabled(preparing)
             } footer: {
-                Text("Logs are saved on this phone and survive relaunch. They include playback timing, video progress, layout and audio events. They exclude sign-in credentials, chat, channel names and media URLs. Nothing is uploaded automatically.")
+                Text("Automatic upload is enabled by default to \(PlaybackDiagnosticDestination.disclosure). Your phone needs access to Alex’s Tailscale network; uploads wait and retry when the receiver is unavailable. Logs also stay on this phone across relaunch. They include playback timing, video progress, layout and audio events, but exclude credentials, account and channel identity, chat, media URLs and full errors. The upload queue is bounded and expires after 24 hours; sharing the rolling local logs remains available.")
             }
         }
         .navigationTitle("Playback diagnostics")
