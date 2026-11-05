@@ -16,6 +16,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     private(set) var loadCount = 0
     private(set) var pipSupported = false
     private(set) var isPlaying = false
+    private(set) var isRequestingPlay = false
     private(set) var audioWarning: String?
     private(set) var failure: String?
     private(set) var needsLoad = true
@@ -26,8 +27,15 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     @ObservationIgnored private let activateAudio: @MainActor () async throws -> Void
     @ObservationIgnored private let deactivateAudio: @MainActor () async throws -> Void
     @ObservationIgnored private let pauseMedia: @MainActor (WKWebView) async -> Void
+    @ObservationIgnored private let requestPlay: @MainActor (WKWebView, String) async throws -> Bool
     @ObservationIgnored private let pauseTimeout: Duration
-    @ObservationIgnored private var videoFits = true
+    private var videoFits = true
+    private var playerReady = false
+    private var pendingPauses = 0
+    var canPlay: Bool {
+        configuration.hostURL != nil && hasCurrentPage && playerReady && videoFits
+            && !isPlaying && !isRequestingPlay && pendingPauses == 0 && failure == nil
+    }
     private static let insufficientSpace = "Video paused because this view is too small. Expand it to continue."
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var pauseReason: String?
@@ -45,13 +53,23 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
          deactivateAudio: (@MainActor () async throws -> Void)? = nil,
          inactivityEvents: AsyncStream<AudioDeactivation>? = nil,
          pauseMedia: (@MainActor (WKWebView) async -> Void)? = nil,
-         pauseTimeout: Duration = .seconds(2)) {
+         pauseTimeout: Duration = .seconds(2),
+         requestPlay: (@MainActor (WKWebView, String) async throws -> Bool)? = nil) {
         self.configuration = configuration
         self.loadRequest = loadRequest ?? { view, request in view.load(request) }
         self.activateAudio = activateAudio ?? { try await AudioPlaybackSession.activate() }
         self.deactivateAudio = deactivateAudio ?? { try await AudioPlaybackSession.deactivate() }
         self.pauseMedia = pauseMedia ?? { view in await view.pauseAllMediaPlayback() }
         self.pauseTimeout = pauseTimeout
+        self.requestPlay = requestPlay ?? { view, session in
+            let result = try await view.callAsyncJavaScript("""
+                if (new URL(location.href).searchParams.get('session') !== session ||
+                    !window.duoPlayer || typeof window.duoPlayer.play !== 'function') return false;
+                window.duoPlayer.play();
+                return true;
+                """, arguments: ["session": session], in: nil, contentWorld: .page)
+            return result as? Bool == true
+        }
         super.init()
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
@@ -97,6 +115,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         loadTask = nil
         channel = login
         needsLoad = true
+        playerReady = false
+        isRequestingPlay = false
         pauseReason = nil
         failure = nil
         pauseTimedOut = false
@@ -183,7 +203,29 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         return value
     }
 
+    /// Requests playback through Twitch's public embed API. Only PLAYING
+    /// confirms success and activates audio; a JavaScript return value does not.
+    func play() async {
+        guard canPlay else { return }
+        let ticket = bridgeSession
+        let pauseTicket = pauseTransaction
+        let event = hostEvent
+        isRequestingPlay = true
+        status = "Starting video…"
+        defer { if bridgeSession == ticket { isRequestingPlay = false } }
+        let view = webView!
+        let request = requestPlay
+        let accepted = await mediaCommandWithDeadline { (try? await request(view, ticket)) == true }
+        guard bridgeSession == ticket, pauseTransaction == pauseTicket, videoFits,
+              failure == nil, hostEvent == event, !isPlaying else { return }
+        if !accepted { status = "Could not start video. Try Play again or use the Twitch player." }
+    }
+
     func pause(reason: String = "Paused") async {
+        // Keep Play disabled through both the WebKit callback and this
+        // request's state updates, so an older Pause cannot undo a new Play.
+        pendingPauses += 1
+        defer { pendingPauses -= 1 }
         let ticket = bridgeSession
         let transaction = UUID()
         pauseTransaction = transaction
@@ -246,10 +288,21 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     private func pauseWithDeadline() async -> Bool {
         let view = webView!
         let pause = pauseMedia
+        pendingPauses += 1
+        return await mediaCommandWithDeadline {
+            // Timing out stops waiting; it does not cancel WebKit's command.
+            // A new Play must still wait for that command's actual callback.
+            defer { self.pendingPauses -= 1 }
+            await pause(view)
+            return true
+        }
+    }
+
+    private func mediaCommandWithDeadline(_ command: @escaping @MainActor () async -> Bool) async -> Bool {
         let deadline = pauseTimeout
         return await withCheckedContinuation { continuation in
-            let result = MediaPauseResult(continuation)
-            let operation = Task { await pause(view); result.finish(true) }
+            let result = MediaCommandResult(continuation)
+            let operation = Task { result.finish(await command()) }
             let timer = Task {
                 do { try await Task.sleep(for: deadline) } catch { return }
                 result.finish(false)
@@ -382,7 +435,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
               let data = body as? [String: Any], data["session"] as? String == bridgeSession,
               let event = data["event"] as? String else { return false }
         switch event {
-        case "READY": status = "Ready. Tap Play in the Twitch player."
+        case "READY": playerReady = true; status = "Ready. Tap Play to watch."
         case "PLAYING":
             guard videoFits else {
                 Task { [weak self] in
@@ -423,10 +476,10 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     #endif
 }
 
-/// A WebKit callback may arrive after the deadline. Resolve exactly once;
-/// the timeout never releases audio without confirmation that media paused.
+/// A WebKit callback may arrive after the deadline. Resolve exactly once.
+/// Command dispatch never confirms playback or releases audio on a timeout.
 @MainActor
-private final class MediaPauseResult {
+private final class MediaCommandResult {
     private var continuation: CheckedContinuation<Bool, Never>?
     var onFinish: (() -> Void)?
     init(_ continuation: CheckedContinuation<Bool, Never>) { self.continuation = continuation }

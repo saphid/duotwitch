@@ -66,7 +66,7 @@ struct LibraryView: View {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(query.isEmpty ? (section == .following ? "Your people, live now" : category == nil ? "Find your next watch" : "Live in \(title)") : "Search results")
                             .font(.title2.bold())
-                        Text(query.isEmpty ? (section == .categories ? "Explore a world of live communities." : "Drop in. Find your community.") : "Channels matching “\(query)”")
+                        Text(query.isEmpty ? (section == .categories ? "Explore a world of live communities." : "Drop in. Find your community.") : "\(section == .categories ? "Categories" : "Channels") matching “\(query)”")
                             .foregroundStyle(.secondary).font(.subheadline)
                     }.padding(.top, 8)
                 }

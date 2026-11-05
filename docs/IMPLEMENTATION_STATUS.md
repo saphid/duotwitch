@@ -3,7 +3,7 @@
 This is a compiled development candidate. It is not an official-app parity
 pass and has not been uploaded to TestFlight.
 
-Latest signed Simulator checkpoint: **62 tests passed**, with no failures,
+Latest signed Simulator checkpoint: **69 tests passed**, with no failures,
 skipped tests, Swift compiler diagnostics or xcresult runtime warnings. A real
 Keychain read failed in the unsigned verification build and passed with Xcode
 ad-hoc signing; no saved credentials were cleared. The new regression guards
@@ -12,24 +12,43 @@ The registered public Client ID and deployed player host remain configured.
 The preceding unsigned Release Simulator build passed its sandboxed config
 guard; it is not a signed device archive.
 
+The current candidate adds accessible native **Play video** through the official
+Twitch embed `play()` method. It waits for READY, rejects hidden/undersized
+video, bounds an unresponsive command to two seconds, and retains Pause and
+channel-switch ordering. Only the production PLAYING event marks playback or
+activates audio. The deployed host is unchanged. Five new regressions pass;
+actual production Play/Pause/resume was verified on the preceding 67-test binary. The earlier 62-test
+runtime proof below remains attributed to its original binary. See
+`docs/council/native-play-checkpoint.md`.
+
 The preceding 57-test binary passed the owned-origin live player flow: host events
 **ONLINE → PLAYING → PAUSE → PLAYING**, native Pause and official resume, with
 one player load. All 10 bundle files and 44 frozen source entries matched
 before and after. See `build/proof/host-events-current/REPORT.md`.
 
-This runtime check used the DEBUG player probe, not the full WatchView. Native
-authentication/chat, full-watch fold continuity, audible output, background
-recovery, system PiP, product parity and TestFlight remain unverified. Both
-Apple app-record and Twitch public-client prerequisites are now complete;
-see DELIVERY.md and docs/PUBLIC_CLIENT.md. The first configured normal-app
-runtime check obtained a device code but stopped before browser authorization;
-it also exposed the unsigned-build Keychain failure described above. The signed
-retry verified normal startup without that error and real device-code
-acquisition. Continue on Twitch then hit repeated Device observation failures
-(`regular iOS snapshot node escaped its cumulative clip`), so authorization and
-all dependent integration checks remain unverified. Report:
-`build/proof/native-configured-signed/REPORT.md`. The Device stop rule is being
-honored; explicit direction for its SSH fallback has been requested.
+That historical runtime check used the DEBUG player probe. The current signed
+62-test candidate has now passed real native OAuth as `saphid`, populated Live
+discovery, production WatchView opening and changing received native chat.
+Account restored after process termination/relaunch without reauthorization.
+All 44 source entries and all 12 candidate/installed bundle files matched at
+both boundaries. See `build/proof/native-ssh/REPORT.md`.
+
+A second bounded check verified chat left/right, Full/Slim modes and a real
+keyboard-entered unsent draft surviving mode changes, Back/reopen and chat-side
+changes. No message was sent. See `build/proof/native-ssh-followup/REPORT.md`.
+The draft was discarded by terminating only the owned app process; saved
+credentials were preserved. These checks used Alex's explicit SSH-control
+exception after the repeated Device observation failure.
+
+The 67-test production native Play path now has verified changing gameplay,
+native Pause with stable pixels and native resume. The official player was
+muted before further playback after Alex requested silence. See
+`build/proof/native-play/REPORT.md`. The 69-test ordering fix has fresh test
+evidence; those runtime frames remain attributed to the 67-test binary. The follow-up did not repeat failed Play pixel attempts. Actual fold/compact continuity, audible output, background recovery, PiP and
+TestFlight remain unverified. The historical product judgment remains WITHHOLD;
+its authentication/discovery/receive-chat blockers are superseded by this new
+evidence, not its playback or delivery gates.
+
 After Claude rate limiting stopped the source-review attempt,
 Alex authorized a fresh Sol high review. That review passes at 8.5/10 with no
 new actionable findings; see docs/council/source-configured-review-sol.md.

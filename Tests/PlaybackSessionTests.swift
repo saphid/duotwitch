@@ -4,6 +4,139 @@ import WebKit
 
 @MainActor
 final class PlaybackSessionTests: XCTestCase {
+    func testRefitCannotPlayUntilOlderPauseCompletes() async throws {
+        var completion: CheckedContinuation<Void, Never>?
+        var requests = 0
+        var activations = 0
+        let (session, nonce) = makeBridgeSession(activate: { activations += 1 }, pause: { _ in
+            await withCheckedContinuation { completion = $0 }
+        }, play: { _, _ in requests += 1; return true })
+        emit("READY", session: session, nonce: nonce)
+        let shrinking = Task { await session.videoAreaChanged(fits: false, channel: "lofigirl") }
+        try await waitUntil { completion != nil }
+        await session.videoAreaChanged(fits: true, channel: "lofigirl")
+        XCTAssertFalse(session.canPlay, "An older pause must finish before a new Play is allowed")
+        await session.play()
+        XCTAssertEqual(requests, 0)
+        completion?.resume()
+        await shrinking.value
+        XCTAssertTrue(session.canPlay)
+        await session.play()
+        XCTAssertEqual(requests, 1)
+        emit("PLAYING", session: session, nonce: nonce)
+        try await waitUntil { activations == 1 }
+        XCTAssertTrue(session.isPlaying)
+        XCTAssertEqual(session.status, "Video playing")
+    }
+
+    func testNativePlayWaitsForReadyAndOnlyBridgePlaybackActivatesAudio() async throws {
+        var requests = 0
+        var activations = 0
+        let (session, nonce) = makeBridgeSession(activate: { activations += 1 }, play: { _, received in
+            XCTAssertFalse(received.isEmpty)
+            requests += 1
+            return true
+        })
+        await session.play()
+        XCTAssertEqual(requests, 0)
+        emit("READY", session: session, nonce: nonce)
+        XCTAssertTrue(session.canPlay)
+        await session.play()
+        XCTAssertEqual(requests, 1)
+        XCTAssertEqual(session.status, "Starting video…")
+        XCTAssertFalse(session.isPlaying)
+        XCTAssertEqual(activations, 0)
+        emit("PLAYING", session: session, nonce: nonce)
+        try await waitUntil { activations == 1 }
+        XCTAssertTrue(session.isPlaying)
+        XCTAssertFalse(session.canPlay)
+    }
+
+    func testNativePlayWaitsForTimedOutPauseCallbackEvenAfterPauseEvent() async throws {
+        var completion: CheckedContinuation<Void, Never>?
+        var requests = 0
+        let (session, nonce) = makeBridgeSession(pause: { _ in
+            await withCheckedContinuation { completion = $0 }
+        }, play: { _, _ in requests += 1; return true }, pauseTimeout: .milliseconds(30))
+        emit("READY", session: session, nonce: nonce)
+        await session.videoAreaChanged(fits: false, channel: "lofigirl")
+        XCTAssertNotNil(session.failure)
+        await session.videoAreaChanged(fits: true, channel: "lofigirl")
+        emit("PAUSE", session: session, nonce: nonce)
+        XCTAssertNil(session.failure)
+        XCTAssertFalse(session.canPlay, "An event does not cancel a still-pending WebKit pause")
+        await session.play()
+        XCTAssertEqual(requests, 0)
+        completion?.resume()
+        try await waitUntil { session.canPlay }
+        await session.play()
+        XCTAssertEqual(requests, 1)
+    }
+
+    func testHiddenVideoCannotRequestNativePlay() async {
+        var requests = 0
+        let (session, nonce) = makeBridgeSession(play: { _, _ in requests += 1; return true })
+        emit("READY", session: session, nonce: nonce)
+        session.hideVideo()
+        await session.play()
+        XCTAssertEqual(requests, 0)
+        XCTAssertFalse(session.canPlay)
+    }
+
+    func testLatePlayFailureCannotOverwriteNewerPauseOrChannel() async throws {
+        var completion: CheckedContinuation<Bool, Error>?
+        let (session, nonce) = makeBridgeSession(play: { _, _ in
+            try await withCheckedThrowingContinuation { completion = $0 }
+        })
+        emit("READY", session: session, nonce: nonce)
+        let request = Task { await session.play() }
+        try await waitUntil { completion != nil }
+        await session.pause(reason: "Paused by user")
+        completion?.resume(throwing: URLError(.cannotConnectToHost))
+        await request.value
+        XCTAssertEqual(session.status, "Paused by user")
+        XCTAssertFalse(session.isRequestingPlay)
+
+        completion = nil
+        let second = Task { await session.play() }
+        try await waitUntil { completion != nil }
+        session.open(channel: "monstercat")
+        completion?.resume(returning: false)
+        await second.value
+        XCTAssertEqual(session.status, "Loading Twitch player…")
+        XCTAssertEqual(session.channel, "monstercat")
+        XCTAssertFalse(session.canPlay)
+    }
+
+    func testRejectedNativePlayKeepsOfficialControlsAvailableWithoutClaimingPlayback() async {
+        let (session, nonce) = makeBridgeSession(play: { _, _ in false })
+        emit("READY", session: session, nonce: nonce)
+        await session.play()
+        XCTAssertFalse(session.isPlaying)
+        XCTAssertNil(session.failure)
+        XCTAssertTrue(session.canPlay)
+        XCTAssertTrue(session.status.contains("Twitch player"))
+    }
+
+    func testUnresponsiveNativePlayIsBoundedAndCanBeRetried() async {
+        var completion: CheckedContinuation<Bool, Error>?
+        var url: URL?
+        let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+            loadRequest: { _, request in url = request.url }, activateAudio: {},
+            pauseTimeout: .milliseconds(30), requestPlay: { _, _ in
+                try await withCheckedThrowingContinuation { completion = $0 }
+            })
+        session.open(channel: "lofigirl")
+        let nonce = URLComponents(url: url!, resolvingAgainstBaseURL: false)!.queryItems!.first { $0.name == "session" }!.value!
+        emit("READY", session: session, nonce: nonce)
+        await session.play()
+        XCTAssertFalse(session.isRequestingPlay)
+        XCTAssertTrue(session.canPlay)
+        XCTAssertFalse(session.isPlaying)
+        XCTAssertTrue(session.status.contains("Could not start"))
+        completion?.resume(returning: true)
+    }
+
     func testChannelInputCannotInjectURLParametersOrHTML() {
         XCTAssertEqual(PlaybackSession.validChannel("  ThePrimeagen\n"), "theprimeagen")
         for input in ["", "bad&parent=example.com", "<script>", "a/b", "hello world", "café", String(repeating: "a", count: 26)] {
@@ -401,10 +534,12 @@ final class PlaybackSessionTests: XCTestCase {
     private func makeBridgeSession(activate: @escaping @MainActor () async throws -> Void = {},
                                    deactivate: @escaping @MainActor () async throws -> Void = {},
                                    events: AsyncStream<AudioDeactivation>? = nil,
-                                   pause: @escaping @MainActor (WKWebView) async -> Void = { _ in }) -> (PlaybackSession, String) {
+                                   pause: @escaping @MainActor (WKWebView) async -> Void = { _ in },
+                                   play: @escaping @MainActor (WKWebView, String) async throws -> Bool = { _, _ in true },
+                                   pauseTimeout: Duration = .seconds(2)) -> (PlaybackSession, String) {
         var url: URL?
         let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://Player.Example.org/player"), probeEnabled: false),
-            loadRequest: { _, request in url = request.url }, activateAudio: activate, deactivateAudio: deactivate, inactivityEvents: events, pauseMedia: pause)
+            loadRequest: { _, request in url = request.url }, activateAudio: activate, deactivateAudio: deactivate, inactivityEvents: events, pauseMedia: pause, pauseTimeout: pauseTimeout, requestPlay: play)
         session.open(channel: "lofigirl")
         let nonce = URLComponents(url: url!, resolvingAgainstBaseURL: false)!.queryItems!.first { $0.name == "session" }!.value!
         return (session, nonce)

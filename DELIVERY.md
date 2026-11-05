@@ -4,6 +4,18 @@ Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/2
 
 User-authorized target: a native Swift iPhone/iPhone Duo app in TestFlight, with an invitation for Alex and the T3 crew group included. Production App Store submission and public beta links are outside this request.
 
+Latest explicit instruction: playback verification must be inaudible to Alex.
+Before playback, verify a per-player mute or a supported silent Simulator audio
+route; do not infer headphones are inaudible or change global Mac audio for
+unrelated applications. This requirement was sent to the active Astra runtime
+worker immediately. No current silent-routing success is claimed yet.
+
+Alex also explicitly authorizes sharing the verified TestFlight details and
+Git repository in `#txt` on the T3Code dev Discord server. Resolve the exact
+channel, send only after real build/audience/repository readback, and retain a
+message receipt. No broad mentions or public TestFlight link are authorized.
+
+
 ## Identity and tooling
 
 - Product/display name: DuoTwitch.
@@ -21,8 +33,12 @@ PUBLIC client are both created and verified. The Twitch registration name is
 Saphid Duo Viewer; the native app remains DuoTwitch. Public Client ID:
 `xuaoegs6v9yy1dw86gemt4gyuqtf1o`. See [public-client evidence](docs/PUBLIC_CLIENT.md).
 The source now contains the public configuration; 62 signed Simulator tests
-and the preceding unsigned Release Simulator build pass. Native live integration and product/delivery
-gates remain open. The account-recovery attempts below are historical.
+and the preceding unsigned Release Simulator build pass. Native OAuth, Live discovery, received production chat and authenticated relaunch
+are verified on the signed 62-test candidate. Full/Slim and chat-side changes
+retain a real unsent draft across Back/reopen. Production moving video,
+fold continuity, PiP and product/delivery gates remain open. Reports:
+`build/proof/native-ssh/REPORT.md` and
+`build/proof/native-ssh-followup/REPORT.md`. No message was sent. The account-recovery attempts below are historical.
 
 At 2026-11-05 03:19 UTC, the dedicated bundle identifier `com.saphid.duotwitch` was registered as `DuoTwitch`, record `BXXWR6ZCZ7`, using the existing configuration for team `NJZUMEA4BN`. Fresh exact bundle and app queries first returned HTTP 200, total zero, with no next page. Registration returned HTTP 201; direct GET and a complete exact query then returned the matching bundle identity. The POST requested platform `IOS`; Apple returned `UNIVERSAL`. That discrepancy is recorded without further platform or capability changes.
 
@@ -61,6 +77,34 @@ secret or reuse another application's Client ID. Twitch describes Client IDs
 as public configuration: [Register an app](https://dev.twitch.tv/docs/authentication/register-app/).
 
 An authenticated, complete group listing found the exact `t3crew` internal group on Duocord. Its related tester collection returned three testers, reported total three, with no next page: Nikolas Kitsios, Alex Jankowiak and Julius M. Alex is already part of the requested crew audience. Preserve those existing tester identities when preparing DuoTwitch's own internal group. Private tester IDs and membership readback are in ignored `build/t3crew-audience.json`; the sanitized group inventory is in `build/testflight-audience-preflight.json`. No invitations or membership changes have been sent.
+
+## Delivery preparation after renewed TestFlight instruction
+
+A fresh exact app build query returned HTTP 200 with no builds. GitHub lookup
+for `saphid/duotwitch` returned not found, and this checkout has no remote;
+repository creation/push is still pending reviewed source. Alex explicitly selected public visibility for Discord source access. The
+repository is created at https://github.com/saphid/duotwitch; push is pending
+fresh source review.
+
+Created DuoTwitch's own internal `t3crew` group after a complete app-scoped list
+returned zero groups. Apple returned HTTP 201; group ID
+`d5e47889-3cb9-4199-9164-2ab484f9a3f2`. The source `t3crew` group's fresh complete
+membership still contains exactly the same three existing testers. Adding
+those identities to the new group returned HTTP 409, `STATE_ERROR`,
+"Tester(s) cannot be assigned". Readback confirms zero members. Do not claim
+crew access or repeat the same mutation without resolving its prerequisite.
+Ignored receipts: `build/duotwitch-t3crew-group.json` and associated
+`duotwitch-t3crew-*`/`duotwitch-group-members-readback.txt` files. No invitations
+or build assignments have succeeded.
+
+Beeper lookup succeeded when scoped to the Discord account after an initial
+unscoped 500. It found one `#txt` chat (Beeper chat `1116`, underlying room
+`!d8plVzrUmOEsSKa6IHRR:beeper.local`). Recent context includes the T3 Code dev
+participants, but exact Discord server identity still needs corroboration.
+The newest observed sort key is `282816`. No announcement has been sent.
+The Discord-history archive fallback returned `operation_failed`; no direct
+Discord fetcher or limiter bypass was used. Use Beeper and a fresh duplicate
+check before the authorized final message. Keep conversation content private.
 
 ## Verification and delivery sequence
 

@@ -92,6 +92,10 @@ private struct WatchVideoPanel: View {
                     if session.isPlaying {
                         Button("Pause video", systemImage: "pause.fill") { Task { await session.pause() } }
                             .buttonStyle(.bordered).frame(minHeight: 44)
+                    } else if session.hasCurrentPage {
+                        Button("Play video", systemImage: "play.fill") { Task { await session.play() } }
+                            .buttonStyle(.bordered).frame(minHeight: 44)
+                            .disabled(!session.canPlay || !playerFits)
                     }
                     if session.failure != nil && playerFits {
                         Button("Retry player", systemImage: "arrow.clockwise") { session.open(channel: channel.login, forceReload: true) }
