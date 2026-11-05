@@ -20,8 +20,8 @@ User-authorized target: a native Swift iPhone/iPhone Duo app in TestFlight, with
 PUBLIC client are both created and verified. The Twitch registration name is
 Saphid Duo Viewer; the native app remains DuoTwitch. Public Client ID:
 `xuaoegs6v9yy1dw86gemt4gyuqtf1o`. See [public-client evidence](docs/PUBLIC_CLIENT.md).
-The source now contains the public configuration; 61 tests and an unsigned
-Release Simulator build pass. Native live integration and product/delivery
+The source now contains the public configuration; 62 signed Simulator tests
+and the preceding unsigned Release Simulator build pass. Native live integration and product/delivery
 gates remain open. The account-recovery attempts below are historical.
 
 At 2026-11-05 03:19 UTC, the dedicated bundle identifier `com.saphid.duotwitch` was registered as `DuoTwitch`, record `BXXWR6ZCZ7`, using the existing configuration for team `NJZUMEA4BN`. Fresh exact bundle and app queries first returned HTTP 200, total zero, with no next page. Registration returned HTTP 201; direct GET and a complete exact query then returned the matching bundle identity. The POST requested platform `IOS`; Apple returned `UNIVERSAL`. That discrepancy is recorded without further platform or capability changes.

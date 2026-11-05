@@ -3,6 +3,12 @@ import XCTest
 
 @MainActor
 final class AuthTests: XCTestCase {
+    func testRealKeychainReadIsAvailableToTheApp() {
+        // Read only: exercise the application's real signing/Keychain boundary
+        // without clearing a saved session or printing credential contents.
+        XCTAssertNoThrow(try KeychainCredentialStore().load())
+    }
+
     private func makeAuth(store: MemoryCredentialStore, sleep: @escaping @MainActor (Duration) async throws -> Void = { try await Task.sleep(for: $0) }) -> TwitchAuth {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [StubTwitchProtocol.self]

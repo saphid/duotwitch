@@ -3,11 +3,14 @@
 This is a compiled development candidate. It is not an official-app parity
 pass and has not been uploaded to TestFlight.
 
-Latest configured checkpoint: **61 tests passed**, with no failures, skipped
-tests, Swift compiler diagnostics or xcresult runtime warnings. The registered
-public Client ID and deployed player host are now configured. A real unsigned
-Release Simulator build also passed, with the config guard under sandbox-exec.
-See `docs/council/configured-checkpoint.md` for exact manifests and evidence.
+Latest signed Simulator checkpoint: **62 tests passed**, with no failures,
+skipped tests, Swift compiler diagnostics or xcresult runtime warnings. A real
+Keychain read failed in the unsigned verification build and passed with Xcode
+ad-hoc signing; no saved credentials were cleared. The new regression guards
+this real application boundary. See `docs/council/signed-simulator-checkpoint.md`.
+The registered public Client ID and deployed player host remain configured.
+The preceding unsigned Release Simulator build passed its sandboxed config
+guard; it is not a signed device archive.
 
 The preceding 57-test binary passed the owned-origin live player flow: host events
 **ONLINE → PLAYING → PAUSE → PLAYING**, native Pause and official resume, with
@@ -18,12 +21,18 @@ This runtime check used the DEBUG player probe, not the full WatchView. Native
 authentication/chat, full-watch fold continuity, audible output, background
 recovery, system PiP, product parity and TestFlight remain unverified. Both
 Apple app-record and Twitch public-client prerequisites are now complete;
-see DELIVERY.md and docs/PUBLIC_CLIENT.md. Native runtime verification is
-pending. After Claude rate limiting stopped the first source-review attempt,
+see DELIVERY.md and docs/PUBLIC_CLIENT.md. The first configured normal-app
+runtime check obtained a device code but stopped before browser authorization;
+it also exposed the unsigned-build Keychain failure described above. A signed
+runtime retry is pending. After Claude rate limiting stopped the source-review attempt,
 Alex authorized a fresh Sol high review. That review passes at 8.5/10 with no
 new actionable findings; see docs/council/source-configured-review-sol.md.
 It is independent-session review without model diversity, and is a source
-score only.
+score only and belongs to the preceding 61-test source. The 62-test delta adds
+only the real Keychain read regression; application code remains unchanged.
+A fresh Sol high review of that signed checkpoint also passes at 8.5/10,
+with no actionable findings. It retains the same runtime limits; see
+docs/council/source-signed-keychain-review-sol.md.
 
 Sol's product checkpoint **withholds sign-off**, with high confidence. It
 independently verified all 44 source entries, all 10 bundle files and the actual
