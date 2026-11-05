@@ -16,7 +16,9 @@ before and after. See `build/proof/host-events-current/REPORT.md`.
 This runtime check used the DEBUG player probe, not the full WatchView. Native
 authentication/chat, full-watch fold continuity, audible output, background
 recovery, system PiP, product parity and TestFlight remain unverified. Twitch
-SMS delivery and Apple trusted-device 2FA still block account prerequisites.
+SMS delivery still blocks Twitch's public-client prerequisite. Apple's
+authentication was subsequently completed through fresh SMS, and the separate
+App Store Connect app record was created and verified; see DELIVERY.md.
 The 61-test binary has not had a new runtime check or independent source review.
 
 Sol's product checkpoint **withholds sign-off**, with high confidence. It
@@ -28,6 +30,25 @@ fold continuity, PiP and delivery remain unmet or unproven. The other final
 council judges remain deferred under REQUIREMENTS.md. Full assessment:
 `docs/council/product-checkpoint-7-sol.md` (Codex / gpt-6.1-sol, xhigh,
 completed).
+
+## Account recovery update — 05:59 UTC
+
+The user-authorized MacBook Pro/Air recovery completed Apple sign-in using a
+fresh Apple SMS. The supported ASC UI created app `6831008730` (DuoTwitch,
+`com.saphid.duotwitch`, SKU `duotwitch-ios`, en-US, iOS). Live UI and complete
+direct/exact API readbacks verified identity; no upload or invitation occurred.
+This supersedes the earlier Apple 2FA/app-record blocker, not the product
+assessment's other gaps. The unchanged source still has 61 passing tests.
+
+Twitch's one fresh resend returned the same SMS-delivery error, with no new
+code. The preserved challenge has no verified public client. The Air was
+locked, so no GUI/session access was attempted there; no machine was unlocked
+or woken. The recovery changed only delivery documentation and sanitized
+receipts. T3 task
+`node:delegated-task:command%3Amcp%3A01b949c1-9016-42f6-a4e4-fd3e90c5884d%3Adelegate-task%3Aduotwitch-air-pro-cua-auth-recovery-20261105`
+completed as Codex / gpt-6-astra, high. Receipt:
+`build/mac-auth-recovery-20261105.json`; see DELIVERY.md for the access-save
+warning and verified resulting access state.
 
 ## Implemented in source
 
