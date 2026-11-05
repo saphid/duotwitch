@@ -39,6 +39,22 @@ phone also needs existing Tailscale connectivity and any requested iOS permissio
 No public/external beta, App Store release, physical fix, PiP or fold-continuity
 claim. Earlier runtime proof below remains attributed to its original build.
 
+## Current Simulator runtime — partial
+
+The frozen WebKit-audio candidate was tested personally by GPT-6 Astra high,
+with official Unmute readback before both Play actions and muted media samples.
+Source 54/54 and candidate/installed bundles 12/12 matched before and after.
+Native Pause held 36.1 seconds; the player retained one load, and zero native
+`audio.transition` records occurred. No unintended native Pause followed Play.
+
+Sustained visible motion and resumed motion did **not** pass: initial and resume
+recordings contain long identical-frame intervals and very high dropped-frame
+counts despite media-clock progress. This does not isolate source, decoder,
+compositor/capture or provider behavior. It is not a physical Duo recovery pass.
+The default queue/retry activity was observed, but no remote receipt was verified.
+Report: `build/proof/webkit-audio-ownership/REPORT.md`. App/session cleanup
+completed and Simulator data/Keychain were preserved.
+
 ## Automatic collection operational limit
 
 The current internal build enables automatic, privacy-filtered upload by

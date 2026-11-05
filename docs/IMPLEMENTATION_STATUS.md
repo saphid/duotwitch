@@ -27,6 +27,22 @@ No physical playback, resumed live media, phone auto-upload or interruption-deli
 claim follows from these synthetic tests. Earlier runtime evidence below remains
 attributed to its original binary.
 
+## Current Simulator runtime — partial
+
+The frozen WebKit-audio candidate was tested personally by GPT-6 Astra high,
+with official Unmute readback before both Play actions and muted media samples.
+Source 54/54 and candidate/installed bundles 12/12 matched before and after.
+Native Pause held 36.1 seconds; the player retained one load, and zero native
+`audio.transition` records occurred. No unintended native Pause followed Play.
+
+Sustained visible motion and resumed motion did **not** pass: initial and resume
+recordings contain long identical-frame intervals and very high dropped-frame
+counts despite media-clock progress. This does not isolate source, decoder,
+compositor/capture or provider behavior. It is not a physical Duo recovery pass.
+The default queue/retry activity was observed, but no remote receipt was verified.
+Report: `build/proof/webkit-audio-ownership/REPORT.md`. App/session cleanup
+completed and Simulator data/Keychain were preserved.
+
 ## Previous delivered diagnostics checkpoint
 
 # Playback diagnostics update — 6 November 2026
