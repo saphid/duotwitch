@@ -18,7 +18,12 @@ final class MountedWatchLayoutTests: XCTestCase {
     }
 
     private func assertProductionWatchFullVideoReturn(dynamicTypeSize: DynamicTypeSize) async throws {
-        for (width, returningMode) in [(466.0, WatchMode.balanced), (466.0, .slim), (550.0, .balanced), (550.0, .slim)] {
+        let cases: [(Double, Double, UserInterfaceSizeClass, WatchMode)] = [
+            (466, 700, .regular, .balanced), (466, 700, .regular, .slim),
+            (550, 700, .regular, .balanced), (550, 700, .regular, .slim),
+            (750, 304, .compact, .balanced), (750, 304, .compact, .slim)
+        ]
+        for (width, height, sizeClass, returningMode) in cases {
             let preferencesName = "DuoTwitch-layout-test-\(UUID().uuidString)"
             let preferences = try XCTUnwrap(UserDefaults(suiteName: preferencesName))
             defer { preferences.removePersistentDomain(forName: preferencesName) }
@@ -34,7 +39,7 @@ final class MountedWatchLayoutTests: XCTestCase {
             let app = AppModel(auth: TwitchAuth(clientId: ""), player: session)
             let channel = WatchedChannel(channel: TwitchChannel(id: "fixture", broadcasterLogin: "fixture", displayName: "Fixture", gameName: "", title: "", thumbnailUrl: "", isLive: true))
             let host = UIHostingController(rootView: WatchView(app: app, channel: channel)
-                .environment(\.horizontalSizeClass, .regular).dynamicTypeSize(dynamicTypeSize)
+                .environment(\.horizontalSizeClass, sizeClass).dynamicTypeSize(dynamicTypeSize)
                 .defaultAppStorage(preferences).ignoresSafeArea())
             let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
             let window = UIWindow(windowScene: scene)
@@ -43,7 +48,7 @@ final class MountedWatchLayoutTests: XCTestCase {
             window.makeKeyAndVisible()
             container.addChild(host)
             container.view.addSubview(host.view)
-            host.view.frame = CGRect(x: 0, y: 0, width: width, height: 700)
+            host.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
             host.didMove(toParent: container)
             defer { window.isHidden = true; window.rootViewController = nil }
             try await Task.sleep(for: .milliseconds(200))
@@ -73,43 +78,43 @@ final class MountedWatchLayoutTests: XCTestCase {
     func testProductionPanelDoesNotPauseItselfAfterPlay() async throws {
         let channel = WatchedChannel(channel: TwitchChannel(id: "lofi", broadcasterLogin: "lofigirl", displayName: "LofiGirl", gameName: "Music", title: "A live stream with a title that wraps in smaller video panes", thumbnailUrl: "", isLive: true))
         var testedSizes = 0
-        for width in [402.0, 420.0, 500.0, 600.0] {
-            for height in [364.0, 384.0, 420.0, 480.0, 560.0] {
-                var nonce: String?
-                var pauses = 0
-                let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
-                    loadRequest: { _, request in nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value },
-                    pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
-                let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel, toggleFullVideo: {}).ignoresSafeArea())
-                let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-                let window = UIWindow(windowScene: scene)
-                let container = UIViewController()
-                window.rootViewController = container
-                window.makeKeyAndVisible()
-                container.addChild(host)
-                container.view.addSubview(host.view)
-                host.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
-                host.didMove(toParent: container)
-                try await Task.sleep(for: .milliseconds(100))
-                host.view.layoutIfNeeded()
-                if let nonce {
-                    session.handleHostMessage(["session": nonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
-                    try await Task.sleep(for: .milliseconds(40))
-                    if session.canPlay {
-                        testedSizes += 1
-                        let before = pauses
-                        await session.play()
-                        session.handleHostMessage(["session": nonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
-                        try await Task.sleep(for: .milliseconds(150))
-                        XCTAssertTrue(session.isPlaying, "Playback stopped at \(width)×\(height): \(session.status)")
-                        XCTAssertEqual(pauses, before, "Panel issued a Pause after Play at \(width)×\(height)")
-                    }
+        for (width, height) in [(750.0, 304.0), (464.0, 304.0)] + [402.0, 420.0, 500.0, 600.0].flatMap({ width in
+            [364.0, 384.0, 420.0, 480.0, 560.0].map { (width, $0) }
+        }) {
+            var nonce: String?
+            var pauses = 0
+            let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+                loadRequest: { _, request in nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value },
+                pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
+            let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel, toggleFullVideo: {}).ignoresSafeArea())
+            let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+            let window = UIWindow(windowScene: scene)
+            let container = UIViewController()
+            window.rootViewController = container
+            window.makeKeyAndVisible()
+            container.addChild(host)
+            container.view.addSubview(host.view)
+            host.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            host.didMove(toParent: container)
+            try await Task.sleep(for: .milliseconds(100))
+            host.view.layoutIfNeeded()
+            if let nonce {
+                session.handleHostMessage(["session": nonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+                try await Task.sleep(for: .milliseconds(40))
+                if session.canPlay {
+                    testedSizes += 1
+                    let before = pauses
+                    await session.play()
+                    session.handleHostMessage(["session": nonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+                    try await Task.sleep(for: .milliseconds(150))
+                    XCTAssertTrue(session.isPlaying, "Playback stopped at \(width)×\(height): \(session.status)")
+                    XCTAssertEqual(pauses, before, "Panel issued a Pause after Play at \(width)×\(height)")
                 }
-                window.isHidden = true
-                window.rootViewController = nil
             }
+            window.isHidden = true
+            window.rootViewController = nil
         }
-        XCTAssertEqual(testedSizes, 20, "Every supported panel size must load a playable player, including the compact allocation")
+        XCTAssertEqual(testedSizes, 22, "Every supported panel size must load a playable player, including short landscape")
     }
 
     func testMountedPanesFollowBookTabletopAndSidePreferences() async throws {

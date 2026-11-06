@@ -46,6 +46,20 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     @ObservationIgnored private(set) var webView: WKWebView!
     var isConfigured: Bool { configuration.hostURL != nil || configuration.probeEnabled }
 
+    static let publicPlayScript = """
+        if (new URL(location.href).searchParams.get('session') !== session ||
+            !window.duoPlayer || typeof window.duoPlayer.play !== 'function') return false;
+        if (muteForTesting) {
+            if (typeof window.duoPlayer.setMuted !== 'function' ||
+                typeof window.duoPlayer.getMuted !== 'function') return false;
+            window.duoPlayer.setMuted(true);
+            if (window.duoPlayer.getMuted() !== true) return false;
+        }
+        if (new URL(location.href).searchParams.get('session') !== session) return false;
+        window.duoPlayer.play();
+        return true;
+        """
+
     init(configuration: PlayerConfiguration = .current,
          loadRequest: (@MainActor (WKWebView, URLRequest) -> Void)? = nil,
          inactivityEvents: AsyncStream<AudioDeactivation>? = nil,
@@ -59,12 +73,16 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         self.pauseMedia = pauseMedia ?? { view in await view.pauseAllMediaPlayback() }
         self.pauseTimeout = pauseTimeout
         self.requestPlay = requestPlay ?? { view, session in
-            let result = try await view.callAsyncJavaScript("""
-                if (new URL(location.href).searchParams.get('session') !== session ||
-                    !window.duoPlayer || typeof window.duoPlayer.play !== 'function') return false;
-                window.duoPlayer.play();
-                return true;
-                """, arguments: ["session": session], in: nil, contentWorld: .page)
+            #if DEBUG
+            let silent = ProcessInfo.processInfo.arguments.contains("-DuoTwitchSilentPlayback")
+            #else
+            let silent = false
+            #endif
+            let result = try await view.callAsyncJavaScript(PlaybackSession.publicPlayScript,
+                arguments: ["session": session, "muteForTesting": silent], in: nil, contentWorld: .page)
+            if silent, result as? Bool == true {
+                PlaybackSession.log.info("Silent playback gate: public mute verified before Play")
+            }
             return result as? Bool == true
         }
         super.init()

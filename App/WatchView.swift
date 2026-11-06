@@ -81,6 +81,33 @@ private struct WatchLayoutSnapshot: Equatable {
     }
 }
 
+/// Keep the player at the same structural location while controls move beside
+/// it on short screens. The Twitch surface itself is never scaled or covered.
+private struct WatchVideoPanelLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 400
+        let chrome = subviews.count == 2
+            ? subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil)).height : 64
+        return CGSize(width: width, height: proposal.height ?? 300 + chrome)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else { return }
+        let measured = subviews[1].sizeThatFits(ProposedViewSize(width: bounds.width, height: nil)).height
+        let chrome = measured.isFinite ? measured : 64
+        let side = bounds.height >= 300 && bounds.width >= 464 && bounds.height < 300 + chrome
+        let video = CGRect(origin: bounds.origin, size: CGSize(
+            width: side ? bounds.width - 64 : bounds.width,
+            height: side ? bounds.height : max(0, bounds.height - chrome)))
+        let controls = side
+            ? CGRect(x: video.maxX, y: bounds.minY, width: 64, height: bounds.height)
+            : CGRect(x: bounds.minX, y: video.maxY, width: bounds.width, height: min(chrome, bounds.height))
+        for (index, rect) in [video, controls].enumerated() {
+            subviews[index].place(at: rect.origin, anchor: .topLeading, proposal: ProposedViewSize(rect.size))
+        }
+    }
+}
+
 struct WatchVideoPanel: View {
     let session: PlaybackSession
     let channel: WatchedChannel
@@ -90,7 +117,7 @@ struct WatchVideoPanel: View {
     @State private var showDetails = false
 
     var body: some View {
-        VStack(spacing: 0) {
+        WatchVideoPanelLayout {
             GeometryReader { geometry in
                 let fits = geometry.size.width >= 400 && geometry.size.height >= 300
                 Group {
@@ -112,7 +139,10 @@ struct WatchVideoPanel: View {
             // constrained allocation can still shrink and expose the fit gate.
             .frame(idealHeight: 300)
             // Primary controls stay mounted and never vanish under focus or a tap.
-            transport
+            ViewThatFits(in: .horizontal) {
+                transport
+                transportRail
+            }
         }
         .background(.black)
         .sheet(isPresented: $showDetails) { details }
@@ -135,16 +165,7 @@ struct WatchVideoPanel: View {
     private var transport: some View {
         HStack(spacing: 12) {
             if session.channel == channel.login {
-                Button(session.isPlaying ? "Pause video" : "Play video", systemImage: session.isPlaying ? "pause.fill" : "play.fill") {
-                    Task {
-                        if session.isPlaying { await session.pause() }
-                        else { await session.play() }
-                    }
-                }
-                .labelStyle(.iconOnly).font(.title3)
-                .frame(width: 48, height: 48)
-                .background(AppTheme.accent.opacity(0.16), in: .circle)
-                .disabled(!session.isPlaying && (!session.canPlay || !playerFits))
+                playControl
                 VStack(alignment: .leading, spacing: 2) {
                     Text(playbackHeadline)
                         .font(.subheadline.weight(.semibold)).lineLimit(1)
@@ -160,15 +181,54 @@ struct WatchVideoPanel: View {
                     .frame(width: 48, height: 48)
                 Text(playerFits ? "Opening channel…" : "More room needed").font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
             }
-            Button("About \(channel.name)", systemImage: "info.circle") { showDetails = true }
-                .labelStyle(.iconOnly).frame(width: 44, height: 48)
-            if let toggleFullVideo {
-                Button(fullVideo ? "Show video and chat" : "Focus on video", systemImage: fullVideo ? "rectangle.split.2x1" : "arrow.up.left.and.arrow.down.right", action: toggleFullVideo)
-                    .labelStyle(.iconOnly).frame(width: 44, height: 48)
-            }
+            informationControl
+            focusControl
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
         .frame(minHeight: 64)
+        .background(AppTheme.surface)
+    }
+
+    private var playControl: some View {
+        Button(session.isPlaying ? "Pause video" : "Play video", systemImage: session.isPlaying ? "pause.fill" : "play.fill") {
+            Task {
+                if session.isPlaying { await session.pause() }
+                else { await session.play() }
+            }
+        }
+        .labelStyle(.iconOnly).font(.title3)
+        .frame(width: 48, height: 48)
+        .background(AppTheme.accent.opacity(0.16), in: .circle)
+        .accessibilityValue("\(playbackHeadline). \(session.status)")
+        .disabled(!session.isPlaying && (!session.canPlay || !playerFits))
+    }
+
+    private var informationControl: some View {
+        Button("About \(channel.name)", systemImage: "info.circle") { showDetails = true }
+            .labelStyle(.iconOnly).frame(width: 44, height: 48)
+    }
+
+    @ViewBuilder private var focusControl: some View {
+        if let toggleFullVideo {
+            Button(fullVideo ? "Show video and chat" : "Focus on video", systemImage: fullVideo ? "rectangle.split.2x1" : "arrow.up.left.and.arrow.down.right", action: toggleFullVideo)
+                .labelStyle(.iconOnly).frame(width: 44, height: 48)
+        }
+    }
+
+    private var transportRail: some View {
+        VStack(spacing: 8) {
+            if session.channel == channel.login {
+                playControl
+                if session.failure != nil && playerFits {
+                    Button("Retry player", systemImage: "arrow.clockwise") { session.open(channel: channel.login, forceReload: true) }
+                        .labelStyle(.iconOnly).frame(width: 44, height: 48)
+                }
+            }
+            informationControl
+            focusControl
+        }
+        .padding(8).frame(width: 64)
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(AppTheme.surface)
     }
 

@@ -9,6 +9,8 @@ struct WatchPaneGeometry {
     init(size: CGSize, compact: Bool, division: CGRect?, mode: WatchMode, chatLeading: Bool,
          minimumVideoHeight: CGFloat = 364) {
         let minimumHeight = max(364, minimumVideoHeight)
+        let sideControls = size.height >= 300 && size.height < minimumHeight
+        let minimumWidth: CGFloat = sideControls ? 464 : 400
         let bounds = CGRect(origin: .zero, size: size)
         let fold = division.flatMap { bounds.intersects($0) ? $0.intersection(bounds) : nil }
         if mode == .video {
@@ -34,12 +36,13 @@ struct WatchPaneGeometry {
             let right = CGRect(x: fold.maxX, y: 0, width: size.width - fold.maxX, height: size.height)
             video = chatLeading ? right : left
             chat = chatLeading ? left : right
-        } else if size.width >= 641 && size.height >= minimumHeight && (!compact || size.height < minimumHeight + 241) {
+        } else if size.width >= minimumWidth + 241 && size.height >= (sideControls ? 300 : minimumHeight)
+                    && (!compact || size.height < minimumHeight + 241) {
             // A preference must never shrink a supported player below 400×300.
             // Short compact screens use the available width instead of losing
             // video height to stacked chat. Reserve 240 pt for side-by-side chat.
             let chatWidth = size.width * (mode == .slim ? 0.28 : 0.39)
-            let videoWidth = max(400, min(size.width - 241, size.width - chatWidth - 1))
+            let videoWidth = max(minimumWidth, min(size.width - 241, size.width - chatWidth - 1))
             let remainingWidth = size.width - videoWidth - 1
             video = CGRect(x: chatLeading ? remainingWidth + 1 : 0, y: 0, width: videoWidth, height: size.height)
             chat = CGRect(x: chatLeading ? 0 : videoWidth + 1, y: 0, width: remainingWidth, height: size.height)
