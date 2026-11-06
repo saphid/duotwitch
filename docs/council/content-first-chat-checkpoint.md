@@ -198,3 +198,20 @@ Alex, t3crew and DuoCrew. The similarly named external group is excluded. Releas
 uses existing reviewed5GiB-floor job, unchanged SHA256
 6848bc1dcb5c800a4baef375a61a61c210b906fae4462e2ba303e8ab1036fd31.
 Source commit/release preparation follows. No Discord access or updates.
+
+
+## Internal delivery completed
+
+Source committed/pushed as574a02ad341fdf6546e5ad06b7b3010400481aaf. Existing
+reviewed release job started once with owned detached supervisor;5GiB floor kept.
+Release **0.1.0 (202611060726)**, build ID8f92c0ea-3c98-4329-87a4-8cc4447060f7,
+archived exact com.saphid.duotwitch/NJZUMEA4BN identity and public client/host.
+Strict/deep archive signature, archive/upload/supervisor exits0. Exact8-file
+archive manifest matches after upload. Apple processing/distribution/readbacks
+exit0 and verify VALID/INTERNAL_ONLY/IN_BETA_TESTING, complete explicit internal
+Alex/t3crew/DuoCrew relationships, automatic notifications enabled and matching
+en-US notes. No external group, public submission, duplicate invitation or Discord
+access. Final receipt build/testflight/content-first-chat-delivery-final.json;
+per-stage receipts build/testflight/202611060726/. Email receipt, installation,
+physical Duo/keyboard/VoiceOver/authenticated chat and playback remain unverified.
+Issue208 stays open. No broader player fix or full product acceptance claimed.

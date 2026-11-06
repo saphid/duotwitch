@@ -664,3 +664,13 @@ actionable findings and Astra/high scoped visual acceptance passes. Exact source
 and bundle12 identities match. See DELIVERY.md and the content-first checkpoint
 for evidence and remaining signed-in/keyboard/VoiceOver/playback/Duo limits.
 Internal TestFlight preparation follows; no Discord access or updates.
+
+
+Content-first chat delivered to internal TestFlight **0.1.0 (202611060726)**,
+archived source574a02a. Apple verifies VALID/INTERNAL_ONLY/IN_BETA_TESTING,
+complete explicit Alex/t3crew/DuoCrew relationships, automatic notifications and
+matching en-US test notes. Signed identity, exact8-file archive, upload and final
+readbacks pass. Current UI verification remains115 tests plus source review and
+scoped silent runtime described above; physical/signed-in/keyboard/VoiceOver/live
+playback limits remain. No Discord access. Final receipt:
+`build/testflight/content-first-chat-delivery-final.json`.

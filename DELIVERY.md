@@ -2,9 +2,15 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Verified candidate — content-first chat
+## Current internal TestFlight — content-first chat
 
-The next candidate removes the permanent Chat heading, rule and connection row.
+**0.1.0 (202611060726)** is available in internal TestFlight. Apple readback
+confirms VALID / INTERNAL_ONLY / IN_BETA_TESTING, complete explicit assignments
+to internal Alex, t3crew and DuoCrew, automatic tester notifications enabled,
+and matching en-US What to Test notes. Inbox receipt, installation and physical
+acceptance remain unverified. No duplicate invitations were sent.
+
+This update removes the permanent Chat heading, rule and connection row.
 Messages receive that space; connection notices and conditional reconnect live
 in Viewing options. Jump to latest floats over the timeline with a 44-point
 interactive label and a terminal scroll target that includes VoiceOver clearance.
@@ -32,11 +38,16 @@ and Explore are preserved. No Discord read or update occurred.
   misses are disclosed in the runtime report. These checks do not resolve the
   historical player freezes or host Pause.
 
-Internal delivery is being prepared; the verified current TestFlight build below
-remains authoritative until exact Apple processing/group readback succeeds.
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/8f92c0ea-3c98-4329-87a4-8cc4447060f7).
+- Archived source [574a02a](https://github.com/saphid/duotwitch/commit/574a02ad341fdf6546e5ad06b7b3010400481aaf).
+- Archive/upload/supervisor/signature/processing/distribution/readback exits0.
+  Identity verifies bundle com.saphid.duotwitch, team NJZUMEA4BN, version/build,
+  public Twitch client/player host and internal-only export. The exact8-file
+  archive manifest matches. Receipts: `build/testflight/202611060726/` and
+  `build/testflight/content-first-chat-delivery-final.json`.
 [Checkpoint](docs/council/content-first-chat-checkpoint.md). Issue208 remains open.
 
-## Current internal TestFlight — drag handle and simpler Viewing options
+## Previous internal TestFlight — drag handle and simpler Viewing options
 
 **0.1.0 (202611060438)** is available in internal TestFlight. Apple readback
 verifies VALID / INTERNAL_ONLY / IN_BETA_TESTING, complete explicit relationships
