@@ -160,3 +160,31 @@ seven-file executable delta; see watch-chrome-identity-final-review-sol.md.
 Task a5b691e6-05d7-406f-97a9-1678591ceeb0, OpenAI/Codex/gpt-6.1-sol/high, completed.
 Same-model independent session only. Current silent visual acceptance is still
 pending; do not claim physical keyboard or live account proof.
+
+## Delivered final candidate
+
+Reviewed source committed/pushed as a9f46a311cba264f13fe3fb4657bac5439264db3.
+Astra/high silent visual acceptance completed with no actionable visual defects
+in the scoped signed-out/non-playing controls. Monstercat was offline; no
+Play/Resume/audio occurred. Source62 and exact12 candidate/installed identities
+match at both boundaries. Preferences restored byte-for-byte, portrait restored,
+owned session/panel closed, simulator/data preserved. Report and screenshots:
+build/proof/watch-chrome-identity-final/. Task:
+node:delegated-task:command%3Amcp%3A01b949c1-9016-42f6-a4e4-fd3e90c5884d%3Adelegate-task%3A39a569d8-b640-42ff-9b3f-e17afc430218
+Actual OpenAI/Codex gpt-6-astra/high, completed personally without delegation.
+
+Original release-job.py ran once with normal10GiB reserve, archive/upload/strict
+signature/supervisor exits0. Build0.1.0(202611060259), Apple ID
+4f4f1035-1ab2-4226-901d-ae9ae59698e8, VALID/INTERNAL_ONLY/IN_BETA_TESTING.
+Live group readback is complete and explicitly assigns internal Alex, t3crew,
+DuoCrew. Automatic notifications enabled; email receipt/installation unverified.
+Exact trimmed What to Test notes verified. Archive identity and exact8-file
+manifest are in build/testflight/202611060259/. Validated final receipt:
+build/testflight/watch-chrome-delivery-final.json.
+Authorized Discord #txt announcement/repo link sent through Beeper with exact
+normalized self-authored readback; native Discord ID/placement unverified.
+Receipt: build/testflight/watch-chrome-discord-receipt.json.
+
+Physical keyboard touch/clearance/selection, mounted app-root sign-in transition,
+live auth/chat, sustained playback and physical Duo/fold remain unverified.
+Previous freeze/motion/host-Pause observations retain historical attribution.

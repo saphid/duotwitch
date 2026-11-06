@@ -2,28 +2,62 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Candidate awaiting delivery — cleaner watch controls
+## Current internal TestFlight — cleaner controls and typing resize
 
-The reviewed candidate removes both duplicate native transport rails and gives
-the whole video pane back to the player. Playback, details and Account appear
-first in Viewing options; layout settings use submenus. A focused Chat size
-slider above the safe-area edge lets the pane allocation change while typing,
-without replacing the native composer or losing its unsent draft in the fixture.
-The signed-out chat prompt and connection warning are compact. One app-root
-Account presenter/observer serves normal and DEBUG entries; DEBUG chat resolves
-the real Twitch user ID before starting.
+**0.1.0 (202611060259)** is available in internal TestFlight. Apple readback
+confirms VALID / INTERNAL_ONLY / IN_BETA_TESTING, complete explicit relationships
+to internal Alex, t3crew and DuoCrew, and automatic tester notifications enabled.
+The en-US What to Test notes match after whitespace trimming. Email receipt,
+installation and tester acceptance remain unverified; no duplicate invitations
+were sent in this update.
 
-114 signed Simulator tests pass, zero failed/skipped, exit0. Fresh independent
-Codex / GPT-6.1 Sol / high source review found no actionable findings in the exact
-seven-file delta. Same-model independent session only, not model diversity.
-[Source review](docs/council/watch-chrome-identity-final-review-sol.md) and
-[checkpoint](docs/council/watch-chrome-keyboard-checkpoint.md). Current silent
-visual acceptance and a new internal TestFlight build remain pending. Direct
-slider-event tests do not prove physical keyboard touch/clearance or selection;
-live auth/chat, sustained playback and physical Duo behavior remain unverified.
-The previous distributed build below retains its original evidence attribution.
+The duplicate native video-control rails are removed; the player receives its
+whole pane. Playback, channel details and Account lead Viewing options, followed
+by Layout and Chat layout submenus. The focused composer's Chat size slider
+changes beside/below pane allocation while keeping the composer and unsent draft
+in the hosted fixture. Connection warnings and signed-out prompts are compact.
+One shared Account presenter/observer serves the normal and DEBUG roots; the
+DEBUG entry resolves a real broadcaster ID before authenticated chat starts.
 
-## Current internal TestFlight — adjustable small video and chat
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/4f4f1035-1ab2-4226-901d-ae9ae59698e8).
+- Public source: [saphid/duotwitch](https://github.com/saphid/duotwitch), archived
+  [a9f46a3](https://github.com/saphid/duotwitch/commit/a9f46a311cba264f13fe3fb4657bac5439264db3).
+- 114 signed Simulator tests passed, zero failed/skipped, exit0. Existing
+  AccountView compiler deprecation remains; no runtime-warning record is not a
+  warning-free-build claim.
+- Fresh independent OpenAI/Codex GPT-6.1 Sol/high review completed with no
+  actionable findings in the exact seven-file executable delta. Prior account
+  observer and DEBUG identity findings are resolved. Same author/reviewer model,
+  independent session only; no model diversity.
+  [Review](docs/council/watch-chrome-identity-final-review-sol.md).
+- Astra/high silent signed-out visual checks passed: primary menu actions visible
+  without scrolling in both orientations, Account presentation/dismissal, grouped
+  settings, compact chat prompt, non-playing Full/chat return and divider resize.
+  Monstercat was offline; no Play/Resume/audio action occurred. All62 source and
+  exact12 candidate/installed files matched before/after; strict signatures pass.
+  Preferences restored byte-for-byte, portrait restored, owned app/session/panel
+  closed and Simulator/data preserved. Evidence:
+  `build/proof/watch-chrome-identity-final/report.md`.
+- Archive, upload, supervisor, distribution and strict signature exits0. Archive
+  identity verifies bundle com.saphid.duotwitch, team NJZUMEA4BN, version/build,
+  public Twitch client/player host. Export is internal-only. Archive and exact
+  eight-file manifest: `build/testflight/202611060259/`; validated final receipt:
+  `build/testflight/watch-chrome-delivery-final.json`.
+- Authorized T3Code (dev) #txt announcement and public repository link sent through
+  Beeper with exact normalized self-authored readback. Private receipt:
+  `build/testflight/watch-chrome-discord-receipt.json`. Discord-native message ID
+  and placement remain independently unverified.
+
+Physical keyboard touch/clearance and selection during slider interaction remain
+unverified: the hosted test dispatches UISlider.valueChanged directly. The new
+identity regression manually synchronizes the model rather than mounting the
+common app root. Live authentication/chat, current sustained moving playback,
+physical Duo outside/fold and phone diagnostics connectivity remain unverified.
+Earlier Simulator freezes and unsolicited Twitch Pause remain unresolved. This
+is a scoped internal beta, not full product sign-off.
+[Checkpoint](docs/council/watch-chrome-keyboard-checkpoint.md).
+
+## Previous internal TestFlight — adjustable small video and chat
 
 **0.1.0 (202611060151)** is available to internal **Alex** and **t3crew**, and
 explicitly assigned to internal **DuoCrew**. Apple readback verifies `VALID`,

@@ -1,18 +1,28 @@
-# Cleaner watch controls candidate — 6 November 2026
+# Cleaner controls delivered — 6 November 2026
 
-The duplicate transport rail is removed. Primary playback/details/Account routes
-lead Viewing options; layout settings are grouped. A focus-dependent Chat size
-slider changes beside/below allocation while preserving the production composer
-and unsent draft in a hosted fixture. The common Account presenter/observer and
-resolved DEBUG broadcaster identity are source-reviewed.
+**0.1.0 (202611060259)** from
+[a9f46a3](https://github.com/saphid/duotwitch/commit/a9f46a311cba264f13fe3fb4657bac5439264db3)
+is VALID / INTERNAL_ONLY / IN_BETA_TESTING, explicitly assigned to internal Alex,
+t3crew and DuoCrew with automatic notifications enabled. Email receipt and
+installation remain unverified. The duplicate control rail is removed; primary
+menu routes are visible without scrolling, and layout settings are grouped.
+A focus-only Chat size slider resizes panes while preserving the composer/draft
+in the hosted fixture.
 
 114 tests pass, zero failed/skipped, exit0. Fresh independent Codex/Sol/high source
-review found no actionable findings in the frozen seven-file executable delta;
-same-model session only, no model diversity. Silent visual acceptance and new
-TestFlight delivery remain pending. Physical touch, keyboard clearance/selection,
-live auth/chat and playback are unverified. See [DELIVERY.md](../DELIVERY.md).
+review found no actionable findings in the exact seven-file executable delta;
+same-model independent session only. Astra/high silent signed-out visual checks
+pass. Source/candidate/installed identities match; preferences were restored
+exactly and owned UI resources closed. Archive/upload/signature/distribution
+exit0. Authorized Discord announcement and repository link have exact normalized
+Beeper self-readback.
 
-# Internal beta delivered — 6 November 2026
+Physical keyboard touch/clearance/selection, live identity/chat and sustained
+playback remain unverified; earlier freezes/host Pause remain unresolved. See
+[DELIVERY.md](../DELIVERY.md) and
+[review](council/watch-chrome-identity-final-review-sol.md). Owning issue stays open.
+
+# Previous internal beta delivered — 6 November 2026
 
 **0.1.0 (202611060151)** from
 [e78213d](https://github.com/saphid/duotwitch/commit/e78213d7aad56d4944b9ece9bf2273443da35322)
