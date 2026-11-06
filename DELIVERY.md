@@ -2,19 +2,64 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Next candidate — small video, keyboard and adjustable chat
+## Current internal TestFlight — adjustable small video and chat
 
-Alex's latest clarification supersedes the intermediate minimum-visible-size
-candidate below. Visible video can now shrink to a positive user-chosen size,
-including keyboard-reduced landscape allocations, using a supported logical
-Twitch viewport with scaled native presentation. Side/below placement, saved split
-sizes, direct/accessible adjustment and unscaled native controls remain. Current
-full suite passed112tests, exit0 after reproducing/fixing the independent review's
-chat-bounds and identical-Slim findings. Fresh Codex/Sol/high recheck found no
-actionable P0–P3 findings. Silent runtime and TestFlight delivery are pending. See
-[recheck](docs/council/small-video-keyboard-review2-sol.md) and
-[fix checkpoint](docs/council/small-video-review-fixes-checkpoint.md).
-No new beta is available yet. See the small-video keyboard checkpoint.
+**0.1.0 (202611060151)** is available to internal **Alex** and **t3crew**, and
+explicitly assigned to internal **DuoCrew**. Apple readback verifies `VALID`,
+`INTERNAL_ONLY`, `IN_BETA_TESTING`, all three complete group relationships and
+automatic tester notifications enabled. The en-US What to Test notes match after
+trimming surrounding whitespace. Email delivery and installation of this update
+are not verified. Andy's existing team invitation remains pending; DuoCrew has no
+testers until his internal eligibility/membership is completed after acceptance.
+
+Video can shrink to any positive user-chosen pane using a supported logical
+Twitch viewport with uniformly scaled native presentation. Drag the divider or
+use Smaller/Larger chat; choose beside/below placement. Regular and Slim modes
+remember separate side widths and below-video heights, with per-mode reset.
+Native controls remain unscaled. No automatic Resume was added.
+
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/98c25e83-74a3-4789-8ed1-e124a8357d8f).
+- Public source: [saphid/duotwitch](https://github.com/saphid/duotwitch), archived
+  [e78213d](https://github.com/saphid/duotwitch/commit/e78213d7aad56d4944b9ece9bf2273443da35322).
+- **112 signed Simulator tests passed**, zero failed/skipped, exit0. Existing
+  AccountView compiler deprecation remains; empty runtimeWarnings is not a
+  warning-free-build claim.
+- Fresh independent Codex / GPT-6.1 Sol / high review completed with no actionable
+  P0–P3 findings in the complete frozen six-file delta over cd48393. Both earlier
+  chat-bounds and identical-Slim findings are resolved. Same author/reviewer model;
+  no model diversity. [Review](docs/council/small-video-keyboard-review2-sol.md).
+- Archive/upload/signature/distribution exits0. Archived identity verifies bundle
+  `com.saphid.duotwitch`, team `NJZUMEA4BN`, version/build, public Twitch client and
+  player host. Export uses `testFlightInternalTestingOnly=true`. The archived
+  binary contains the new lxso1 receiver endpoint, with no blocked lxso2 endpoint.
+- Archive: `build/testflight/202611060151/DuoTwitch.xcarchive`; identity, exact
+  eight-file bundle manifest and readbacks are beside it. Final receipt:
+  `build/testflight/small-video-delivery-final.json`.
+- Authorized T3Code (dev) #txt announcement sent through Beeper and exact normalized
+  self-authored readback verified; private receipt:
+  `build/testflight/small-video-discord-receipt.json`. Discord-native message ID
+  and server-side placement were not independently read back.
+
+### Current runtime and remaining limits
+
+The silent runtime demonstrated native dragging, clipped small chat, independent
+saved modes, Full/chat returns and both rotations without native layout Pause,
+retaining one player/load. All three accepted Play requests passed the fail-closed
+public mute gate. Sustained moving video did not pass: long frozen frames recurred,
+and Twitch emitted an unsolicited PAUSE after a scaled-size mode change, without
+a native pause request or fit failure. Its cause remains unresolved. Actual
+composer/keyboard/IME was unavailable because the Simulator was signed out;
+keyboard-sized continuity is covered synthetically. Physical Duo outside/fold
+behavior, tiny iframe interaction and accessibility traversal remain unverified.
+
+Default allowlisted diagnostics now target the deployed owned lxso1 receiver.
+The current runtime returned355 records, of which32 preserved canonical projected
+lines matched exactly. Delivery is bounded and incomplete; phone connectivity is
+unverified and requires existing Tailscale access/any iOS permission. Local export
+remains independent. Report: `build/proof/small-video-current/REPORT.md`.
+Source62 and both exact12 bundles matched before/after; signatures pass. This
+internal beta is not full product/council sign-off. Earlier evidence below retains
+its original candidate attribution.
 
 ## Previous intermediate — adjustable video/chat and rotation continuity
 
@@ -52,7 +97,7 @@ screen says “Video needs more room”; historical382-point allocations cannot 
 the supported400×300embed in portrait. Rotation guidance is provided; portrait
 outside playback, fold continuity and PiP are not claimed.
 
-## Distributed internal TestFlight — WebKit audio ownership candidate
+## Previous internal TestFlight — WebKit audio ownership candidate
 
 **0.1.0 (202611052312)** is available to the existing internal **Alex**, **t3crew**
 and **DuoCrew** groups. Apple readback verifies `VALID`, `INTERNAL_ONLY`,
@@ -89,7 +134,7 @@ phone also needs existing Tailscale connectivity and any requested iOS permissio
 No public/external beta, App Store release, physical fix, PiP or fold-continuity
 claim. Earlier runtime proof below remains attributed to its original build.
 
-## Current Simulator runtime — partial
+## Previous Simulator runtime — WebKit audio ownership candidate
 
 The frozen WebKit-audio candidate was tested personally by GPT-6 Astra high,
 with official Unmute readback before both Play actions and muted media samples.
@@ -105,7 +150,7 @@ The default queue/retry activity was observed, but no remote receipt was verifie
 Report: `build/proof/webkit-audio-ownership/REPORT.md`. App/session cleanup
 completed and Simulator data/Keychain were preserved.
 
-## Automatic collection operational limit
+## Historical automatic collection staging limit
 
 Next-source change (not yet deployed/distributed): automatic upload now targets
 Alex’s dedicated DuoTwitch JSON/SQLite receiver at

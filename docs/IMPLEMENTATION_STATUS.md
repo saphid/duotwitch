@@ -1,3 +1,22 @@
+# Internal beta delivered — 6 November 2026
+
+**0.1.0 (202611060151)** from
+[e78213d](https://github.com/saphid/duotwitch/commit/e78213d7aad56d4944b9ece9bf2273443da35322)
+is VALID / INTERNAL_ONLY / IN_BETA_TESTING with complete explicit Alex, t3crew
+and DuoCrew relationships. Automatic tester notifications are enabled; inbox
+receipt and installation of this update are unverified. Andy's existing team
+invitation remains pending, so DuoCrew membership is not complete. The authorized
+Discord #txt announcement/public repo link have normalized exact Beeper readback.
+
+112 signed Simulator tests pass, exit0; fresh Codex/Sol/high review of the frozen
+six-file delta completed without actionable findings. Current runtime passed
+resizing/clipping/mode persistence and rotation without native layout pauses, but
+sustained motion failed and one unsolicited Twitch Pause remains unresolved.
+Physical outside/fold and signed-in keyboard/IME are unverified. Default uploads
+now target the working lxso1 receiver, with partial exact Simulator receipt;
+phone collection remains unverified. See [DELIVERY.md](../DELIVERY.md) for exact
+readbacks, artifacts and limits. Owning issue remains open.
+
 # Small video and keyboard continuity — 6 November 2026
 
 Alex clarified that visible video may shrink freely and must continue when the
@@ -10,13 +29,29 @@ retains the existing pause safeguards; positive small panes remain playable.
 Focused tests18passed, including a persistent keyboard-sized production layout.
 Full signed suite110passed, zero failed/skipped, exit0; fresh independent source
 review found a P2 chat-bounds defect and P3 identical-Slim defect. Both reproduced
-and are corrected in the112-test candidate (zero failed/skipped, exit0), now awaiting
-current live runtime. The fresh Codex/Sol/high recheck completed with no actionable
+and are corrected in the112-test candidate (zero failed/skipped, exit0). The fresh Codex/Sol/high recheck completed with no actionable
 P0–P3 findings in the frozen six-file delta; this is an independent session using
 the author's model, not model diversity. See
 [recheck](council/small-video-keyboard-review2-sol.md),
 [fix checkpoint](council/small-video-review-fixes-checkpoint.md) and
 [checkpoint](council/small-video-keyboard-checkpoint.md).
+
+## Current runtime and delivery
+
+The current frozen runtime passed native dragging, clipping, independent saved
+modes, Full/chat returns and both rotations without native layout Pause. One
+player/load remained; all three accepted Plays passed the public mute gate.
+Sustained moving video failed, and an unsolicited Twitch PAUSE followed a scaled
+mode-size change without native Pause/fit/hidden/interruption evidence. Cause is
+unresolved. Actual keyboard/IME could not be exercised while signed out. Synthetic
+mounted tests cover persistent keyboard-sized allocations; physical Duo/outside
+and signed-in composer continuity remain open.
+
+Automatic collection returned 355 current-run records; 32 preserved canonical
+projected lines match exactly. Complete delivery/phone connectivity are not claimed.
+Source62 and both exact12 bundles matched, signatures0. Runtime report:
+`build/proof/small-video-current/REPORT.md`. Internal beta is delivered from
+[e78213d](https://github.com/saphid/duotwitch/commit/e78213d7aad56d4944b9ece9bf2273443da35322).
 
 # Previous adjustable chat intermediate — 6 November 2026
 
