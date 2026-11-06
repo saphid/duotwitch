@@ -45,14 +45,15 @@ struct MainView: View {
                                     .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
                             }
                         }
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Account", systemImage: "person.crop.circle") { app.accountPresented = true }
-                                .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+                        if !app.isWatching {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Account", systemImage: "person.crop.circle") { app.accountPresented = true }
+                                    .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+                            }
                         }
                     }
             }
         }
-        .sheet(isPresented: $app.accountPresented) { AccountView(app: app) }
         .task(id: phase) {
             guard phase == .active else { return }
             await app.auth.maintainSession()
@@ -63,7 +64,6 @@ struct MainView: View {
                 await app.auth.maintainSession()
             }
         }
-        .onChange(of: app.auth.account) { _, _ in app.accountChanged() }
         .onChange(of: app.isWatching) { _, watching in
             if watching { libraryVisibility = visibility; visibility = .detailOnly }
             else { visibility = libraryVisibility }

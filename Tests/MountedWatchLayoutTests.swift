@@ -7,6 +7,83 @@ import XCTest
 /// physical hinge tests and do not imply live Twitch continuity.
 @MainActor
 final class MountedWatchLayoutTests: XCTestCase {
+    func testKeyboardChatResizeKeepsComposerFocusAndDraft() async throws {
+        // Restore fixture credentials entirely in memory; no account or socket
+        // traffic is used to mount the actual production composer and toolbar.
+        let scopes = TwitchAuth.requestedScopes
+        StubTwitchProtocol.install { _ in
+            (200, ["client_id": "test-client", "user_id": "fixture", "login": "fixture",
+                   "expires_in": 3600, "scopes": scopes])
+        }
+        defer { StubTwitchProtocol.install(nil) }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubTwitchProtocol.self]
+        let store = MemoryCredentialStore()
+        store.value = TwitchCredentials(clientId: "test-client", accessToken: "fixture", refreshToken: "fixture",
+            expiresAt: .now.addingTimeInterval(3600), userId: "fixture", login: "fixture", scopes: TwitchAuth.requestedScopes)
+        let auth = TwitchAuth(clientId: "test-client", store: store, http: TwitchHTTP(session: URLSession(configuration: config)))
+        await auth.restore()
+        XCTAssertNotNil(auth.account)
+        let preferencesName = "DuoTwitch-keyboard-resize-\(UUID().uuidString)"
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: preferencesName))
+        defer { preferences.removePersistentDomain(forName: preferencesName) }
+        preferences.set(WatchChatPlacement.beside.rawValue, forKey: "watchChatPlacement")
+        preferences.set(WatchMode.balanced.rawValue, forKey: "watchMode")
+        let player = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+            loadRequest: { _, _ in }, pauseMedia: { _ in }, requestPlay: { _, _ in true })
+        // This unconfigured chat API cannot open a network connection or send.
+        let chat = ChatSession(api: TwitchAPI(auth: TwitchAuth(clientId: "")))
+        let app = AppModel(auth: auth, player: player, chat: chat)
+        let channel = WatchedChannel(channel: TwitchChannel(id: "fixture", broadcasterLogin: "fixture", displayName: "Fixture", gameName: "", title: "", thumbnailUrl: "", isLive: true))
+        let host = UIHostingController(rootView: NavigationStack {
+            WatchView(app: app, channel: channel).defaultAppStorage(preferences)
+        })
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.endEditing(true); window.isHidden = true; window.rootViewController = nil }
+        try await Task.sleep(for: .milliseconds(250))
+        let composer = try XCTUnwrap(findTextInput(in: host.view))
+        chat.draft = "Keep this unsent draft"
+        XCTAssertTrue(composer.becomeFirstResponder())
+        try await Task.sleep(for: .milliseconds(500))
+        for placement in [WatchChatPlacement.beside, .below] {
+            preferences.set(placement.rawValue, forKey: "watchChatPlacement")
+            try await Task.sleep(for: .milliseconds(120))
+            let slider = try XCTUnwrap(sliders(in: window).first,
+                "The focused composer must expose a live Chat size slider")
+            let before = player.webView.convert(player.webView.bounds, to: host.view).size
+            slider.value = slider.minimumValue + (slider.maximumValue - slider.minimumValue) * 0.75
+            slider.sendActions(for: .valueChanged)
+            try await Task.sleep(for: .milliseconds(120))
+            host.view.layoutIfNeeded()
+            let after = player.webView.convert(player.webView.bounds, to: host.view).size
+            XCTAssertNotEqual(placement == .beside ? before.width : before.height,
+                              placement == .beside ? after.width : after.height,
+                              "The keyboard resize control must change the actual video allocation")
+            XCTAssertGreaterThan(preferences.double(forKey: placement == .beside ? "watchChatWidth" : "watchChatHeight"), 0)
+            XCTAssertTrue(composer.isFirstResponder, "Resizing from the keyboard must not dismiss the composer")
+            XCTAssertTrue(findTextInput(in: host.view) === composer)
+            XCTAssertEqual(chat.draft, "Keep this unsent draft")
+        }
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "Focused composer with live resize control"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        window.endEditing(true)
+        try await Task.sleep(for: .milliseconds(180))
+        XCTAssertTrue(sliders(in: window).isEmpty, "Resize accessory must leave when the composer loses focus")
+        XCTAssertEqual(chat.draft, "Keep this unsent draft")
+    }
+
+    private func sliders(in view: UIView) -> [UISlider] {
+        (view as? UISlider).map { [$0] } ?? view.subviews.flatMap { sliders(in: $0) }
+    }
+
     func testProductionWatchFullVideoReturnAtNarrowRegularWidthDoesNotPause() async throws {
         try await assertProductionWatchFullVideoReturn(dynamicTypeSize: .large)
     }
@@ -183,7 +260,7 @@ final class MountedWatchLayoutTests: XCTestCase {
             let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
                 loadRequest: { _, request in nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value },
                 pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
-            let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel, toggleFullVideo: {}).ignoresSafeArea())
+            let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel).ignoresSafeArea())
             let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
             let window = UIWindow(windowScene: scene)
             let container = UIViewController()
@@ -195,6 +272,11 @@ final class MountedWatchLayoutTests: XCTestCase {
             host.didMove(toParent: container)
             try await Task.sleep(for: .milliseconds(100))
             host.view.layoutIfNeeded()
+            let expectedViewport = WatchVideoViewport(available: CGSize(width: width, height: height))
+            XCTAssertEqual(session.webView.bounds.width, expectedViewport.size.width, accuracy: 1,
+                           "The player must use the whole video pane without a duplicate controls rail")
+            XCTAssertEqual(session.webView.bounds.height, expectedViewport.size.height, accuracy: 1,
+                           "The player must not reserve a second transport bar below Twitch's controls")
             if let nonce {
                 session.handleHostMessage(["session": nonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
                 try await Task.sleep(for: .milliseconds(40))

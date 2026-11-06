@@ -5,6 +5,51 @@ import XCTest
 final class ChatSessionTests: XCTestCase {
     override func tearDown() { StubTwitchProtocol.install(nil); super.tearDown() }
 
+    func testSigningInToUnresolvedWatchWaitsForRealBroadcasterIdentity() async throws {
+        let scopes = TwitchAuth.requestedScopes
+        StubTwitchProtocol.install { request in
+            if request.url!.path.hasSuffix("/validate") {
+                return (200, ["client_id": "test-client", "user_id": "viewer", "login": "viewer",
+                    "expires_in": 3600, "scopes": scopes])
+            }
+            if request.url!.path.hasSuffix("/users") {
+                return (200, ["data": [["id": "123456", "login": "channel", "display_name": "Channel",
+                    "description": "", "profile_image_url": "", "offline_image_url": ""]]])
+            }
+            return (202, ["data": [["id": "subscription"]]])
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubTwitchProtocol.self]
+        let http = TwitchHTTP(session: URLSession(configuration: config))
+        let store = MemoryCredentialStore()
+        store.value = TwitchCredentials(clientId: "test-client", accessToken: "fixture", refreshToken: "fixture",
+            expiresAt: .now.addingTimeInterval(3600), userId: "viewer", login: "viewer", scopes: scopes)
+        let auth = TwitchAuth(clientId: "test-client", store: store, http: http)
+        let socket = FakeChatSocket(welcome: true)
+        var connections = 0
+        let chat = ChatSession(api: TwitchAPI(auth: auth, http: http), makeSocket: { _ in
+            connections += 1
+            return socket
+        })
+        defer { chat.stop(clear: true) }
+        let app = AppModel(auth: auth, http: http, chat: chat)
+        let unresolved = WatchedChannel(user: TwitchUser(id: "", login: "channel", displayName: "Channel",
+            description: "", profileImageUrl: "", offlineImageUrl: ""))
+        app.watch(unresolved)
+        await auth.restore()
+        XCTAssertNotNil(auth.account)
+        app.accountChanged()
+        app.watch(unresolved)
+        try await Task.sleep(for: .milliseconds(40))
+        XCTAssertEqual(connections, 0, "Neither sign-in nor reappearance may join chat with an unresolved ID")
+        let resolved = try await app.api.user(login: "channel")
+        let user = try XCTUnwrap(resolved)
+        app.watch(WatchedChannel(user: user))
+        try await waitUntil { chat.connection == .connected }
+        XCTAssertEqual(app.selectedChannel?.id, "123456")
+        XCTAssertEqual(connections, 1)
+    }
+
     func testSuccessfulSendSurvivesBackgroundSuspension() async throws {
         let gate = DispatchSemaphore(value: 0)
         let socket = FakeChatSocket(welcome: true)

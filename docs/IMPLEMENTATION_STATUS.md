@@ -1,3 +1,17 @@
+# Cleaner watch controls candidate — 6 November 2026
+
+The duplicate transport rail is removed. Primary playback/details/Account routes
+lead Viewing options; layout settings are grouped. A focus-dependent Chat size
+slider changes beside/below allocation while preserving the production composer
+and unsent draft in a hosted fixture. The common Account presenter/observer and
+resolved DEBUG broadcaster identity are source-reviewed.
+
+114 tests pass, zero failed/skipped, exit0. Fresh independent Codex/Sol/high source
+review found no actionable findings in the frozen seven-file executable delta;
+same-model session only, no model diversity. Silent visual acceptance and new
+TestFlight delivery remain pending. Physical touch, keyboard clearance/selection,
+live auth/chat and playback are unverified. See [DELIVERY.md](../DELIVERY.md).
+
 # Internal beta delivered — 6 November 2026
 
 **0.1.0 (202611060151)** from

@@ -2,6 +2,27 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
+## Candidate awaiting delivery — cleaner watch controls
+
+The reviewed candidate removes both duplicate native transport rails and gives
+the whole video pane back to the player. Playback, details and Account appear
+first in Viewing options; layout settings use submenus. A focused Chat size
+slider above the safe-area edge lets the pane allocation change while typing,
+without replacing the native composer or losing its unsent draft in the fixture.
+The signed-out chat prompt and connection warning are compact. One app-root
+Account presenter/observer serves normal and DEBUG entries; DEBUG chat resolves
+the real Twitch user ID before starting.
+
+114 signed Simulator tests pass, zero failed/skipped, exit0. Fresh independent
+Codex / GPT-6.1 Sol / high source review found no actionable findings in the exact
+seven-file delta. Same-model independent session only, not model diversity.
+[Source review](docs/council/watch-chrome-identity-final-review-sol.md) and
+[checkpoint](docs/council/watch-chrome-keyboard-checkpoint.md). Current silent
+visual acceptance and a new internal TestFlight build remain pending. Direct
+slider-event tests do not prove physical keyboard touch/clearance or selection;
+live auth/chat, sustained playback and physical Duo behavior remain unverified.
+The previous distributed build below retains its original evidence attribution.
+
 ## Current internal TestFlight — adjustable small video and chat
 
 **0.1.0 (202611060151)** is available to internal **Alex** and **t3crew**, and

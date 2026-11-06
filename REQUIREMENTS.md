@@ -46,3 +46,13 @@ to positive smaller allocations; keep native transport controls unscaled.
 ## Existing infrastructure lookup
 
 `pa-memory` returned older native iPhone signing references but no DuoTwitch implementation; this is incomplete prior-work evidence, not proof of absence. T3 project inventory located both Duocord and Duocord Native. Portfolio registry validation passed; no Twitch/Duocord/iPhone Duo capability matched the bounded lookup. Use the explicitly requested new project here. Existing App Store operations are documented in `/Users/saphid/projects/apple-app-store-connect`, and Duocord Native has reusable ASC signing/upload patterns.
+
+## Watch controls and typing follow-up — 6 November 2026
+
+Remove the redundant permanent native Play/Info/Full-video rail and transport bar
+beside Twitch's own player controls. Video uses its whole allocated pane. Native
+fallback playback, details/diagnostics, account and layout options remain in one
+standard menu. Avoid redundant account buttons, persistent oversized notices and
+duplicated connection text. When the composer is focused, allow panel resizing
+without dismissing the keyboard or losing the unsent draft/selection; resizing
+controls must leave with focus, rather than becoming another permanent rail.

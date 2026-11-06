@@ -59,7 +59,7 @@ final class AppModel {
             chat.stop(clear: true)
             selectedChannel = channel
         }
-        if auth.account != nil {
+        if auth.account != nil && !channel.id.isEmpty {
             if changed || !chat.resume() { chat.start(broadcasterId: channel.id) }
         }
         if changed { chat.restoreDraft(drafts[channel.id] ?? "", sendError: draftErrors[channel.id]) }
@@ -70,7 +70,7 @@ final class AppModel {
         chat.stop(clear: true)
         drafts.removeAll()
         draftErrors.removeAll()
-        if isWatching, let selectedChannel, auth.account != nil { chat.start(broadcasterId: selectedChannel.id) }
+        if isWatching, let selectedChannel, !selectedChannel.id.isEmpty, auth.account != nil { chat.start(broadcasterId: selectedChannel.id) }
     }
 
     func leaveWatch(_ channel: WatchedChannel, appearance: UUID) {

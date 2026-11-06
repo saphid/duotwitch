@@ -4,9 +4,11 @@ struct NativeChatView: View {
     @Bindable var session: ChatSession
     let signedIn: Bool
     var composerVisible = true
+    var onComposerFocusChange: (Bool) -> Void = { _ in }
     let signIn: () -> Void
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var atBottom = true
+    @State private var showConnectionNotice = false
     @FocusState private var composerFocused: Bool
 
     var body: some View {
@@ -14,6 +16,14 @@ struct NativeChatView: View {
             HStack {
                 Label("Chat", systemImage: "bubble.left.and.bubble.right").font(.headline)
                 Spacer()
+                if let gap = session.gapNotice {
+                    Button { showConnectionNotice = true } label: {
+                        Image(systemName: "exclamationmark.bubble").foregroundStyle(.secondary)
+                    }
+                    .frame(minWidth: 44, minHeight: 44)
+                    .accessibilityLabel(gap)
+                    .accessibilityHint("Shows connection details.")
+                }
                 if session.connection == .connected {
                     Circle().fill(.green).frame(width: 7, height: 7).accessibilityLabel("Connected")
                 } else if signedIn {
@@ -23,11 +33,12 @@ struct NativeChatView: View {
             }.padding(.horizontal, 14).frame(minHeight: 48)
             Divider()
             if !signedIn {
-                ContentUnavailableView {
-                    Label("Join the conversation", systemImage: "bubble.left.and.bubble.right")
-                } description: { Text("Sign in to read and send messages.") } actions: {
-                    Button("Sign in", action: signIn).buttonStyle(.borderedProminent)
-                }.frame(maxHeight: .infinity)
+                VStack(spacing: 12) {
+                    Text("Sign in to join chat.").font(.callout).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Sign in", action: signIn).buttonStyle(.bordered)
+                }
+                .padding(16).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 timeline
                 composer
@@ -35,20 +46,18 @@ struct NativeChatView: View {
         }
         .background(AppTheme.background)
         .accessibilityIdentifier("nativeChat")
+        .alert("Chat connection", isPresented: $showConnectionNotice) {
+            Button("OK") { session.dismissGapNotice() }
+        } message: {
+            Text(session.gapNotice ?? "")
+        }
+        .onChange(of: composerFocused) { _, focused in onComposerFocusChange(focused) }
         .onChange(of: composerVisible) { _, visible in if !visible { composerFocused = false } }
     }
 
     private var timeline: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
-                if let gap = session.gapNotice {
-                    HStack(alignment: .top) {
-                        Text(gap).font(.caption).foregroundStyle(.secondary)
-                        Spacer(minLength: 4)
-                        Button("Dismiss connection notice", systemImage: "xmark") { session.dismissGapNotice() }
-                            .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
-                    }.padding(.leading, 12).background(AppTheme.surface)
-                }
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         if session.messages.isEmpty {
@@ -98,7 +107,9 @@ struct NativeChatView: View {
                 }
             }
             if let error = session.sendError { Text(error).font(.caption).foregroundStyle(.orange) }
-            if session.connection != .connected { Text(session.connection.title).font(.caption).foregroundStyle(.secondary) }
+            if session.connection != .connected && !session.messages.isEmpty {
+                Text(session.connection.title).font(.caption).foregroundStyle(.secondary)
+            }
             HStack(alignment: .bottom, spacing: 8) {
                 TextField("Send a message", text: $session.draft, axis: .vertical)
                     .lineLimit(1...4).focused($composerFocused)
