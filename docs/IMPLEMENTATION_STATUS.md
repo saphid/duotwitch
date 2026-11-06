@@ -1,4 +1,30 @@
-# Cleaner controls delivered — 6 November 2026
+# Drag handle and Viewing options delivered — 6 November 2026
+
+**0.1.0 (202611060438)** from
+[860ec92](https://github.com/saphid/duotwitch/commit/860ec926bbaac918504a7258ceca786c71b4b2a1)
+is VALID / INTERNAL_ONLY / IN_BETA_TESTING with complete explicit internal Alex,
+t3crew and DuoCrew assignments, notifications enabled and matching notes.
+Inbox receipt and installation unverified. No duplicate invitation or Discord
+read/update. Explore unchanged; side menu clarified as Viewing options only.
+
+Divider replaces the slider, keeps its44point target inside available bounds,
+and retains visible grip alignment at minimum splits. Hide keyboard appears
+while composing. Viewing options is shorter; Layout opens a system Form sheet.
+115tests passed,0failed/skipped,exit0. Fresh independent Codex/Sol/high complete
+four-file source recheck: no actionable P0-P3; previous P3 resolved. Same model
+as author, independent session only. Final Astra/high silent edge/runtime check
+passes scoped dragging/menu checks, exact source/bundle identities and cleanup.
+390saved preference files restored exactly. Archive/upload/signature/processing/
+distribution/readback exits0, exact archived identity and8-file manifest verified.
+
+Actual Hide keyboard activation and keyboard clearance remain unverified in
+signed-out runtime; hosted pan-delta focus/draft/selection evidence is separate.
+Physical Duo/fold/outside, current moving playback and authenticated chat remain
+open. See [DELIVERY.md](../DELIVERY.md),
+[review](council/drag-watch-delivery-review-sol.md) and
+[checkpoint](council/drag-keyboard-checkpoint.md). Owning issue remains open.
+
+# Previous cleaner controls delivered — 6 November 2026
 
 **0.1.0 (202611060259)** from
 [a9f46a3](https://github.com/saphid/duotwitch/commit/a9f46a311cba264f13fe3fb4657bac5439264db3)

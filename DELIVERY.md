@@ -2,7 +2,55 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Current internal TestFlight — cleaner controls and typing resize
+## Current internal TestFlight — drag handle and simpler Viewing options
+
+**0.1.0 (202611060438)** is available in internal TestFlight. Apple readback
+verifies VALID / INTERNAL_ONLY / IN_BETA_TESTING, complete explicit relationships
+to internal Alex, t3crew and DuoCrew, automatic tester notifications enabled,
+and matching en-US What to Test notes. Inbox receipt, installation and tester
+acceptance are unverified; no duplicate invitations were sent.
+
+Chat resizing uses the divider instead of a slider, with an on-screen44point
+touch target and unchanged visible grip alignment even at extreme splits.
+Hide keyboard appears in the navigation bar while composing and clears focus
+without clearing the draft. Viewing options keeps primary actions short; Layout
+opens a system settings sheet. Alex clarified that side menu means Viewing
+options: the Explore sidebar is unchanged. No Discord read or update occurred.
+
+- [Build details](https://appstoreconnect.apple.com/apps/6831008730/testflight/ios/4f7cea8b-cdf2-4529-ac71-0712c66cfd0f).
+- Archived source [860ec92](https://github.com/saphid/duotwitch/commit/860ec926bbaac918504a7258ceca786c71b4b2a1).
+- **115 signed Simulator tests passed**,0failed/skipped,exit0. Hosted production
+  fixture verifies both-axis pane changes via pan deltas, no slider, accumulated
+  movement, same composer/focus, unsent draft and text selection. Geometry
+  regression covers target containment and grip alignment at extreme splits.
+  Existing compiler/tool warnings remain; empty runtimeWarnings is not a
+  warning-free-build claim.
+- Fresh independent OpenAI/Codex GPT-6.1 Sol/high source recheck completed with
+  no actionable P0-P3 findings in the complete four-file executable delta.
+  Prior P3 edge-target finding resolved. Same-model independent session only,
+  no diversity claim. [Review](docs/council/drag-watch-delivery-review-sol.md).
+- Codex/GPT-6 Astra/high silent final recheck found no actionable issues in
+  edge-drag/Viewing options scope: minimum leading/trailing and tiny below panes
+  recover from their visible grips, alignment correct; menu/Layout work. Source62
+  and exact12candidate/installed files match before/after.390 saved preference
+  files restored exactly; portrait/owned app/session/panel cleanup complete,
+  Simulator/data/Keychain preserved. No playback action. Evidence:
+  `build/proof/drag-watch-delivery/report.md` and `receipt.json`. Broader prior
+  menu/orientation/persistence/reset checks retain their earlier114test candidate.
+- Signed archive identity verifies bundle com.saphid.duotwitch, team NJZUMEA4BN,
+  version/build and public Twitch client/player host. Internal-only export;
+  archive/upload/supervisor/signature/processing/distribution/readback exits0.
+  Exact8-file archive manifest and receipts: `build/testflight/202611060438/`.
+  Validated final receipt: `build/testflight/drag-watch-delivery-final.json`.
+
+Actual Hide keyboard activation, physical keyboard clearance and draft/selection
+preservation during touch remain unverified because runtime chat was signed out.
+The hosted pan test does not establish physical event delivery. Physical Duo
+outside/fold, current sustained live playback and authenticated chat remain open;
+this interface update does not claim to resolve historical player freezes/Pause.
+[Checkpoint](docs/council/drag-keyboard-checkpoint.md). Owning issue stays open.
+
+## Previous internal TestFlight — cleaner controls and typing resize
 
 **0.1.0 (202611060259)** is available in internal TestFlight. Apple readback
 confirms VALID / INTERNAL_ONLY / IN_BETA_TESTING, complete explicit relationships

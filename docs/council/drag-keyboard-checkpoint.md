@@ -112,3 +112,31 @@ no actionable P0-P3 findings in complete frozen four-file delta. Prior P3
 resolved. See drag-watch-delivery-review-sol.md. Same-model independent session,
 no diversity claim. Final edge-fixed runtime taskb0d10614 still pending; no
 TestFlight delivery of these changes yet.
+
+## Final silent runtime and delivery start
+
+Taskb0d10614 completed personally using OpenAI/Codex GPT-6 Astra/high without
+delegation: no actionable findings in edge-drag/Viewing options scope.
+One-point leading/trailing and tiny portrait/below panes recovered by dragging
+visible grips with correct alignment. Viewing options/Layout worked.62source and
+exact12candidate/installed matches before/after.390 fresh preference files restored
+byte-for-byte; portrait restored, own app/session/panel closed; data/Keychain
+preserved. Signed out: Hide keyboard/composer runtime not exercised. No Play.
+Report build/proof/drag-watch-delivery/report.md and receipt.json.
+
+Reviewed source committed/pushed as860ec92. Signed internal-only archive/upload
+started once through the existing reviewed5GiB-floor job; exact launch receipt
+build/testflight/drag-watch-supervisor-launch.json. No duplicate job, public
+release/external group or Discord action. Processing/assignment not yet claimed.
+
+## Delivered
+
+0.1.0(202611060438), build4f7cea8b-cdf2-4529-ac71-0712c66cfd0f, from
+860ec926bbaac918504a7258ceca786c71b4b2a1. Archive identity/signature/internal-only
+export verified, exact8-file manifest. Archive/upload/supervisor/processing/
+distribution/readback exits0. VALID/INTERNAL_ONLY/IN_BETA_TESTING, exact complete
+explicit Alex/t3crew/DuoCrew internal relationships, autoNotifyEnabled=true and
+matching en-US notes. No duplicate invite. Email receipt/installation unverified.
+Final receipt build/testflight/drag-watch-delivery-final.json, exact archive
+and receipts build/testflight/202611060438/. No Discord read or send. Final
+source/runtime reviews and115test evidence remain bounded as stated above.
