@@ -16,7 +16,8 @@ struct WatchView: View {
     @State private var fold = FoldState()
     @State private var appearance = UUID()
     @State private var showDetails = false
-    @State private var composerFocused = false
+    @State private var showLayout = false
+    @FocusState private var composerFocused: Bool
 
     var body: some View {
         let layoutCompact = sizeClass != .regular
@@ -27,7 +28,7 @@ struct WatchView: View {
         } secondary: {
             WatchPaneBounds {
                 NativeChatView(session: app.chat, signedIn: app.auth.account != nil, composerVisible: mode != .video,
-                    onComposerFocusChange: { composerFocused = $0 }) { app.accountPresented = true }
+                    composerFocus: $composerFocused) { app.accountPresented = true }
             }
                 .onGeometryChange(for: CGSize.self) { $0.size } action: { chatSize = $0 }
                 .accessibilityHidden(mode == .video)
@@ -53,6 +54,13 @@ struct WatchView: View {
         .navigationTitle(channel.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if composerFocused {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Hide keyboard", systemImage: "keyboard.chevron.compact.down") { composerFocused = false }
+                        .labelStyle(.iconOnly)
+                        .accessibilityIdentifier("hideChatKeyboard")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button(app.player.isPlaying ? "Pause video" : "Play video", systemImage: app.player.isPlaying ? "pause.fill" : "play.fill") {
@@ -67,55 +75,48 @@ struct WatchView: View {
                     Button("Channel details", systemImage: "info.circle") { showDetails = true }
                     Button("Account", systemImage: "person.crop.circle") { app.accountPresented = true }
                     Divider()
-                    Menu("Layout", systemImage: "rectangle.split.2x1") {
-                        Picker("Viewing mode", selection: $mode) {
-                            ForEach(WatchMode.allCases) { item in Label(item.rawValue, systemImage: item.symbol).tag(item) }
-                        }
-                    }
-                    Menu("Chat layout", systemImage: "bubble.left.and.bubble.right") {
-                        Picker("Chat position", selection: $chatPlacement) {
-                            ForEach(WatchChatPlacement.allCases) { item in Text(item.rawValue).tag(item) }
-                        }
-                        if chatIsBeside { Toggle("Chat on the left", isOn: $chatLeading) }
-                        ControlGroup("Chat size") {
-                            Button("Smaller chat", systemImage: "minus") { resizeChat(chatIsBeside, -32) }
-                            Button("Larger chat", systemImage: "plus") { resizeChat(chatIsBeside, 32) }
-                        }.disabled(fold.division != nil)
-                        Button("Reset split", systemImage: "arrow.counterclockwise") {
-                            if mode == .slim { slimChatWidth = 160; slimChatHeight = 160 }
-                            else { chatWidth = 240; chatHeight = 240 }
-                        }
-                    }.disabled(mode == .video)
+                    Button("Layout…", systemImage: "rectangle.split.2x1") { showLayout = true }
                     Divider()
                     Link("Open in Twitch", destination: URL(string: "https://www.twitch.tv/\(channel.login)")!)
                 } label: { Label("Viewing options", systemImage: "ellipsis") }
                 .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if composerFocused && mode != .video && fold.division == nil {
-                HStack(spacing: 12) {
-                    Text("Chat size").font(.caption).foregroundStyle(.secondary)
-                    Slider(value: keyboardChatExtent, in: 1...maximumChatExtent)
-                        .accessibilityIdentifier("keyboardChatSize")
-                        .accessibilityLabel("Chat size")
-                        .accessibilityValue("\(Int(chatExtent)) points")
-                        .disabled(maximumChatExtent <= 1)
-                }
-                .padding(.horizontal, 16).frame(minHeight: 44).background(.bar)
-            }
-        }
         .sheet(isPresented: $showDetails) { details }
+        .sheet(isPresented: $showLayout) { layoutSettings }
         .onAppear { app.watch(channel, appearance: appearance) }
         .onChange(of: channel.id) { _, _ in app.watch(channel, appearance: appearance) }
         .onDisappear { app.leaveWatch(channel, appearance: appearance) }
     }
     private var chatIsBeside: Bool { chatSize.width < watchSize.width - 1 }
-    private var chatExtent: CGFloat { chatIsBeside ? chatSize.width : chatSize.height }
-    private var maximumChatExtent: CGFloat { max(1, (chatIsBeside ? watchSize.width : watchSize.height) - 13) }
-    private var keyboardChatExtent: Binding<CGFloat> {
-        Binding(get: { min(maximumChatExtent, max(1, chatExtent)) },
-                set: { resizeChat(chatIsBeside, $0 - chatExtent) })
+
+    private var layoutSettings: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("View", selection: $mode) {
+                        ForEach(WatchMode.allCases) { item in Text(item.rawValue).tag(item) }
+                    }
+                    Picker("Chat position", selection: $chatPlacement) {
+                        ForEach(WatchChatPlacement.allCases) { item in Text(item.rawValue).tag(item) }
+                    }.disabled(mode == .video)
+                    if chatIsBeside && mode != .video {
+                        Toggle("Chat on the left", isOn: $chatLeading)
+                    }
+                }
+                Section {
+                    Button("Reset split", systemImage: "arrow.counterclockwise") {
+                        if mode == .slim { slimChatWidth = 160; slimChatHeight = 160 }
+                        else { chatWidth = 240; chatHeight = 240 }
+                    }.disabled(mode == .video || fold.division != nil)
+                } footer: {
+                    Text("Drag the handle between video and chat to resize.")
+                }
+            }
+            .navigationTitle("Layout").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showLayout = false } } }
+        }
+        .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
     }
 
     private var details: some View {
@@ -145,14 +146,19 @@ struct WatchView: View {
     }
 
     private func resizeChat(_ side: Bool, _ delta: CGFloat) {
-        // Start from the actual clamped allocation, so reversing a drag at a
-        // limit responds immediately rather than consuming accumulated overshoot.
+        // Consume every native pan delta even when events arrive before the
+        // next layout pass. Clamp the saved extent to the available pane first,
+        // so reversing at an edge never consumes accumulated overshoot.
+        let limit = max(1, (side ? watchSize.width : watchSize.height) - 13)
+        let current = CGFloat(mode == .slim ? (side ? slimChatWidth : slimChatHeight)
+                                            : (side ? chatWidth : chatHeight))
+        let next = min(limit, max(1, min(limit, max(1, current)) + delta))
         if mode == .slim {
-            if side { slimChatWidth = max(1, chatSize.width + delta) }
-            else { slimChatHeight = max(1, chatSize.height + delta) }
+            if side { slimChatWidth = Double(next) }
+            else { slimChatHeight = Double(next) }
         } else {
-            if side { chatWidth = max(1, chatSize.width + delta) }
-            else { chatHeight = max(1, chatSize.height + delta) }
+            if side { chatWidth = Double(next) }
+            else { chatHeight = Double(next) }
         }
     }
 }

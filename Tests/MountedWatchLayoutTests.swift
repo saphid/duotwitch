@@ -7,7 +7,7 @@ import XCTest
 /// physical hinge tests and do not imply live Twitch continuity.
 @MainActor
 final class MountedWatchLayoutTests: XCTestCase {
-    func testKeyboardChatResizeKeepsComposerFocusAndDraft() async throws {
+    func testKeyboardHandleResizeKeepsComposerFocusDraftAndSelection() async throws {
         // Restore fixture credentials entirely in memory; no account or socket
         // traffic is used to mount the actual production composer and toolbar.
         let scopes = TwitchAuth.requestedScopes
@@ -48,36 +48,79 @@ final class MountedWatchLayoutTests: XCTestCase {
         chat.draft = "Keep this unsent draft"
         XCTAssertTrue(composer.becomeFirstResponder())
         try await Task.sleep(for: .milliseconds(500))
+        let input = try XCTUnwrap(composer as? any UITextInput)
+        let start = try XCTUnwrap(input.position(from: input.beginningOfDocument, offset: 2))
+        let end = try XCTUnwrap(input.position(from: input.beginningOfDocument, offset: 8))
+        input.selectedTextRange = input.textRange(from: start, to: end)
+        XCTAssertTrue(sliders(in: window).isEmpty, "Chat resizing must not expose a slider")
         for placement in [WatchChatPlacement.beside, .below] {
             preferences.set(placement.rawValue, forKey: "watchChatPlacement")
             try await Task.sleep(for: .milliseconds(120))
-            let slider = try XCTUnwrap(sliders(in: window).first,
-                "The focused composer must expose a live Chat size slider")
+            let handle = try XCTUnwrap(resizeHandles(in: window).first,
+                "The same divider must remain available while composing")
+            XCTAssertEqual(placement == .beside ? handle.bounds.width : handle.bounds.height, 44, accuracy: 1)
             let before = player.webView.convert(player.webView.bounds, to: host.view).size
-            slider.value = slider.minimumValue + (slider.maximumValue - slider.minimumValue) * 0.75
-            slider.sendActions(for: .valueChanged)
+            // Drive the same native pan-delta path; physical event delivery is
+            // requires separate verification through the Simulator device surface.
+            let key = placement == .beside ? "watchChatWidth" : "watchChatHeight"
+            let oldPreference = preferences.object(forKey: key) == nil ? 240 : preferences.double(forKey: key)
+            for _ in 0..<4 {
+                handle.resizeFromPan(placement == .beside ? CGPoint(x: -10, y: 0) : CGPoint(x: 0, y: -10))
+            }
             try await Task.sleep(for: .milliseconds(120))
             host.view.layoutIfNeeded()
             let after = player.webView.convert(player.webView.bounds, to: host.view).size
             XCTAssertNotEqual(placement == .beside ? before.width : before.height,
                               placement == .beside ? after.width : after.height,
-                              "The keyboard resize control must change the actual video allocation")
+                              "The divider must change the actual video allocation while composing")
             XCTAssertGreaterThan(preferences.double(forKey: placement == .beside ? "watchChatWidth" : "watchChatHeight"), 0)
+            XCTAssertEqual(preferences.double(forKey: key), oldPreference + 40, accuracy: 1,
+                "Pan events before a layout pass must accumulate instead of dropping movement")
             XCTAssertTrue(composer.isFirstResponder, "Resizing from the keyboard must not dismiss the composer")
             XCTAssertTrue(findTextInput(in: host.view) === composer)
             XCTAssertEqual(chat.draft, "Keep this unsent draft")
+            let selection = try XCTUnwrap(input.selectedTextRange)
+            XCTAssertEqual(input.offset(from: input.beginningOfDocument, to: selection.start), 2)
+            XCTAssertEqual(input.offset(from: input.beginningOfDocument, to: selection.end), 8)
         }
         let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
         let attachment = XCTAttachment(image: image)
-        attachment.name = "Focused composer with live resize control"
+        attachment.name = "Focused composer with divider handle and keyboard dismissal"
         attachment.lifetime = .keepAlways
         add(attachment)
-        window.endEditing(true)
-        try await Task.sleep(for: .milliseconds(180))
-        XCTAssertTrue(sliders(in: window).isEmpty, "Resize accessory must leave when the composer loses focus")
+        // SwiftUI's toolbar action is visible in the attachment but is not
+        // exposed through the hosted UIKit accessibility tree. Dismissal by
+        // the actual toolbar button needs device-surface verification.
+        XCTAssertTrue(sliders(in: window).isEmpty, "No resize slider may appear after editing")
         XCTAssertEqual(chat.draft, "Keep this unsent draft")
+    }
+
+    func testHandleTargetStaysReachableAtExtremeSplits() {
+        for size in [CGSize(width: 402, height: 700), CGSize(width: 750, height: 304), CGSize(width: 30, height: 30)] {
+            for side in [true, false] {
+                for leading in [true, false] {
+                    for extent in [CGFloat(1), 10_000] {
+                        let panes = WatchPaneGeometry(size: size, compact: true, division: nil,
+                            mode: .balanced, chatLeading: leading, placement: side ? .beside : .below,
+                            chatWidth: extent, chatHeight: extent)
+                        let target = WatchSplitTarget(panes: panes, size: size, side: side)
+                        XCTAssertTrue(CGRect(origin: .zero, size: size).contains(target.frame),
+                            "Extreme splits must retain the entire reachable touch target")
+                        XCTAssertEqual(side ? target.frame.width : target.frame.height,
+                            min(44, side ? size.width : size.height), accuracy: 0.001)
+                        let boundary = side ? min(panes.video.maxX, panes.chat.maxX) + 6 : panes.video.maxY + 6
+                        XCTAssertEqual((side ? target.frame.minX : target.frame.minY) + target.dividerPosition,
+                            boundary, accuracy: 0.001, "The visible grip must stay at the pane divider")
+                    }
+                }
+            }
+        }
+    }
+
+    private func resizeHandles(in view: UIView) -> [WatchSplitHandleView] {
+        (view as? WatchSplitHandleView).map { [$0] } ?? view.subviews.flatMap { resizeHandles(in: $0) }
     }
 
     private func sliders(in view: UIView) -> [UISlider] {

@@ -4,12 +4,20 @@ struct NativeChatView: View {
     @Bindable var session: ChatSession
     let signedIn: Bool
     var composerVisible = true
-    var onComposerFocusChange: (Bool) -> Void = { _ in }
+    var composerFocus: FocusState<Bool>.Binding? = nil
     let signIn: () -> Void
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var atBottom = true
     @State private var showConnectionNotice = false
     @FocusState private var composerFocused: Bool
+
+    private var inputFocused: Bool {
+        get { composerFocus?.wrappedValue ?? composerFocused }
+        nonmutating set {
+            if let composerFocus { composerFocus.wrappedValue = newValue }
+            else { composerFocused = newValue }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,8 +59,7 @@ struct NativeChatView: View {
         } message: {
             Text(session.gapNotice ?? "")
         }
-        .onChange(of: composerFocused) { _, focused in onComposerFocusChange(focused) }
-        .onChange(of: composerVisible) { _, visible in if !visible { composerFocused = false } }
+        .onChange(of: composerVisible) { _, visible in if !visible { inputFocused = false } }
     }
 
     private var timeline: some View {
@@ -70,7 +77,7 @@ struct NativeChatView: View {
                                 .contextMenu {
                                     Button("Reply to \(message.name)", systemImage: "arrowshape.turn.up.left") {
                                         session.replyingTo = message
-                                        composerFocused = true
+                                        inputFocused = true
                                     }
                                     Link("View profile in Twitch", destination: URL(string: "https://www.twitch.tv/\(message.login)")!)
                                 }
@@ -112,7 +119,7 @@ struct NativeChatView: View {
             }
             HStack(alignment: .bottom, spacing: 8) {
                 TextField("Send a message", text: $session.draft, axis: .vertical)
-                    .lineLimit(1...4).focused($composerFocused)
+                    .lineLimit(1...4).focused(composerFocus ?? $composerFocused)
                     .padding(12).background(AppTheme.surface, in: .rect(cornerRadius: 16))
                     .accessibilityIdentifier("chatComposer")
                 Button {

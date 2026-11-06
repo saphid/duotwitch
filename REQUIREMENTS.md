@@ -56,3 +56,10 @@ standard menu. Avoid redundant account buttons, persistent oversized notices and
 duplicated connection text. When the composer is focused, allow panel resizing
 without dismissing the keyboard or losing the unsent draft/selection; resizing
 controls must leave with focus, rather than becoming another permanent rail.
+
+## Drag resizing and keyboard dismissal — 6 November 2026
+
+- Replace the chat-size slider with a drag handle between video and chat, usable while the keyboard is visible.
+- Provide a Hide keyboard action while composing, preserving the unsent draft.
+- Simplify the watch Viewing options menu and layout settings. Alex clarified that “side menu” means Viewing options; leave the Explore sidebar unchanged.
+- Do not send any further Discord updates unless explicitly asked again.

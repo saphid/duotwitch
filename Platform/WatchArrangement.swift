@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum WatchChatPlacement: String, CaseIterable, Identifiable {
     case automatic = "Automatic", beside = "Beside video", below = "Below video"
@@ -85,6 +86,23 @@ struct WatchPaneGeometry {
     }
 }
 
+/// Keep the full touch target reachable while the visible divider stays at
+/// the true pane boundary, including one-point panes against a screen edge.
+struct WatchSplitTarget {
+    let frame: CGRect
+    let dividerPosition: CGFloat
+
+    init(panes: WatchPaneGeometry, size: CGSize, side: Bool) {
+        let center = side ? min(panes.video.maxX, panes.chat.maxX) + 6 : panes.video.maxY + 6
+        let extent = side ? size.width : size.height
+        let length = min(44, max(0, extent))
+        let origin = min(max(0, center - length / 2), max(0, extent - length))
+        frame = side ? CGRect(x: origin, y: 0, width: length, height: size.height)
+                     : CGRect(x: 0, y: origin, width: size.width, height: length)
+        dividerPosition = center - origin
+    }
+}
+
 struct WatchArrangementStyle: ArrangementViewStyle {
     let compact: Bool
     let division: CGRect?
@@ -97,11 +115,22 @@ struct WatchArrangementStyle: ArrangementViewStyle {
     var chatSizeDescription = ""
 
     func makeBody(configuration: Configuration) -> some View {
-        WatchPaneLayout(compact: compact, division: division, mode: mode, chatLeading: chatLeading,
-                        placement: placement, chatWidth: chatWidth, chatHeight: chatHeight) {
-            configuration.primary
-            configuration.secondary
-            WatchSplitHandle(chatLeading: chatLeading, resize: resize, sizeDescription: chatSizeDescription)
+        GeometryReader { geometry in
+            let panes = WatchPaneGeometry(size: geometry.size, compact: compact, division: division,
+                mode: mode, chatLeading: chatLeading, placement: placement,
+                chatWidth: chatWidth, chatHeight: chatHeight)
+            let side = panes.chat.width < geometry.size.width && panes.chat.height > 0
+            let target = WatchSplitTarget(panes: panes, size: geometry.size, side: side)
+            let adjustable = mode != .video && panes.chat.width > 0 && panes.chat.height > 0
+                && (division == nil || !CGRect(origin: .zero, size: geometry.size).intersects(division!))
+            WatchPaneLayout(compact: compact, division: division, mode: mode, chatLeading: chatLeading,
+                            placement: placement, chatWidth: chatWidth, chatHeight: chatHeight) {
+                configuration.primary
+                configuration.secondary
+                WatchSplitHandle(side: side, chatLeading: chatLeading, dividerPosition: target.dividerPosition,
+                                 enabled: adjustable, resize: resize,
+                                 sizeDescription: chatSizeDescription)
+            }
         }
     }
 }
@@ -126,13 +155,11 @@ private struct WatchPaneLayout: Layout {
         let panes = WatchPaneGeometry(size: bounds.size, compact: compact, division: division, mode: mode,
             chatLeading: chatLeading, placement: placement, chatWidth: chatWidth, chatHeight: chatHeight)
         let side = panes.chat.width < bounds.width && panes.chat.height > 0
-        let gap = side
-            ? CGRect(x: min(panes.video.maxX, panes.chat.maxX), y: 0, width: 12, height: bounds.height)
-            : CGRect(x: 0, y: panes.video.maxY, width: bounds.width, height: 12)
         // A real system division is reserved space, not a draggable separator.
         let adjustable = mode != .video && panes.chat.width > 0 && panes.chat.height > 0
             && (division == nil || !CGRect(origin: .zero, size: bounds.size).intersects(division!))
-        let handle = adjustable ? gap : CGRect(x: bounds.width + 1, y: 0, width: 0, height: 0)
+        let target = WatchSplitTarget(panes: panes, size: bounds.size, side: side)
+        let handle = adjustable ? target.frame : CGRect(x: bounds.width + 1, y: 0, width: 0, height: 0)
         for (index, rect) in [panes.video, panes.chat, handle].enumerated() {
             subviews[index].place(at: CGPoint(x: bounds.minX + rect.minX, y: bounds.minY + rect.minY),
                                  anchor: .topLeading, proposal: ProposedViewSize(rect.size))
@@ -141,42 +168,82 @@ private struct WatchPaneLayout: Layout {
 }
 
 
-/// A visible direct-manipulation affordance, with the same operation available
-/// through VoiceOver and the Viewing options menu. It never covers the player.
-private struct WatchSplitHandle: View {
+/// One direct-manipulation divider, including while the keyboard is visible.
+/// A native pan recognizer does not ask the composer to resign first responder.
+private struct WatchSplitHandle: UIViewRepresentable {
+    let side: Bool
     let chatLeading: Bool
+    let dividerPosition: CGFloat
+    let enabled: Bool
     let resize: ((Bool, CGFloat) -> Void)?
     let sizeDescription: String
-    @State private var translation = CGSize.zero
-    @GestureState private var dragging = false
 
-    var body: some View {
-        GeometryReader { proxy in
-            let side = proxy.size.height > proxy.size.width
-            ZStack {
-                AppTheme.surface
-                Capsule().fill(.secondary)
-                    .frame(width: side ? 4 : 44, height: side ? 44 : 4)
-            }
-            .contentShape(Rectangle().inset(by: -16))
-            .gesture(DragGesture(minimumDistance: 2, coordinateSpace: .named("watchPanes"))
-                .updating($dragging) { _, active, _ in active = true }
-                .onChanged { value in
-                    let delta = side ? value.translation.width - translation.width
-                                     : value.translation.height - translation.height
-                    translation = value.translation
-                    resize?(side, delta * (side && chatLeading ? 1 : -1))
-                }
-                .onEnded { _ in translation = .zero })
-            .onChange(of: dragging) { _, active in if !active { translation = .zero } }
-            .accessibilityElement()
-            .accessibilityLabel("Chat size")
-            .accessibilityValue(sizeDescription)
-            .accessibilityHint("Adjust to give more room to chat or video. Also available in Viewing options.")
-            .accessibilityAdjustableAction { direction in
-                resize?(side, direction == .increment ? 32 : -32)
-            }
-        }
-        .allowsHitTesting(resize != nil)
+    func makeUIView(context: Context) -> WatchSplitHandleView { WatchSplitHandleView() }
+
+    func updateUIView(_ view: WatchSplitHandleView, context: Context) {
+        view.side = side
+        view.chatLeading = chatLeading
+        view.dividerPosition = dividerPosition
+        view.resize = resize
+        view.accessibilityValue = sizeDescription
+        view.isUserInteractionEnabled = enabled && resize != nil
+        view.accessibilityElementsHidden = !enabled
+        view.isAccessibilityElement = enabled && resize != nil
+        view.setNeedsDisplay()
     }
+}
+
+final class WatchSplitHandleView: UIView {
+    var side = false
+    var chatLeading = false
+    var dividerPosition: CGFloat = 22
+    var resize: ((Bool, CGFloat) -> Void)?
+
+    init() {
+        super.init(frame: .zero)
+        backgroundColor = .clear
+        isOpaque = false
+        accessibilityIdentifier = "chatResizeHandle"
+        accessibilityLabel = "Chat size"
+        accessibilityHint = "Drag to resize video and chat, or adjust up and down."
+        accessibilityTraits = .adjustable
+        addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(pan(_:))))
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        setNeedsDisplay()
+    }
+
+    override func draw(_ rect: CGRect) {
+        let strip = side ? CGRect(x: dividerPosition - 6, y: 0, width: 12, height: bounds.height)
+                         : CGRect(x: 0, y: dividerPosition - 6, width: bounds.width, height: 12)
+        UIColor.secondarySystemBackground.setFill()
+        UIRectFill(strip)
+        let grip = side ? CGRect(x: dividerPosition - 2, y: bounds.midY - min(18, bounds.height / 2),
+                                  width: 4, height: min(36, bounds.height))
+                        : CGRect(x: bounds.midX - min(18, bounds.width / 2), y: dividerPosition - 2,
+                                 width: min(36, bounds.width), height: 4)
+        UIColor.secondaryLabel.setFill()
+        UIBezierPath(roundedRect: grip, cornerRadius: 2).fill()
+    }
+
+    @objc private func pan(_ gesture: UIPanGestureRecognizer) {
+        // Window coordinates stay still when the divider itself moves. Consume
+        // each delta so reversing at a clamped edge responds immediately.
+        let movement = gesture.translation(in: window)
+        gesture.setTranslation(.zero, in: window)
+        guard gesture.state == .began || gesture.state == .changed else { return }
+        resizeFromPan(movement)
+    }
+
+    func resizeFromPan(_ movement: CGPoint) {
+        let delta = side ? movement.x : movement.y
+        resize?(side, delta * (side && chatLeading ? 1 : -1))
+    }
+
+    override func accessibilityIncrement() { resize?(side, 32) }
+    override func accessibilityDecrement() { resize?(side, -32) }
 }
