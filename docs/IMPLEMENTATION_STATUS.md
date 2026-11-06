@@ -1,4 +1,40 @@
-# Current follow-up — 6 November 2026
+# Small video and keyboard continuity — 6 November 2026
+
+Alex clarified that visible video may shrink freely and must continue when the
+landscape keyboard reduces available space. The candidate now keeps the same
+supported logical Twitch viewport and scales only its native video presentation;
+native transport remains unscaled, with a scrollable short rail and menu controls.
+Split sizing no longer clamps visible video to400×300. Explicit Below stays below;
+automatic placement follows available aspect ratio. Zero-area/hidden navigation
+retains the existing pause safeguards; positive small panes remain playable.
+Focused tests18passed, including a persistent keyboard-sized production layout.
+Full signed suite110passed, zero failed/skipped, exit0; fresh independent source
+review found a P2 chat-bounds defect and P3 identical-Slim defect. Both reproduced
+and are corrected in the112-test candidate (zero failed/skipped, exit0), now awaiting
+current live runtime. The fresh Codex/Sol/high recheck completed with no actionable
+P0–P3 findings in the frozen six-file delta; this is an independent session using
+the author's model, not model diversity. See
+[recheck](council/small-video-keyboard-review2-sol.md),
+[fix checkpoint](council/small-video-review-fixes-checkpoint.md) and
+[checkpoint](council/small-video-keyboard-checkpoint.md).
+
+# Previous adjustable chat intermediate — 6 November 2026
+
+Open layouts now offer automatic/beside/below placement, a draggable divider and
+accessible resizing actions. Side width and below-video height persist separately;
+the default reserves minimal useful chat and maximizes video. Fold regions and
+the supported video minimum still constrain allocation. The source/test candidate
+also keeps the host through transient rotation allocations, with bounded settling
+before insufficient-space Pause and no automatic resume. 109 signed iOS tests
+pass, exit0. Independent review and current runtime remain pending. See
+[checkpoint](council/resizable-chat-checkpoint.md).
+
+The preceding cd48393 runtime verified exact automatic remote receipt of160
+projected app records, not complete delivery or phone connectivity. It verified
+silent gated Play and settled landscape fit, but found rotation pauses and long
+frame freezes. Its evidence remains attributed to that earlier binary.
+
+# Previous follow-up — 6 November 2026
 
 Reviewed source now preserves supported video size across narrower regular/short
 compact layouts and measures actual Dynamic Type transport height.102signed iOS

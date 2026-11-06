@@ -22,6 +22,40 @@ final class PlaybackSessionTests: XCTestCase {
         events.continuation.finish()
     }
 
+    func testTransientUndersizeCannotPauseAfterRefitOrEnablePlayWhileSettling() async throws {
+        var pauses = 0
+        let (session, nonce) = makeBridgeSession(pause: { _ in pauses += 1 })
+        emit("READY", session: session, nonce: nonce)
+        let shrinking = Task { await session.videoAreaChanged(fits: false, channel: "lofigirl", settlingFor: .milliseconds(80)) }
+        try await Task.sleep(for: .milliseconds(10))
+        XCTAssertFalse(session.canPlay)
+        emit("PLAYING", session: session, nonce: nonce)
+        await session.videoAreaChanged(fits: true, channel: "lofigirl")
+        await shrinking.value
+        XCTAssertEqual(pauses, 0)
+        XCTAssertTrue(session.isPlaying)
+        await session.pause()
+        await session.videoAreaChanged(fits: true, channel: "lofigirl")
+        XCTAssertFalse(session.isPlaying, "Refitting must not undo intentional Pause")
+    }
+
+    func testPersistentUndersizeStillPausesAfterSettlingAndLeavingPausesImmediately() async throws {
+        var pauses = 0
+        let (session, nonce) = makeBridgeSession(pause: { _ in pauses += 1 })
+        emit("PLAYING", session: session, nonce: nonce)
+        await session.videoAreaChanged(fits: false, channel: "lofigirl", settlingFor: .milliseconds(20))
+        XCTAssertEqual(pauses, 1)
+        XCTAssertFalse(session.isPlaying)
+        await session.videoAreaChanged(fits: true, channel: "lofigirl")
+        emit("PLAYING", session: session, nonce: nonce)
+        let shrinking = Task { await session.videoAreaChanged(fits: false, channel: "lofigirl", settlingFor: .milliseconds(80)) }
+        try await Task.sleep(for: .milliseconds(10))
+        session.hideVideo()
+        try await waitUntil { pauses == 2 }
+        await shrinking.value
+        XCTAssertEqual(pauses, 2, "A stale settling task must not add a second Pause after leaving")
+    }
+
     func testRefitCannotPlayUntilOlderPauseCompletes() async throws {
         var completion: CheckedContinuation<Void, Never>?
         var requests = 0

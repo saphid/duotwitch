@@ -21,6 +21,19 @@ Xcode 27.2 is installed at `/Applications/Xcode-27.2.0.app`; the system-selected
 
 ## Acceptance evidence
 
+Alex's 6 November follow-up: open landscape must allow chat resizing; open
+portrait must offer chat below video. Default to the largest supported video
+with useful chat, while allowing the split to be adjusted. Remember side-chat
+width and below-video chat height independently. Preserve the live player,
+intentional Pause and draft while adjusting. Active fold regions still take
+precedence over placement preferences.
+
+Alex clarified that the visible video may shrink as small as the user chooses.
+Opening the keyboard in landscape must not replace video with a room-needed
+message or pause it just because the available pane is smaller. Keep the public
+Twitch renderer at a supported logical viewport and scale its native presentation
+to positive smaller allocations; keep native transport controls unscaled.
+
 - Browse/search/open a real Twitch channel; preserve selected channel and playback across layout changes.
 - Officially supported Twitch authentication and APIs; tokens in Keychain; no bundled client secrets or extraction of private player APIs.
 - Live video with honest loading/offline/error states, real playback controls and supported Picture in Picture.

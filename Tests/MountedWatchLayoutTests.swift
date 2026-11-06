@@ -75,10 +75,107 @@ final class MountedWatchLayoutTests: XCTestCase {
         }
     }
 
+    func testProductionResizableChatRetainsPlayerAndPlayback() async throws {
+        for (width, height, placement) in [(1000.0, 700.0, WatchChatPlacement.beside), (800, 1100, .below)] {
+            let name = "DuoTwitch-resize-test-\(UUID().uuidString)"
+            let preferences = try XCTUnwrap(UserDefaults(suiteName: name))
+            defer { preferences.removePersistentDomain(forName: name) }
+            preferences.set(WatchMode.balanced.rawValue, forKey: "watchMode")
+            preferences.set(placement.rawValue, forKey: "watchChatPlacement")
+            var nonce: String?
+            var pauses = 0
+            var loads = 0
+            let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+                loadRequest: { _, request in
+                    loads += 1
+                    nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value
+                }, pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
+            let app = AppModel(auth: TwitchAuth(clientId: ""), player: session)
+            let channel = WatchedChannel(channel: TwitchChannel(id: "fixture", broadcasterLogin: "fixture", displayName: "Fixture", gameName: "", title: "", thumbnailUrl: "", isLive: true))
+            let host = UIHostingController(rootView: WatchView(app: app, channel: channel)
+                .environment(\.horizontalSizeClass, .regular).dynamicTypeSize(.accessibility3)
+                .defaultAppStorage(preferences).ignoresSafeArea())
+            let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+            let window = UIWindow(windowScene: scene)
+            let container = UIViewController()
+            window.rootViewController = container
+            window.makeKeyAndVisible()
+            container.addChild(host)
+            container.view.addSubview(host.view)
+            host.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            host.didMove(toParent: container)
+            defer { window.isHidden = true; window.rootViewController = nil }
+            try await Task.sleep(for: .milliseconds(250))
+            let currentNonce = try XCTUnwrap(nonce)
+            session.handleHostMessage(["session": currentNonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+            await session.play()
+            session.handleHostMessage(["session": currentNonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+            let baseline = pauses
+            let browser = session.webView
+            var extents: [CGFloat] = []
+            for amount in [240.0, 340, 10000, 240] {
+                preferences.set(amount, forKey: placement == .beside ? "watchChatWidth" : "watchChatHeight")
+                try await Task.sleep(for: .milliseconds(180))
+                host.view.layoutIfNeeded()
+                XCTAssertTrue(session.webView === browser)
+                XCTAssertTrue(session.isPlaying)
+                XCTAssertEqual(pauses, baseline)
+                XCTAssertEqual(loads, 1)
+                XCTAssertGreaterThanOrEqual(session.webView.bounds.width, 400)
+                XCTAssertGreaterThanOrEqual(session.webView.bounds.height, 300)
+                extents.append(placement == .beside ? session.webView.bounds.width : session.webView.bounds.height)
+            }
+            XCTAssertGreaterThan(extents[0], extents[1], "Growing chat must shrink the actual production player allocation")
+            XCTAssertEqual(extents[0], extents[3], accuracy: 1, "Reset split must restore the original allocation")
+            preferences.set(WatchMode.slim.rawValue, forKey: "watchMode")
+            try await Task.sleep(for: .milliseconds(180))
+            let slimExtent = placement == .beside ? session.webView.bounds.width : session.webView.bounds.height
+            XCTAssertGreaterThan(slimExtent, extents[0], "Slim chat must visibly reserve more room for video by default")
+            preferences.set(320.0, forKey: placement == .beside ? "watchSlimChatWidth" : "watchSlimChatHeight")
+            try await Task.sleep(for: .milliseconds(180))
+            preferences.set(WatchMode.balanced.rawValue, forKey: "watchMode")
+            try await Task.sleep(for: .milliseconds(180))
+            let restored = placement == .beside ? session.webView.bounds.width : session.webView.bounds.height
+            XCTAssertEqual(restored, extents[0], accuracy: 1, "Resizing Slim must preserve the saved regular split")
+            XCTAssertTrue(session.isPlaying)
+            XCTAssertEqual(pauses, baseline)
+            XCTAssertEqual(loads, 1)
+            if placement == .beside {
+                let attachedHost = session.webView.superview
+                host.view.frame.size = CGSize(width: 340, height: 286)
+                try await Task.sleep(for: .milliseconds(80))
+                host.view.frame.size = CGSize(width: 750, height: 304)
+                try await Task.sleep(for: .milliseconds(450))
+                XCTAssertTrue(session.isPlaying, "A transient rotation allocation must not issue Pause")
+                XCTAssertEqual(pauses, baseline)
+                XCTAssertTrue(session.webView.superview === attachedHost, "The browser host must survive transient undersize geometry")
+                XCTAssertEqual(loads, 1)
+                // A persistent keyboard-sized allocation must keep playing,
+                // not merely survive a short transition grace period.
+                host.view.frame.size = CGSize(width: 750, height: 160)
+                try await Task.sleep(for: .milliseconds(500))
+                host.view.layoutIfNeeded()
+                XCTAssertTrue(session.isPlaying, "The keyboard-sized layout must not pause video")
+                XCTAssertEqual(pauses, baseline)
+                XCTAssertTrue(session.webView.superview === attachedHost)
+                XCTAssertGreaterThanOrEqual(session.webView.bounds.width, 400)
+                XCTAssertGreaterThanOrEqual(session.webView.bounds.height, 300)
+                let presented = session.webView.convert(session.webView.bounds, to: host.view)
+                XCTAssertGreaterThan(presented.height, 0)
+                XCTAssertLessThanOrEqual(presented.height, 161, "The visible player must scale inside the reduced allocation")
+                await session.pause()
+                host.view.frame.size = CGSize(width: 750, height: 304)
+                try await Task.sleep(for: .milliseconds(180))
+                XCTAssertFalse(session.isPlaying, "Keyboard dismissal must not undo intentional Pause")
+                XCTAssertEqual(loads, 1)
+            }
+        }
+    }
+
     func testProductionPanelDoesNotPauseItselfAfterPlay() async throws {
         let channel = WatchedChannel(channel: TwitchChannel(id: "lofi", broadcasterLogin: "lofigirl", displayName: "LofiGirl", gameName: "Music", title: "A live stream with a title that wraps in smaller video panes", thumbnailUrl: "", isLive: true))
         var testedSizes = 0
-        for (width, height) in [(750.0, 304.0), (464.0, 304.0)] + [402.0, 420.0, 500.0, 600.0].flatMap({ width in
+        for (width, height) in [(750.0, 304.0), (464.0, 304.0), (500.0, 160.0), (382.0, 280.0), (160.0, 120.0)] + [402.0, 420.0, 500.0, 600.0].flatMap({ width in
             [364.0, 384.0, 420.0, 480.0, 560.0].map { (width, $0) }
         }) {
             var nonce: String?
@@ -114,7 +211,7 @@ final class MountedWatchLayoutTests: XCTestCase {
             window.isHidden = true
             window.rootViewController = nil
         }
-        XCTAssertEqual(testedSizes, 22, "Every supported panel size must load a playable player, including short landscape")
+        XCTAssertEqual(testedSizes, 25, "Every supported panel size must load a playable player, including short landscape")
     }
 
     func testMountedPanesFollowBookTabletopAndSidePreferences() async throws {
@@ -133,6 +230,28 @@ final class MountedWatchLayoutTests: XCTestCase {
                 assertRect(chat, expected.chat)
                 XCTAssertFalse(video.intersects(division))
                 XCTAssertFalse(chat.intersects(division))
+            }
+        }
+    }
+
+    func testOnePointChatAllocationIsEnforcedOnBothSidesAndBelow() async throws {
+        let model = LayoutHarnessModel()
+        let mounted = try MountedHarness(model: model)
+        defer { mounted.close() }
+        model.chatWidth = 1
+        model.chatHeight = 1
+        for placement in [WatchChatPlacement.beside, .below] {
+            model.placement = placement
+            for leading in [false, true] {
+                model.chatLeading = leading
+                await mounted.settle()
+                let expected = WatchPaneGeometry(size: mounted.size, compact: false, division: nil,
+                    mode: .balanced, chatLeading: leading, placement: placement, chatWidth: 1, chatHeight: 1)
+                let probe = try XCTUnwrap(model.chat.view)
+                let chat = probe.convert(probe.bounds, to: mounted.host.view)
+                assertRect(chat, expected.chat)
+                XCTAssertFalse(chat.intersects(expected.video), "The allocated chat wrapper must not overlap video")
+                XCTAssertTrue(CGRect(origin: .zero, size: mounted.size).contains(chat))
             }
         }
     }
@@ -205,6 +324,9 @@ private final class LayoutHarnessModel {
     var division: CGRect?
     var chatLeading = false
     var mode: WatchMode = .balanced
+    var chatWidth: CGFloat? = nil
+    var chatHeight: CGFloat? = nil
+    var placement: WatchChatPlacement = .automatic
     let video = ViewIdentity()
     let chat = ViewIdentity()
     let session = ChatSession(api: TwitchAPI(auth: TwitchAuth(clientId: "")))
@@ -223,13 +345,16 @@ private struct WatchLayoutHarness: View {
     let model: LayoutHarnessModel
     var body: some View {
         ArrangementView { PaneProbe(identity: model.video) } secondary: {
-            NativeChatView(session: model.session, signedIn: true, composerVisible: model.mode != .video) { }
+            WatchPaneBounds {
+                NativeChatView(session: model.session, signedIn: true, composerVisible: model.mode != .video) { }
+            }
                 .background(PaneProbe(identity: model.chat))
                 .opacity(model.mode == .video ? 0 : 1)
                 .allowsHitTesting(model.mode != .video)
         }
             .arrangementViewStyle(WatchArrangementStyle(compact: false, division: model.division,
-                mode: model.mode, chatLeading: model.chatLeading))
+                mode: model.mode, chatLeading: model.chatLeading, placement: model.placement,
+                chatWidth: model.chatWidth, chatHeight: model.chatHeight))
             .ignoresSafeArea()
     }
 }

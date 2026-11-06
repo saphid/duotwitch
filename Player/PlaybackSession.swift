@@ -30,6 +30,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
     @ObservationIgnored private let requestPlay: @MainActor (WKWebView, String) async throws -> Bool
     @ObservationIgnored private let pauseTimeout: Duration
     private var videoFits = true
+    @ObservationIgnored private var videoFitTransaction = UUID()
+    private var settlingVideoFit = false
     private var playerReady = false
     private var pendingPauses = 0
     var canPlay: Bool {
@@ -266,6 +268,8 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
 
     func hideVideo() {
         recordDiagnostic("video.hidden")
+        videoFitTransaction = UUID()
+        settlingVideoFit = false
         videoFits = false
         let ticket = bridgeSession
         Task { [weak self] in
@@ -288,9 +292,23 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         if let failure { status = failure }
     }
 
-    func videoAreaChanged(fits: Bool, channel: String) async {
+    func videoAreaChanged(fits: Bool, channel: String, settlingFor delay: Duration = .zero) async {
         recordDiagnostic("video.fit", values: ["newFits": .flag(fits)])
+        let transaction = UUID()
+        videoFitTransaction = transaction
+        let page = bridgeSession
         videoFits = fits
+        settlingVideoFit = !fits && delay > .zero
+        if settlingVideoFit {
+            do { try await Task.sleep(for: delay) }
+            catch {
+                if videoFitTransaction == transaction { settlingVideoFit = false }
+                return
+            }
+            guard videoFitTransaction == transaction else { return }
+            settlingVideoFit = false
+            guard bridgeSession == page else { return }
+        }
         if fits && isConfigured {
             if pauseReason == Self.insufficientSpace {
                 pauseReason = "Video paused. Tap Play to continue."
@@ -469,7 +487,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         switch event {
         case "READY": playerReady = true; status = "Ready. Tap Play to watch."
         case "PLAYING":
-            guard videoFits else {
+            guard videoFits || settlingVideoFit else {
                 Task { [weak self] in
                     guard let self, !self.videoFits else { return }
                     await self.pause(reason: Self.insufficientSpace)

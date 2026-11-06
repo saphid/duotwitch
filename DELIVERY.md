@@ -2,7 +2,35 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Next candidate — layout continuity and owned-network diagnostics
+## Next candidate — small video, keyboard and adjustable chat
+
+Alex's latest clarification supersedes the intermediate minimum-visible-size
+candidate below. Visible video can now shrink to a positive user-chosen size,
+including keyboard-reduced landscape allocations, using a supported logical
+Twitch viewport with scaled native presentation. Side/below placement, saved split
+sizes, direct/accessible adjustment and unscaled native controls remain. Current
+full suite passed112tests, exit0 after reproducing/fixing the independent review's
+chat-bounds and identical-Slim findings. Fresh Codex/Sol/high recheck found no
+actionable P0–P3 findings. Silent runtime and TestFlight delivery are pending. See
+[recheck](docs/council/small-video-keyboard-review2-sol.md) and
+[fix checkpoint](docs/council/small-video-review-fixes-checkpoint.md).
+No new beta is available yet. See the small-video keyboard checkpoint.
+
+## Previous intermediate — adjustable video/chat and rotation continuity
+
+The new candidate adds draggable and accessible chat resizing, explicit below-video
+placement, separate persisted sizes and a largest-video reset. It also addresses
+the transient rotation Pause reproduced by the preceding runtime.109signed iOS
+tests pass, exit0; current source review and visual runtime remain pending. See
+[checkpoint](docs/council/resizable-chat-checkpoint.md). No new TestFlight build
+has been delivered yet.
+
+The deployed lxso1 receiver now has exact automatic receipt of160 projected
+records from the preceding Simulator runtime. Delivery is bounded and incomplete;
+this does not prove physical-phone connectivity. The currently distributed build
+still targets lxso2. Historical evidence below retains its original scope.
+
+## Previous candidate — layout continuity and owned-network diagnostics
 
 Source review is complete with no actionable findings after correcting both
 narrow-width and accessibility-control-height allocation.102signed iOS tests and
