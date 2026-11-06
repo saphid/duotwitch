@@ -2,7 +2,29 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
-## Current internal TestFlight — WebKit audio ownership candidate
+## Next candidate — layout continuity and owned-network diagnostics
+
+Source review is complete with no actionable findings after correcting both
+narrow-width and accessibility-control-height allocation.102signed iOS tests and
+28receiver tests pass; signature verifies. See
+[checkpoint](docs/council/playback-followup-20261106.md) and
+[fresh recheck](docs/council/fullvideo-accessibility-review-sol.md).
+Current muted runtime and new TestFlight delivery remain pending.
+
+The new lxso1 receiver is now active: two identical real HTTPS pushes returned204,
+with exact one-record SSH readback. All pre-existing Serve/Funnel routes are
+preserved. The next app source targets it by default; the currently distributed
+build still targets the blocked lxso2 receiver. Phone connectivity/permissions
+and automatic receipt remain unverified.
+
+Alex confirms the delivered202611052312build continues open-mode playback.
+The follow-up layout correction addresses a production-mounted insufficient-space
+Pause after Full video exit; physical resolution is not yet confirmed. Outside
+screen says “Video needs more room”; historical382-point allocations cannot host
+the supported400×300embed in portrait. Rotation guidance is provided; portrait
+outside playback, fold continuity and PiP are not claimed.
+
+## Distributed internal TestFlight — WebKit audio ownership candidate
 
 **0.1.0 (202611052312)** is available to the existing internal **Alex**, **t3crew**
 and **DuoCrew** groups. Apple readback verifies `VALID`, `INTERNAL_ONLY`,

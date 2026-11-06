@@ -11,6 +11,9 @@ struct WatchView: View {
     @State private var previousMode: WatchMode = .balanced
 
     var body: some View {
+        let layoutCompact = sizeClass != .regular
+        let layoutMode = mode
+        let layoutDivision = fold.division
         ArrangementView {
             WatchVideoPanel(session: app.player, channel: channel, fullVideo: mode == .video) {
                 if mode == .video { mode = previousMode }
@@ -24,6 +27,12 @@ struct WatchView: View {
         }
         .arrangementViewStyle(WatchArrangementStyle(compact: sizeClass != .regular,
             division: fold.division, mode: mode, chatLeading: chatLeading))
+        .onGeometryChange(for: WatchLayoutSnapshot.self) { geometry in
+            WatchLayoutSnapshot(size: geometry.size, compact: layoutCompact,
+                                mode: layoutMode, division: layoutDivision)
+        } action: { layout in
+            app.player.recordDiagnostic("watch.layout", values: layout.diagnosticValues)
+        }
         .background(FoldReader(state: fold))
         .background(AppTheme.background)
         .clipped()
@@ -48,6 +57,30 @@ struct WatchView: View {
     }
 }
 
+private struct WatchLayoutSnapshot: Equatable {
+    let size: CGSize
+    let compact: Bool
+    let mode: WatchMode
+    let division: CGRect?
+
+    var diagnosticValues: [String: PlaybackDiagnosticValue] {
+        let name: String
+        switch mode { case .balanced: name = "balanced"; case .slim: name = "slim"; case .video: name = "video" }
+        var values: [String: PlaybackDiagnosticValue] = [
+            "viewingMode": .text(name), "compact": .flag(compact),
+            "width": .number(Double(size.width)), "height": .number(Double(size.height)),
+            "hasDivision": .flag(division != nil)
+        ]
+        if let division {
+            values["divisionX"] = .number(Double(division.minX))
+            values["divisionY"] = .number(Double(division.minY))
+            values["divisionWidth"] = .number(Double(division.width))
+            values["divisionHeight"] = .number(Double(division.height))
+        }
+        return values
+    }
+}
+
 struct WatchVideoPanel: View {
     let session: PlaybackSession
     let channel: WatchedChannel
@@ -64,7 +97,7 @@ struct WatchVideoPanel: View {
                     if session.isConfigured && fits && session.hasCurrentPage && session.channel == channel.login {
                         PlayerHost(session: session)
                     } else {
-                        placeholder(fits: fits)
+                        placeholder(fits: fits, width: geometry.size.width)
                     }
                 }
                 .frame(width: geometry.size.width, height: geometry.size.height)
@@ -74,6 +107,10 @@ struct WatchVideoPanel: View {
                     await session.videoAreaChanged(fits: fits, channel: channel.login)
                 }
             }
+            // An unconstrained layout measurement reserves the supported video
+            // height plus the transport's actual Dynamic Type height. A real
+            // constrained allocation can still shrink and expose the fit gate.
+            .frame(idealHeight: 300)
             // Primary controls stay mounted and never vanish under focus or a tap.
             transport
         }
@@ -135,13 +172,13 @@ struct WatchVideoPanel: View {
         .background(AppTheme.surface)
     }
 
-    private func placeholder(fits: Bool) -> some View {
+    private func placeholder(fits: Bool, width: CGFloat) -> some View {
         ContentUnavailableView {
             Label(session.isConfigured ? (fits ? "Opening Twitch" : "Video needs more room") : "Video unavailable", systemImage: "play.rectangle")
         } description: {
-            Text(session.isConfigured ? (fits && session.channel == channel.login ? session.status : "Switch to full video for more space, or watch this channel in Twitch.") : "The video service is not configured in this build.")
+            Text(session.isConfigured ? (width < 400 ? "Rotate your phone to give video more room. You can also watch this channel in Twitch." : (fits && session.channel == channel.login ? session.status : "Switch to full video for more space, or watch this channel in Twitch.")) : "The video service is not configured in this build.")
         } actions: {
-            if !fits, !fullVideo, let toggleFullVideo {
+            if width >= 400, !fits, !fullVideo, let toggleFullVideo {
                 Button("Focus on video", action: toggleFullVideo).buttonStyle(.borderedProminent)
             }
             Link("Watch in Twitch", destination: URL(string: "https://www.twitch.tv/\(channel.login)")!)

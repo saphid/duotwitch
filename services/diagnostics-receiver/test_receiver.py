@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -418,6 +419,33 @@ class InstallerTests(unittest.TestCase):
                 with self.assertRaises(ValueError): install.manage('install', home, Path(r.__file__).parent)
                 command.assert_not_called()
                 self.assertFalse((home / 'services/duotwitch-diagnostics').exists())
+
+    def test_group_writable_ancestor_requires_a_private_group(self):
+        import install
+        for private in [False, True]:
+            with self.subTest(private=private), tempfile.TemporaryDirectory() as temp:
+                home = Path(temp).resolve(); self.prepare(home)
+                (home / 'services').chmod(0o775)
+                with self.manager(home) as command, patch.object(install, 'private_group', return_value=private):
+                    if private:
+                        install.manage('install', home, Path(r.__file__).parent)
+                    else:
+                        with self.assertRaises(ValueError): install.manage('install', home, Path(r.__file__).parent)
+                        command.assert_not_called()
+
+    def test_private_group_checks_explicit_and_primary_members(self):
+        import install
+        for members, primary, expected in [
+                ([], [(1000, 1000)], True),
+                (['owner'], [(1000, 1000), (1001, 1001)], True),
+                (['other'], [(1000, 1000)], False),
+                ([], [(1000, 1000), (1001, 1000)], False)]:
+            with self.subTest(members=members, primary=primary), \
+                 patch.object(install.os, 'getuid', return_value=1000), \
+                 patch.object(install.pwd, 'getpwuid', return_value=SimpleNamespace(pw_name='owner')), \
+                 patch.object(install.grp, 'getgrgid', return_value=SimpleNamespace(gr_mem=members)), \
+                 patch.object(install.pwd, 'getpwall', return_value=[SimpleNamespace(pw_uid=uid, pw_gid=gid) for uid, gid in primary]):
+                self.assertEqual(install.private_group(1000), expected)
 
     def test_dropin_and_lower_priority_unit_are_refused(self):
         import install

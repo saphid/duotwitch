@@ -6,14 +6,23 @@ configuration screen, bundled secret or analytics SDK. This is Alex’s private
 DuoTwitch JSON record receiver: validated JSON lines are stored in SQLite on
 owned local-network storage. It is **not Loki or PostHog**.
 
-**Deployment is staged, not operationally verified.** No lxso1 service has been
-installed/started and no Serve handler changed by this implementation. Parent
-review, deployment, synthetic HTTPS 204 and exact SSH readback are prerequisites
-for claiming collection works. The already distributed 0.1.0 (202611052312)
-client still targets lxso2’s unavailable Loki. Its volume was 98.8% full, above
-Loki’s 90% WAL threshold; the final synthetic push/readback failed. That
-installation, route and ingester remain untouched. PostHog’s scoped access
-returned 401, so this implementation uses owned storage instead.
+**Deployed and synthetically verified on 6 November 2026.** The owned user unit
+is active/running. Two identical real HTTPS pushes returned204; exact SSH-local
+SQLite readback found one matching record. File/directory permissions are0600/0700.
+The entire Serve comparison proves only the additive diagnostics path changed;
+existing443root, other routes and8443Funnel were preserved. Private evidence is
+`build/proof/local-receiver-deployment/receipt.json`. No private user attachment
+was uploaded. Phone automatic receipt is still a separate runtime gate.
+
+The first start failed before Python with systemd218/CAPABILITIES; ownership-checked
+rollback succeeded. A transient probe established that the empty capability-bound
+setting was unsupported; removing only that directive passed with zero effective/
+permitted capabilities and NoNewPrivileges enabled. Fresh independent Sol/high
+source recheck completed with no actionable findings before the successful install.
+
+The already distributed0.1.0(202611052312) still targets lxso2’s unavailable Loki.
+It needs the next app update to use this receiver. Existing lxso2 routes and its
+full volume remain untouched; no PostHog credential was introduced.
 
 The phone needs an approved Tailscale connection and any permissions iOS
 requests. There is no prompt bypass, ATS exception or third-party fallback.
@@ -159,7 +168,9 @@ The installer refuses existing unowned service/data paths, an occupied port,
 source drift or a different installed release. It checks the effective systemd
 fragment and all unit search paths, including exact, prefix and type-wide
 drop-ins. Ancestor directories must remain real, owned directories without
-group/world write access. These checks repeat before enable/disable, so rollback
+world write access. Group write is permitted only when that group contains no
+other user, checked through explicit and primary group membership. These checks
+repeat before enable/disable, so rollback
 refuses externally changed service behavior. Repeating the same installation
 is safe. Partial installs fail closed and need ownership inspection; do not
 remove unknown paths to retry. It installs/enables only this user unit; lingering

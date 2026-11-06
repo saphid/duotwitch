@@ -28,6 +28,10 @@ struct DiagnosticWireFixture {
             values: ["version": .text("0.1.0"), "build": .text("202611061200"), "os": .text("27.2"),
                      "playing": .flag(false), "time": .number(12.5), "source": .text("app"),
                      "channelName": .text("must-never-leave")]))
+        uploader.enqueue(PlaybackDiagnosticRecord(run: "D42E3296-790A-41C5-9619-1BC20964E272", sequence: 2,
+            wallTime: 1_800_000_000.223456, uptime: 21.6, event: "watch.layout",
+            values: ["viewingMode": .text("balanced"), "compact": .flag(true),
+                     "width": .number(382), "height": .number(700), "hasDivision": .flag(false)]))
         _ = await uploader.snapshot()
         clock.advance()
         await uploader.flush()

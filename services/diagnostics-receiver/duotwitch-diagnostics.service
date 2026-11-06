@@ -20,7 +20,6 @@ RestrictAddressFamilies=AF_INET AF_UNIX
 RestrictNamespaces=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-CapabilityBoundingSet=
 MemoryMax=96M
 CPUQuota=20%
 TasksMax=16

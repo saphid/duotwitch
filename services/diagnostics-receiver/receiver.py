@@ -31,12 +31,13 @@ EVENTS = set('''app.launch app.scene diagnostics.export player.created channel.o
  native.play.result native.pause.requested native.pause.result video.hidden video.fit video.geometry media.pause.begin
  media.pause.callback media.pause.result web.navigation.finished web.navigation.provisionalFailed web.navigation.failed
  web.process.terminated host.received host.applied web.load.sent media.observed audio.notification web.window.changed
- web.host.attach watch.enter watch.leave'''.split())
+ web.host.attach watch.enter watch.leave watch.layout'''.split())
 FLAGS = set('''playing requestingPlay audioReady fits hostReady needsLoad failed windowAttached forceReload sameChannel
- requestedPlaying activating allowed accepted stale confirmed newFits paused ended muted hidden systemSource hasInterruption'''.split())
+ requestedPlaying activating allowed accepted stale confirmed newFits paused ended muted hidden systemSource hasInterruption compact hasDivision'''.split())
 NUMBERS = set('''pendingPauses loadCount appState webWidth webHeight width height errorCode video time volume ready network
- rate error decoded dropped reason type routeReason'''.split())
+ rate error decoded dropped reason type routeReason divisionX divisionY divisionWidth divisionHeight'''.split())
 ENUMS = {
+    'viewingMode': 'balanced slim video',
     'source': 'app system systemIdle', 'audioOwner': 'webKit', 'phase': 'active inactive background',
     'cause': 'user insufficientSpace watchHidden audioInterruption other',
     'event': 'READY PLAYING PAUSE ONLINE OFFLINE PLAYBACK_BLOCKED ENDED',

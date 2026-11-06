@@ -6,7 +6,9 @@ struct WatchPaneGeometry {
     let video: CGRect
     let chat: CGRect
 
-    init(size: CGSize, compact: Bool, division: CGRect?, mode: WatchMode, chatLeading: Bool) {
+    init(size: CGSize, compact: Bool, division: CGRect?, mode: WatchMode, chatLeading: Bool,
+         minimumVideoHeight: CGFloat = 364) {
+        let minimumHeight = max(364, minimumVideoHeight)
         let bounds = CGRect(origin: .zero, size: size)
         let fold = division.flatMap { bounds.intersects($0) ? $0.intersection(bounds) : nil }
         if mode == .video {
@@ -32,17 +34,22 @@ struct WatchPaneGeometry {
             let right = CGRect(x: fold.maxX, y: 0, width: size.width - fold.maxX, height: size.height)
             video = chatLeading ? right : left
             chat = chatLeading ? left : right
-        } else if compact {
-            // Reserve the supported 300 pt player plus its 64 pt native controls.
-            // Leave room for usable chat instead of offering an undersized embed.
-            let height = max(0, min(size.height - 241, max(364, size.width * 9 / 16 + 64)))
-            video = CGRect(x: 0, y: 0, width: size.width, height: max(0, height))
-            chat = CGRect(x: 0, y: height + 1, width: size.width, height: max(0, size.height - height - 1))
-        } else {
+        } else if size.width >= 641 && size.height >= minimumHeight && (!compact || size.height < minimumHeight + 241) {
+            // A preference must never shrink a supported player below 400×300.
+            // Short compact screens use the available width instead of losing
+            // video height to stacked chat. Reserve 240 pt for side-by-side chat.
             let chatWidth = size.width * (mode == .slim ? 0.28 : 0.39)
-            let videoWidth = max(0, size.width - chatWidth - 1)
-            video = CGRect(x: chatLeading ? chatWidth + 1 : 0, y: 0, width: videoWidth, height: size.height)
-            chat = CGRect(x: chatLeading ? 0 : videoWidth + 1, y: 0, width: chatWidth, height: size.height)
+            let videoWidth = max(400, min(size.width - 241, size.width - chatWidth - 1))
+            let remainingWidth = size.width - videoWidth - 1
+            video = CGRect(x: chatLeading ? remainingWidth + 1 : 0, y: 0, width: videoWidth, height: size.height)
+            chat = CGRect(x: chatLeading ? 0 : videoWidth + 1, y: 0, width: remainingWidth, height: size.height)
+        } else {
+            // Narrow regular panes stack too. Prefer supported video over the
+            // usual chat height when the screen can fit only one comfortably.
+            let preferredHeight = max(minimumHeight, size.width * 9 / 16 + minimumHeight - 300)
+            let height = max(0, min(size.height, max(minimumHeight, min(size.height - 241, preferredHeight))))
+            video = CGRect(x: 0, y: 0, width: size.width, height: height)
+            chat = CGRect(x: 0, y: height + 1, width: size.width, height: max(0, size.height - height - 1))
         }
     }
 }
@@ -75,7 +82,10 @@ private struct WatchPaneLayout: Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         guard subviews.count == 2 else { return }
-        let panes = WatchPaneGeometry(size: bounds.size, compact: compact, division: division, mode: mode, chatLeading: chatLeading)
+        let preferred = WatchPaneGeometry(size: bounds.size, compact: compact, division: division, mode: mode, chatLeading: chatLeading)
+        let measuredHeight = subviews[0].sizeThatFits(ProposedViewSize(width: preferred.video.width, height: nil)).height
+        let panes = WatchPaneGeometry(size: bounds.size, compact: compact, division: division, mode: mode,
+            chatLeading: chatLeading, minimumVideoHeight: measuredHeight.isFinite ? measuredHeight : 364)
         for (index, rect) in [panes.video, panes.chat].enumerated() {
             subviews[index].place(at: CGPoint(x: bounds.minX + rect.minX, y: bounds.minY + rect.minY),
                                  anchor: .topLeading, proposal: ProposedViewSize(rect.size))

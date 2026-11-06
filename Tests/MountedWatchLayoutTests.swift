@@ -7,6 +7,69 @@ import XCTest
 /// physical hinge tests and do not imply live Twitch continuity.
 @MainActor
 final class MountedWatchLayoutTests: XCTestCase {
+    func testProductionWatchFullVideoReturnAtNarrowRegularWidthDoesNotPause() async throws {
+        try await assertProductionWatchFullVideoReturn(dynamicTypeSize: .large)
+    }
+
+    func testProductionWatchFullVideoReturnPreservesPlaybackWithAccessibilityText() async throws {
+        for size in [DynamicTypeSize.accessibility3, .accessibility5] {
+            try await assertProductionWatchFullVideoReturn(dynamicTypeSize: size)
+        }
+    }
+
+    private func assertProductionWatchFullVideoReturn(dynamicTypeSize: DynamicTypeSize) async throws {
+        for (width, returningMode) in [(466.0, WatchMode.balanced), (466.0, .slim), (550.0, .balanced), (550.0, .slim)] {
+            let preferencesName = "DuoTwitch-layout-test-\(UUID().uuidString)"
+            let preferences = try XCTUnwrap(UserDefaults(suiteName: preferencesName))
+            defer { preferences.removePersistentDomain(forName: preferencesName) }
+            preferences.set(WatchMode.video.rawValue, forKey: "watchMode")
+            var nonce: String?
+            var pauses = 0
+            var loads = 0
+            let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+                loadRequest: { _, request in
+                    loads += 1
+                    nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value
+                }, pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in true })
+            let app = AppModel(auth: TwitchAuth(clientId: ""), player: session)
+            let channel = WatchedChannel(channel: TwitchChannel(id: "fixture", broadcasterLogin: "fixture", displayName: "Fixture", gameName: "", title: "", thumbnailUrl: "", isLive: true))
+            let host = UIHostingController(rootView: WatchView(app: app, channel: channel)
+                .environment(\.horizontalSizeClass, .regular).dynamicTypeSize(dynamicTypeSize)
+                .defaultAppStorage(preferences).ignoresSafeArea())
+            let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+            let window = UIWindow(windowScene: scene)
+            let container = UIViewController()
+            window.rootViewController = container
+            window.makeKeyAndVisible()
+            container.addChild(host)
+            container.view.addSubview(host.view)
+            host.view.frame = CGRect(x: 0, y: 0, width: width, height: 700)
+            host.didMove(toParent: container)
+            defer { window.isHidden = true; window.rootViewController = nil }
+            try await Task.sleep(for: .milliseconds(200))
+            let currentNonce = try XCTUnwrap(nonce)
+            session.handleHostMessage(["session": currentNonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+            try await Task.sleep(for: .milliseconds(40))
+            XCTAssertTrue(session.canPlay)
+            await session.play()
+            session.handleHostMessage(["session": currentNonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+            let baselinePauses = pauses
+            preferences.set(returningMode.rawValue, forKey: "watchMode")
+            try await Task.sleep(for: .milliseconds(250))
+            host.view.layoutIfNeeded()
+            XCTAssertTrue(session.isPlaying, "Full video return to \(returningMode) must retain playback when the screen can fit the player")
+            XCTAssertEqual(pauses, baselinePauses, "Returning layout must not request an insufficient-space Pause")
+            XCTAssertEqual(loads, 1)
+            await session.pause()
+            preferences.set(WatchMode.video.rawValue, forKey: "watchMode")
+            try await Task.sleep(for: .milliseconds(60))
+            preferences.set(returningMode.rawValue, forKey: "watchMode")
+            try await Task.sleep(for: .milliseconds(100))
+            XCTAssertFalse(session.isPlaying, "Layout changes must preserve an intentional Pause")
+            XCTAssertEqual(loads, 1)
+        }
+    }
+
     func testProductionPanelDoesNotPauseItselfAfterPlay() async throws {
         let channel = WatchedChannel(channel: TwitchChannel(id: "lofi", broadcasterLogin: "lofigirl", displayName: "LofiGirl", gameName: "Music", title: "A live stream with a title that wraps in smaller video panes", thumbnailUrl: "", isLive: true))
         var testedSizes = 0

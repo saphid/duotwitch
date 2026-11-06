@@ -53,18 +53,20 @@ enum PlaybackDiagnosticUploadProjection {
         "native.pause.result", "video.hidden", "video.fit", "video.geometry", "media.pause.begin",
         "media.pause.callback", "media.pause.result", "web.navigation.finished", "web.navigation.provisionalFailed",
         "web.navigation.failed", "web.process.terminated", "host.received", "host.applied", "web.load.sent",
-        "media.observed", "audio.notification", "web.window.changed", "web.host.attach", "watch.enter", "watch.leave"
+        "media.observed", "audio.notification", "web.window.changed", "web.host.attach", "watch.enter", "watch.leave", "watch.layout"
     ]
     private static let flags: Set<String> = [
         "playing", "requestingPlay", "audioReady", "fits", "hostReady", "needsLoad", "failed", "windowAttached",
         "forceReload", "sameChannel", "requestedPlaying", "activating", "allowed", "accepted", "stale",
-        "confirmed", "newFits", "paused", "ended", "muted", "hidden", "systemSource", "hasInterruption"
+        "confirmed", "newFits", "paused", "ended", "muted", "hidden", "systemSource", "hasInterruption", "compact", "hasDivision"
     ]
     private static let numbers: Set<String> = [
         "pendingPauses", "loadCount", "appState", "webWidth", "webHeight", "width", "height", "errorCode",
-        "video", "time", "volume", "ready", "network", "rate", "error", "decoded", "dropped", "reason", "type", "routeReason"
+        "video", "time", "volume", "ready", "network", "rate", "error", "decoded", "dropped", "reason", "type", "routeReason",
+        "divisionX", "divisionY", "divisionWidth", "divisionHeight"
     ]
     private static let textEnums: [String: Set<String>] = [
+        "viewingMode": ["balanced", "slim", "video"],
         "source": ["app", "system", "systemIdle"],
         "audioOwner": ["webKit"],
         "phase": ["active", "inactive", "background"],

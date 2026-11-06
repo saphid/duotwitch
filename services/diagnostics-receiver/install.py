@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Run on lxso1 only after review. Touches only this service; never Tailscale."""
 import argparse
+import grp
 import hashlib
 import json
 import os
+import pwd
 from pathlib import Path
 import socket
 import stat
@@ -55,6 +57,14 @@ def systemd_snapshot():
     return values
 
 
+def private_group(gid):
+    uid = os.getuid()
+    name = pwd.getpwuid(uid).pw_name
+    group = grp.getgrgid(gid)
+    return (set(group.gr_mem) <= {name} and
+            all(user.pw_uid == uid for user in pwd.getpwall() if user.pw_gid == gid))
+
+
 def check_paths(home, directories, files):
     if not home.is_absolute() or home.resolve() != home:
         fail('home must be an absolute path without symlink ancestors')
@@ -70,7 +80,7 @@ def check_paths(home, directories, files):
                 info = current.stat()
                 if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
                     fail('directory ownership or type changed; refusing mutation')
-                if info.st_mode & 0o022:
+                if info.st_mode & 0o002 or (info.st_mode & 0o020 and not private_group(info.st_gid)):
                     fail('writable directory ancestor; refusing mutation')
     for path in files:
         if path.is_symlink():

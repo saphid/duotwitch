@@ -1,3 +1,21 @@
+# Current follow-up — 6 November 2026
+
+Reviewed source now preserves supported video size across narrower regular/short
+compact layouts and measures actual Dynamic Type transport height.102signed iOS
+tests and28receiver tests pass; latest independent Sol/high recheck has no
+P0–P3findings. Physical Full-video exit and current muted runtime remain pending.
+
+The dedicated lxso1 JSON/SQLite receiver is active and verified by HTTPS204 twice
+and exact one-record SSH readback. Existing network routes are preserved.
+New app default uploads target it, but the currently delivered202611052312build
+still targets blocked lxso2. Phone collection requires the next app update and
+actual connectivity/permission verification. Alex confirms continuous playback in
+the delivered audio-ownership build; layout/outer-display requirements remain open.
+
+See [follow-up](council/playback-followup-20261106.md) and
+[review](council/fullvideo-accessibility-review-sol.md). Earlier checkpoints below
+retain their original evidence scope.
+
 # WebKit audio ownership and automatic diagnostics candidate — 6 November 2026
 
 The physical export from TestFlight 202611052215 shows two stops after native

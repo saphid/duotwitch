@@ -8,8 +8,25 @@ final class WatchGeometryTests: XCTestCase {
             for height in [604.0, 605.0, 740.0] {
                 let panes = WatchPaneGeometry(size: CGSize(width: 402, height: height), compact: true,
                                               division: nil, mode: mode, chatLeading: false)
-                XCTAssertEqual(panes.video.height, height < 605 ? 363 : 364)
-                XCTAssertGreaterThanOrEqual(panes.chat.height, 240)
+                XCTAssertEqual(panes.video.height, 364)
+                XCTAssertGreaterThanOrEqual(panes.chat.height, 239)
+            }
+        }
+    }
+
+    func testChatLayoutsPreserveSupportedVideoAcrossWidthAndHeightBoundaries() {
+        for compact in [false, true] {
+            for mode in [WatchMode.balanced, .slim] {
+                for width in [400.0, 402, 550, 640, 641, 650, 900] {
+                    for height in [364.0, 390, 604, 605, 700] {
+                        let size = CGSize(width: width, height: height)
+                        let panes = WatchPaneGeometry(size: size, compact: compact, division: nil, mode: mode, chatLeading: true)
+                        XCTAssertGreaterThanOrEqual(panes.video.width, 400)
+                        XCTAssertGreaterThanOrEqual(panes.video.height, 364)
+                        XCTAssertTrue(CGRect(origin: .zero, size: size).contains(panes.video))
+                        XCTAssertFalse(panes.video.intersects(panes.chat))
+                    }
+                }
             }
         }
     }

@@ -89,6 +89,20 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
         XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("private"))
     }
 
+    func testLayoutProjectionRetainsGeometryAndFixedModesWithoutFreeformStrings() throws {
+        let safe = try XCTUnwrap(PlaybackDiagnosticUploadProjection.record(record(event: "watch.layout", values: [
+            "viewingMode": .text("balanced"), "compact": .flag(true), "width": .number(382),
+            "height": .number(700), "hasDivision": .flag(true), "divisionWidth": .number(12),
+            "divisionHeight": .number(700), "divisionX": .number(390), "divisionY": .number(0),
+            "channel": .text("private-channel")
+        ])))
+        XCTAssertEqual(safe.values.count, 9)
+        let rejected = try XCTUnwrap(PlaybackDiagnosticUploadProjection.record(record(event: "watch.layout", values: [
+            "viewingMode": .text("private-channel"), "compact": .text("true"), "divisionX": .number(.infinity)
+        ])))
+        XCTAssertTrue(rejected.values.isEmpty)
+    }
+
     func testProjectionRetainsOnlyPublicMetadataEnumsNumbersFlagsAndEphemeralUUIDs() throws {
         let safe = try XCTUnwrap(PlaybackDiagnosticUploadProjection.record(record(event: "audio.notification", values: [
             "version": .text("0.1.0"), "build": .text("202611052215"), "os": .text("27.1"),
