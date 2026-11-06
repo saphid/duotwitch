@@ -651,3 +651,16 @@ Report, full identity receipt, action readbacks and original screenshots are in
 the Simulator remained running. No source, account, chat or delivery changes
 were made by this check. Full WatchView, fold, leave-Watch, timeout recovery,
 background, audible output and PiP were outside its scope.
+
+
+## 6 November — content-first chat candidate
+
+The permanent Chat header/rule/status row is removed. Conditional connection
+recovery moves into Viewing options, latest navigation floats over the timeline,
+and the signed-out action adapts to narrow/short panes without broken text.
+Accessibility-size layout settings show complete inline choice labels. Current
+115-test suite and strict signature pass; fresh Sol/high source review has no
+actionable findings and Astra/high scoped visual acceptance passes. Exact source62
+and bundle12 identities match. See DELIVERY.md and the content-first checkpoint
+for evidence and remaining signed-in/keyboard/VoiceOver/playback/Duo limits.
+Internal TestFlight preparation follows; no Discord access or updates.

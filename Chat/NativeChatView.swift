@@ -8,7 +8,6 @@ struct NativeChatView: View {
     let signIn: () -> Void
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var atBottom = true
-    @State private var showConnectionNotice = false
     @FocusState private var composerFocused: Bool
 
     private var inputFocused: Bool {
@@ -21,32 +20,25 @@ struct NativeChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Label("Chat", systemImage: "bubble.left.and.bubble.right").font(.headline)
-                Spacer()
-                if let gap = session.gapNotice {
-                    Button { showConnectionNotice = true } label: {
-                        Image(systemName: "exclamationmark.bubble").foregroundStyle(.secondary)
-                    }
-                    .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel(gap)
-                    .accessibilityHint("Shows connection details.")
-                }
-                if session.connection == .connected {
-                    Circle().fill(.green).frame(width: 7, height: 7).accessibilityLabel("Connected")
-                } else if signedIn {
-                    Button("Reconnect chat", systemImage: "arrow.clockwise") { session.retry() }
-                        .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
-                }
-            }.padding(.horizontal, 14).frame(minHeight: 48)
-            Divider()
             if !signedIn {
-                VStack(spacing: 12) {
-                    Text("Sign in to join chat.").font(.callout).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                    Button("Sign in", action: signIn).buttonStyle(.bordered)
+                GeometryReader { geometry in
+                    ViewThatFits {
+                        Button("Sign in", action: signIn)
+                            .buttonStyle(.bordered).controlSize(.large)
+                            .fixedSize().padding(12)
+                            .accessibilityLabel("Sign in to chat")
+                        Button(action: signIn) {
+                            let side = min(44, max(0, min(geometry.size.width, geometry.size.height)))
+                            Image(systemName: "person.crop.circle.badge.plus")
+                                .font(.system(size: 22))
+                                .scaleEffect(min(1, side / 44))
+                                .frame(width: side, height: side)
+                                .background(AppTheme.surface, in: .circle)
+                                .contentShape(Circle())
+                        }.buttonStyle(.plain).accessibilityLabel("Sign in to chat")
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
-                .padding(16).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 timeline
                 composer
@@ -54,11 +46,8 @@ struct NativeChatView: View {
         }
         .background(AppTheme.background)
         .accessibilityIdentifier("nativeChat")
-        .alert("Chat connection", isPresented: $showConnectionNotice) {
-            Button("OK") { session.dismissGapNotice() }
-        } message: {
-            Text(session.gapNotice ?? "")
-        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Chat")
         .onChange(of: composerVisible) { _, visible in if !visible { inputFocused = false } }
     }
 
@@ -82,7 +71,12 @@ struct NativeChatView: View {
                                     Link("View profile in Twitch", destination: URL(string: "https://www.twitch.tv/\(message.login)")!)
                                 }
                         }
-                        Color.clear.frame(height: 1).id("latest")
+                        // Keep clearance inside the jump target so an explicit
+                        // bottom-aligned jump cannot hide the newest line under
+                        // the persistent VoiceOver action.
+                        Color.clear
+                            .frame(height: voiceOver && !session.messages.isEmpty ? 49 : 1)
+                            .id("latest")
                     }.padding(12)
                 }
                 .defaultScrollAnchor(.bottom)
@@ -93,11 +87,20 @@ struct NativeChatView: View {
                 .onChange(of: session.messages.last?.id) { _, _ in
                     if atBottom && !voiceOver { proxy.scrollTo("latest", anchor: .bottom) }
                 }
-                if !atBottom || voiceOver && !session.messages.isEmpty {
-                    Button("Jump to latest", systemImage: "arrow.down") {
-                        proxy.scrollTo("latest", anchor: .bottom)
-                        atBottom = true
-                    }.buttonStyle(.bordered).padding(8)
+                .overlay(alignment: .bottomTrailing) {
+                    if !atBottom || voiceOver && !session.messages.isEmpty {
+                        Button {
+                            proxy.scrollTo("latest", anchor: .bottom)
+                            atBottom = true
+                        } label: {
+                            Image(systemName: "arrow.down")
+                                .frame(width: 44, height: 44)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain).accessibilityLabel("Jump to latest")
+                        .background(.regularMaterial, in: .circle)
+                        .padding(8)
+                    }
                 }
             }
         }

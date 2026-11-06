@@ -2,6 +2,40 @@
 
 Owning work: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208).
 
+## Verified candidate — content-first chat
+
+The next candidate removes the permanent Chat heading, rule and connection row.
+Messages receive that space; connection notices and conditional reconnect live
+in Viewing options. Jump to latest floats over the timeline with a 44-point
+interactive label and a terminal scroll target that includes VoiceOver clearance.
+Signed-out chat uses one Sign in action, adapting to a bounded account icon in
+narrow/short panes. Accessibility-size Layout choices use full inline labels.
+Normal-size settings retain compact pickers. Divider, composer, playback host
+and Explore are preserved. No Discord read or update occurred.
+
+- Current signed Simulator suite: **115 passed, zero failed/skipped**, exit0;
+  actual `build/verification/content-first-chat-adaptive.xcresult`, summary,
+  log and exit agree. `runtimeWarnings` is empty; existing compiler/tool warnings
+  remain. Strict/deep signature exits0.
+- Fresh OpenAI/Codex GPT-6.1 Sol/high source recheck completed with no actionable
+  P0–P3 findings in the complete two-file delta. Same-model independent session,
+  no diversity claim. [Review](docs/council/content-first-chat-adaptive-review-sol.md).
+- OpenAI/Codex GPT-6 Astra/high silent scoped acceptance passed: AX5 narrow158pt
+  landscape and short59pt below chat actions are unclipped and open/dismiss
+  Account; full Layout choice labels and selected allocation work. Normal text,
+  compact settings and actual divider recovery pass. Source62 and exact12
+  candidate/installed files match before/after. All453 saved preference files
+  restored byte-for-byte, Large text/portrait and owned-resource cleanup verified.
+  Evidence: `build/proof/content-first-chat-adaptive/report.md` and `receipt.json`.
+- Authenticated chat/recovery, physical keyboard, VoiceOver traversal/latest
+  visibility, live playback and physical Duo/fold remain unverified. AX automation
+  misses are disclosed in the runtime report. These checks do not resolve the
+  historical player freezes or host Pause.
+
+Internal delivery is being prepared; the verified current TestFlight build below
+remains authoritative until exact Apple processing/group readback succeeds.
+[Checkpoint](docs/council/content-first-chat-checkpoint.md). Issue208 remains open.
+
 ## Current internal TestFlight — drag handle and simpler Viewing options
 
 **0.1.0 (202611060438)** is available in internal TestFlight. Apple readback

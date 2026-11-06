@@ -4,6 +4,7 @@ struct WatchView: View {
     @Bindable var app: AppModel
     let channel: WatchedChannel
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("watchMode") private var mode: WatchMode = .balanced
     @AppStorage("chatLeading") private var chatLeading = false
     @AppStorage("watchChatPlacement") private var chatPlacement: WatchChatPlacement = .automatic
@@ -17,6 +18,7 @@ struct WatchView: View {
     @State private var appearance = UUID()
     @State private var showDetails = false
     @State private var showLayout = false
+    @State private var showChatConnectionNotice = false
     @FocusState private var composerFocused: Bool
 
     var body: some View {
@@ -74,16 +76,34 @@ struct WatchView: View {
                     }
                     Button("Channel details", systemImage: "info.circle") { showDetails = true }
                     Button("Account", systemImage: "person.crop.circle") { app.accountPresented = true }
+                    if app.chat.gapNotice != nil {
+                        Button("Chat connection notice", systemImage: "exclamationmark.bubble") { showChatConnectionNotice = true }
+                    }
+                    if app.auth.account != nil && app.chat.connection != .connected {
+                        Button("Reconnect chat", systemImage: "arrow.clockwise") { app.chat.retry() }
+                    }
                     Divider()
                     Button("Layout…", systemImage: "rectangle.split.2x1") { showLayout = true }
                     Divider()
                     Link("Open in Twitch", destination: URL(string: "https://www.twitch.tv/\(channel.login)")!)
                 } label: { Label("Viewing options", systemImage: "ellipsis") }
                 .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+                .overlay(alignment: .topTrailing) {
+                    if app.chat.gapNotice != nil {
+                        Circle().fill(.orange).frame(width: 6, height: 6).padding(5)
+                            .accessibilityHidden(true).allowsHitTesting(false)
+                    }
+                }
+                .accessibilityLabel(app.chat.gapNotice == nil ? "Viewing options" : "Viewing options, chat connection notice")
             }
         }
         .sheet(isPresented: $showDetails) { details }
         .sheet(isPresented: $showLayout) { layoutSettings }
+        .alert("Chat connection", isPresented: $showChatConnectionNotice) {
+            Button("OK") { app.chat.dismissGapNotice() }
+        } message: {
+            Text(app.chat.gapNotice ?? "")
+        }
         .onAppear { app.watch(channel, appearance: appearance) }
         .onChange(of: channel.id) { _, _ in app.watch(channel, appearance: appearance) }
         .onDisappear { app.leaveWatch(channel, appearance: appearance) }
@@ -93,13 +113,19 @@ struct WatchView: View {
     private var layoutSettings: some View {
         NavigationStack {
             Form {
-                Section {
-                    Picker("View", selection: $mode) {
-                        ForEach(WatchMode.allCases) { item in Text(item.rawValue).tag(item) }
+                if dynamicTypeSize.isAccessibilitySize {
+                    Section("View") {
+                        viewPicker.pickerStyle(.inline).labelsHidden()
                     }
-                    Picker("Chat position", selection: $chatPlacement) {
-                        ForEach(WatchChatPlacement.allCases) { item in Text(item.rawValue).tag(item) }
-                    }.disabled(mode == .video)
+                    Section("Chat position") {
+                        chatPositionPicker.pickerStyle(.inline).labelsHidden()
+                    }
+                }
+                Section {
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        viewPicker
+                        chatPositionPicker
+                    }
                     if chatIsBeside && mode != .video {
                         Toggle("Chat on the left", isOn: $chatLeading)
                     }
@@ -117,6 +143,22 @@ struct WatchView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showLayout = false } } }
         }
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+    }
+
+    private var viewPicker: some View {
+        Picker("View", selection: $mode) {
+            ForEach(WatchMode.allCases) { item in
+                Text(item.rawValue).fixedSize(horizontal: false, vertical: true).tag(item)
+            }
+        }
+    }
+
+    private var chatPositionPicker: some View {
+        Picker("Chat position", selection: $chatPlacement) {
+            ForEach(WatchChatPlacement.allCases) { item in
+                Text(item.rawValue).fixedSize(horizontal: false, vertical: true).tag(item)
+            }
+        }.disabled(mode == .video)
     }
 
     private var details: some View {

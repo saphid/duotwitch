@@ -63,3 +63,11 @@ controls must leave with focus, rather than becoming another permanent rail.
 - Provide a Hide keyboard action while composing, preserving the unsent draft.
 - Simplify the watch Viewing options menu and layout settings. Alex clarified that “side menu” means Viewing options; leave the Explore sidebar unchanged.
 - Do not send any further Discord updates unless explicitly asked again.
+
+## Content-first chat — 6 November 2026
+
+- Do not reserve a row or column merely to label the chat pane. Give that space to messages.
+- Keep connection notices and conditional reconnect in Viewing options; avoid permanent connection chrome.
+- Keep the resize handle and accessible chat identification. Jump to latest must not reserve another full row.
+- Signed-out chat should offer one compact, actionable Sign in to chat prompt.
+- Keep the signed-out action legible in narrow or short panes at accessibility text sizes, and show complete layout choices without compressed value labels.
