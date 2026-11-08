@@ -10,7 +10,7 @@ enum SupportLinks {
         url.scheme = "mailto"
         url.path = email
         url.queryItems = [
-            URLQueryItem(name: "subject", value: "Duo Viewer chat safety report"),
+            URLQueryItem(name: "subject", value: "Foldstream chat safety report"),
             URLQueryItem(name: "body", value: "Please describe the concern:\n\n\nUser: \(message.login)\nMessage ID: \(message.id)\nMessage: \(message.text)\n\nThis report is sent only when you send this email.")
         ]
         return url.url

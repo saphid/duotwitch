@@ -17,9 +17,9 @@ struct MainView: View {
                         NavigationLink(value: item) { Label(item.rawValue, systemImage: item.symbol) }
                     }
                 } header: {
-                    Label("Duo Viewer", systemImage: "rectangle.split.2x1.fill")
+                    Label("Foldstream", systemImage: "rectangle.split.2x1.fill")
                         .font(.title2.bold()).textCase(nil).padding(.vertical, 16)
-                        .accessibilityElement(children: .ignore).accessibilityLabel("Duo Viewer")
+                        .accessibilityElement(children: .ignore).accessibilityLabel("Foldstream")
                 }
                 Section {
                     Button { app.accountPresented = true } label: {

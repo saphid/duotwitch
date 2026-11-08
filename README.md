@@ -1,6 +1,8 @@
 <img src="assets/icon.svg" width="64" height="64" alt="">
 
-# DuoTwitch
+# Foldstream
+
+Public branding is Foldstream. Repository, Xcode scheme, bundle and registered Twitch client identities remain unchanged. See the [App Store approval checkpoint](docs/APP_STORE_APPROVAL.md) for current candidate status; historical beta evidence below predates this rename.
 
 A native SwiftUI Twitch viewer for iPhone and iPhone Duo, built in [T3 Code](https://t3.codes).
 

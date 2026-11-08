@@ -54,7 +54,7 @@ struct PlayerProbeView: View {
                     }
                 }
             }
-            .navigationTitle("DuoTwitch")
+            .navigationTitle("Foldstream")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

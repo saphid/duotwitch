@@ -64,7 +64,7 @@ struct NativeChatView: View {
                         Link("Report to Twitch", destination: URL(string: "https://safety.twitch.tv/s/article/Filing-a-Report")!)
                     }
                     Section {
-                        Button("Block \(message.name) in Duo Viewer", role: .destructive) {
+                        Button("Block \(message.name) in Foldstream", role: .destructive) {
                             session.block(message)
                             reporting = nil
                         }
@@ -77,7 +77,7 @@ struct NativeChatView: View {
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { reporting = nil } } }
             }
         }
-        .confirmationDialog("Block this user in Duo Viewer?", isPresented: Binding(
+        .confirmationDialog("Block this user in Foldstream?", isPresented: Binding(
             get: { blocking != nil }, set: { if !$0 { blocking = nil } }), titleVisibility: .visible) {
             if let message = blocking {
                 Button("Block \(message.name)", role: .destructive) { session.block(message); blocking = nil }
@@ -104,7 +104,7 @@ struct NativeChatView: View {
                                     }
                                     Link("View profile in Twitch", destination: URL(string: "https://www.twitch.tv/\(message.login)")!)
                                     Button("Report message", systemImage: "flag") { reporting = message }
-                                    Button("Block user in Duo Viewer", systemImage: "person.crop.circle.badge.xmark", role: .destructive) { blocking = message }
+                                    Button("Block user in Foldstream", systemImage: "person.crop.circle.badge.xmark", role: .destructive) { blocking = message }
                                 }
                         }
                         // Keep clearance inside the jump target so an explicit

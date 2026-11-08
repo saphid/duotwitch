@@ -4,7 +4,7 @@ enum PlaybackDiagnosticDestination {
     // Public client ingest metadata, not an admin credential. This route is
     // private to Alex's tailnet and accepts only validated DuoTwitch records.
     static let endpoint = URL(string: "https://lxso1.tail4e5636.ts.net/duotwitch-diagnostics")!
-    static let disclosure = "Alex’s private DuoTwitch JSON log storage at lxso1.tail4e5636.ts.net over HTTPS and Tailscale"
+    static let disclosure = "Alex’s private Foldstream JSON log storage at lxso1.tail4e5636.ts.net over HTTPS and Tailscale"
 }
 
 struct PlaybackDiagnosticUploadResponse: Sendable {

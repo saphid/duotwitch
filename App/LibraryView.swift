@@ -50,7 +50,7 @@ struct LibraryView: View {
                 Button { app.accountPresented = true } label: {
                     Text("Connect to Twitch").fontWeight(.semibold).frame(maxWidth: .infinity).padding(.vertical, 8)
                 }.buttonStyle(.borderedProminent).controlSize(.large)
-                Text("Sign in to browse Twitch and join chat. Duo Viewer is an independent viewer.")
+                Text("Sign in to browse Twitch and join chat. Foldstream is an independent viewer.")
                     .font(.footnote).foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Watch without signing in").font(.headline)
