@@ -1,3 +1,7 @@
+# Recovery in progress — 8 November 2026
+
+Alex directed further work. The simulator discovery cause is identified: Expo hub hides never-booted devices. Initializing isolated app-owned targets restored the supported T3 route without touching the other session. Fresh Astra/high medium-display runtime verified source39/bundle10, signatures0,77.491s changing silent video,73.724s deliberate Pause and132.841s after gated Resume. **Full-video landscape→portrait rotation still caused an unexpected persistent embedded Pause**; exact trace replay fails and diagnosis continues. Medium raw native/offline screenshot candidates exist but are not uploaded. Privacy remains unresolved; inquiry stays unsent. App Store1.0(202611080806) remains PREPARE_FOR_SUBMISSION/MANUAL, not approved. [Current recovery checkpoint](APP_STORE_APPROVAL.md).
+
 # Approval blocked — 8 November 2026
 
 Three consecutive goal-turn audits confirm the same blockers. Live Apple **1.0 (202611080806)** remains **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, no review submission. Missing screenshots and unpublished privacy still block submission. Supported host-local status proves another session’s ownership of the authorized simulator is live; its owner must release it, or another usable target must be authorized. Embedded Twitch collection/ATT evidence remains unresolved; Alex requires the inquiry stay unsent. Available independent delivery work is complete. Goal is blocked, not approved. [Resumable checkpoint](APP_STORE_APPROVAL.md).

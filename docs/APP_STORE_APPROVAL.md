@@ -4,6 +4,18 @@ Goal: Apple approval of the exact submitted app/version/build, with manual relea
 
 Owning spine: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208); cross-app setup background: [#206](https://github.com/saphid/personal-ops/issues/206).
 
+## Recovery after Alex’s “Figure it out” instruction
+
+The earlier device-access impasse is resolved without touching the other live owner. Read-only inspection of installed Expo hub0.19.1 found that its iOS inventory filters out devices with no last-used/last-booted timestamp. Lifecycle-initializing the previously created app-owned simulator made it visible to T3; all subsequent app/screen operations used device_open and its pinned agent-device command. A new isolated iPhone18Pro target **3938543B-EE9A-44B6-8F69-AB3C27101828** likewise appears after initialization and provides the required medium screenshot dimensions. Other sessions’ claims/data were preserved. Earlier blocked snapshots below are historical.
+
+Astra/high task **2a21bde5-5f95-4e41-8dfc-b62c6689fe0a** verified exact source39/bundle10 and basic native UI on the isolated ProMax. It stopped after existing automatic diagnostics received HTTP204, interpreting its no-upload instruction broadly. Parent clarified that ordinary app networking/diagnostics are authorized; the no-upload boundary concerns evidence publication and ASC mutations. Do not claim no diagnostic upload happened. No screenshot/evidence artifact was uploaded.
+
+Astra/high task **a2b44f1d-3759-457b-86e3-8d8bc97f3385** then exercised the exact same-source Debug candidate on isolated iPhone18Pro: source39/candidate10/installed10 hashes all match; all strict/deep signatures exit0. Successful silent-gate OSLogs are paired with fresh passive muted=true on the same player/session. Actual changing video lasted **77.491s**, deliberate Pause held **73.724s**, and native gated Resume continued **132.841s**. Side/below/slim layouts and resizing retained player/loadCount; authenticated chat/keyboard, physical fold and uploaded Release runtime remain untested.
+
+**Overall playback acceptance failed:** active Full video landscape→portrait rotation at08:55:39Z triggered a persistent embedded-media PAUSE. No native Pause request, scene inactivity, audio deactivation, reload or player recreation was observed; fits/windowAttached stayed true. This localizes the symptom but does not identify the underlying caller. An app-local replay checker detects the exact trace symptom and exits1; repeated runtime reproduction and diagnosis precede any fix. Do not override all Twitch PAUSE events or disturb deliberate Pause intent.
+
+Raw honest medium screenshot candidates now exist at1206×2622/2622×1206: native welcome/Account and developer-owned saphid offline watch/layout. They retain alpha and need visual review/preparation before upload; no listing asset is delivered yet. Public live-channel footage remains private test evidence, not marketing-cleared. Reports/receipts and exact gate/timing evidence: `recovery/{runtime,medium-runtime}/`; failing trace checker: `recovery/rotation-diagnosis/check-rotation-trace.py`. Privacy/ATT assessment remains unresolved and inquiry remains unsent. Apple exact build/state/manual release has not changed.
+
 ## Blocked audit — 2026-11-08T08:16:03Z
 
 The same genuine runtime/privacy blockers persisted across three consecutive goal turns after the Foldstream delivery work. Fresh readback confirms app6831008730, iOS **1.0 (202611080806)**, build **3d7054c7-aa01-4d48-acea-bab7ade713aa**, **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, no review submission. Authenticated deep validation still has exactly two blocking errors: screenshots missing and App Privacy unpublished. No approval is claimed.
