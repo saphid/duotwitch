@@ -40,6 +40,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
     private var persistenceFailed = false
     private var scheduled: DispatchWorkItem?
     private var scheduledAt: Double?
+    private var stopped = false
 
     init(directory: URL, transport: any PlaybackDiagnosticTransport = PlaybackDiagnosticHTTPTransport(),
          maximumBytes: Int = 512 * 1024, maximumRecords: Int = 512,
@@ -63,7 +64,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
 
     func enqueue(_ input: PlaybackDiagnosticRecord) {
         queue.async { [self] in
-            guard let record = PlaybackDiagnosticUploadProjection.record(input),
+            guard !stopped, let record = PlaybackDiagnosticUploadProjection.record(input),
                   !state.entries.contains(where: { $0.identity == record.identity }),
                   let data = try? Self.encoder.encode(record), data.count <= 4096,
                   let line = String(data: data, encoding: .utf8) else { return }
@@ -76,6 +77,23 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
             if state.nextAttempt == 0 { state.nextAttempt = now + interval }
             persist()
             schedule()
+        }
+    }
+
+    /// Permanently stop this uploader. A later opt-in creates a fresh instance.
+    func cancelAndDiscard(completion: @escaping @Sendable (Bool) -> Void) {
+        queue.async { [self] in
+            stopped = true
+            scheduled?.cancel()
+            scheduled = nil
+            scheduledAt = nil
+            transport.cancel()
+            inFlight = false
+            state = State()
+            do {
+                if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
+                completion(true)
+            } catch { completion(false) }
         }
     }
 
@@ -165,7 +183,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
     }
 
     private func schedule() {
-        guard automaticallySchedules, !inFlight, !state.entries.isEmpty else { return }
+        guard !stopped, automaticallySchedules, !inFlight, !state.entries.isEmpty else { return }
         let now = clock().timeIntervalSince1970
         let deadline = max(now + 1, state.nextAttempt)
         // New high-frequency records must not postpone an existing flush.
@@ -191,6 +209,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
     }
 
     private func attempt(completion: @escaping @Sendable () -> Void) {
+        guard !stopped else { completion(); return }
         let now = clock().timeIntervalSince1970
         guard !inFlight else { completion(); return }
         let count = state.entries.count
@@ -233,6 +252,7 @@ final class PlaybackDiagnosticUploader: @unchecked Sendable {
         let identities = Set(batch.map(\.identity))
         transport.send(body) { [self] response in
             queue.async { [self] in
+                guard !stopped else { completion(); return }
                 inFlight = false
                 let finished = clock().timeIntervalSince1970
                 if response.accepted || !response.retryable || state.failures >= 8 {

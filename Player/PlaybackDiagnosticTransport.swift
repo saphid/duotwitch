@@ -16,12 +16,15 @@ struct PlaybackDiagnosticUploadResponse: Sendable {
 
 protocol PlaybackDiagnosticTransport: Sendable {
     func send(_ body: Data, completion: @escaping @Sendable (PlaybackDiagnosticUploadResponse) -> Void)
+    func cancel()
 }
 
 /// No cookies, credentials, response body, redirects, SDK/device identity or
 /// third-party fallback. The ephemeral session exists only for one bounded POST.
 final class PlaybackDiagnosticHTTPTransport: PlaybackDiagnosticTransport, @unchecked Sendable {
     private let configuration: @Sendable () -> URLSessionConfiguration
+    private let lock = NSLock()
+    private var sessions: [UUID: (session: URLSession, task: URLSessionDataTask, delegate: ResponseDelegate)] = [:]
 
     init(configuration: @escaping @Sendable () -> URLSessionConfiguration = { .ephemeral }) {
         self.configuration = configuration
@@ -31,7 +34,15 @@ final class PlaybackDiagnosticHTTPTransport: PlaybackDiagnosticTransport, @unche
         guard body.count <= 64 * 1024 else {
             completion(PlaybackDiagnosticUploadResponse(status: 413)); return
         }
-        let delegate = ResponseDelegate(completion: completion)
+        let id = UUID()
+        let delegate = ResponseDelegate { [weak self] response in
+            if let self {
+                self.lock.lock()
+                self.sessions[id] = nil
+                self.lock.unlock()
+            }
+            completion(response)
+        }
         let configuration = configuration()
         configuration.httpShouldSetCookies = false
         configuration.httpCookieStorage = nil
@@ -48,16 +59,44 @@ final class PlaybackDiagnosticHTTPTransport: PlaybackDiagnosticTransport, @unche
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
-        session.dataTask(with: request).resume()
+        let task = session.dataTask(with: request)
+        lock.lock()
+        sessions[id] = (session, task, delegate)
+        task.resume()
+        lock.unlock()
         session.finishTasksAndInvalidate()
+    }
+
+    func cancel() {
+        lock.lock()
+        let active = Array(sessions.values)
+        sessions.removeAll()
+        lock.unlock()
+        active.forEach {
+            // finishTasksAndInvalidate already put the session into invalidation;
+            // explicitly cancel its task rather than relying on a second invalidation.
+            $0.task.cancel()
+            $0.session.invalidateAndCancel()
+            $0.delegate.finish(PlaybackDiagnosticUploadResponse(status: nil))
+        }
     }
 
     private final class ResponseDelegate: NSObject, URLSessionDataDelegate, @unchecked Sendable {
         private let completion: @Sendable (PlaybackDiagnosticUploadResponse) -> Void
+        private let completionLock = NSLock()
+        private var completed = false
         // URLSession's private serial delegate queue owns these fields.
         private var response = PlaybackDiagnosticUploadResponse(status: nil)
 
         init(completion: @escaping @Sendable (PlaybackDiagnosticUploadResponse) -> Void) { self.completion = completion }
+
+        func finish(_ response: PlaybackDiagnosticUploadResponse) {
+            completionLock.lock()
+            guard !completed else { completionLock.unlock(); return }
+            completed = true
+            completionLock.unlock()
+            completion(response)
+        }
 
         func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
                         completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
@@ -70,7 +109,7 @@ final class PlaybackDiagnosticHTTPTransport: PlaybackDiagnosticTransport, @unche
         }
 
         func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-            completion(response)
+            finish(response)
         }
 
         func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,

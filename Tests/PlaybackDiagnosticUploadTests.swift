@@ -18,6 +18,7 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
         private let lock = NSLock()
         private var requests: [Data] = []
         private var onMain = false
+        private var cancellations = 0
         private var callbacks: [@Sendable (PlaybackDiagnosticUploadResponse) -> Void] = []
         var response = PlaybackDiagnosticUploadResponse(status: 204)
         var hold = false
@@ -36,6 +37,8 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
             if !held { completion(reply) }
         }
         func bodies() -> [Data] { lock.lock(); defer { lock.unlock() }; return requests }
+        func cancel() { lock.lock(); cancellations += 1; lock.unlock() }
+        func cancelCount() -> Int { lock.lock(); defer { lock.unlock() }; return cancellations }
         func sentOnMain() -> Bool { lock.lock(); defer { lock.unlock() }; return onMain }
         func complete(_ response: PlaybackDiagnosticUploadResponse) {
             lock.lock()
@@ -68,6 +71,34 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
                         event: String = "media.observed", values: [String: PlaybackDiagnosticValue] = [:]) -> PlaybackDiagnosticRecord {
         PlaybackDiagnosticRecord(run: run, sequence: sequence, wallTime: clock.now().timeIntervalSince1970,
                                  uptime: Double(sequence), event: event, values: values)
+    }
+
+    func testRevocationCancelsHeldUploadAndLateAcknowledgementCannotRestoreTheSpool() async throws {
+        let uploader = uploader()
+        transport.hold = true
+        uploader.enqueue(record())
+        _ = await uploader.snapshot()
+        clock.advance(31)
+        let sent = expectation(description: "held request sent")
+        transport.onSend = { sent.fulfill() }
+        let flush = Task { await uploader.flush() }
+        await fulfillment(of: [sent], timeout: 2)
+        let discarded = await withCheckedContinuation { continuation in
+            uploader.cancelAndDiscard { continuation.resume(returning: $0) }
+        }
+        XCTAssertTrue(discarded)
+        XCTAssertEqual(transport.cancelCount(), 1)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("upload-queue.json").path))
+        transport.complete(PlaybackDiagnosticUploadResponse(status: 204))
+        await flush.value
+        uploader.enqueue(record(2))
+        await uploader.flush()
+        let stopped = await uploader.snapshot()
+        XCTAssertEqual(stopped.pending, 0)
+        XCTAssertFalse(stopped.inFlight)
+        XCTAssertEqual(transport.bodies().count, 1)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("upload-queue.json").path),
+                       "A callback or new event after withdrawal must not recreate queued data")
     }
 
     func testProjectionDropsUnknownEventsIdentifiersStringsAndWrongTypes() throws {

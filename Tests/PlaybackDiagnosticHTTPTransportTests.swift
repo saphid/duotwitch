@@ -26,6 +26,63 @@ final class PlaybackDiagnosticHTTPTransportTests: XCTestCase {
         override func stopLoading() { }
     }
 
+    private final class HeldRequest: URLProtocol, @unchecked Sendable {
+        static let signals = Signals()
+        override class func canInit(with request: URLRequest) -> Bool { true }
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+        override func startLoading() { Self.signals.emit(stopped: false) }
+        override func stopLoading() { Self.signals.emit(stopped: true) }
+    }
+
+    private final class Signals: @unchecked Sendable {
+        private let lock = NSLock()
+        private var onStart: (@Sendable () -> Void)?
+        private var onStop: (@Sendable () -> Void)?
+        func configure(start: (@Sendable () -> Void)? = nil, stop: (@Sendable () -> Void)? = nil) {
+            lock.lock(); onStart = start; onStop = stop; lock.unlock()
+        }
+        func emit(stopped: Bool) {
+            lock.lock(); let callback = stopped ? onStop : onStart; lock.unlock()
+            callback?()
+        }
+    }
+
+    func testWithdrawalCancelsTheRealSessionAndCompletesWithoutAnAcknowledgement() async {
+        let transport = PlaybackDiagnosticHTTPTransport(configuration: {
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.protocolClasses = [HeldRequest.self]
+            return configuration
+        })
+        let completed = expectation(description: "cancelled real session callback")
+        transport.send(Data("{}".utf8)) { response in
+            XCTAssertNil(response.status)
+            XCTAssertFalse(response.accepted)
+            completed.fulfill()
+        }
+        transport.cancel()
+        await fulfillment(of: [completed], timeout: 2)
+    }
+
+    func testWithdrawalStopsAnAlreadyStartedNetworkRequest() async {
+        let started = expectation(description: "real URLSession request started")
+        let stopped = expectation(description: "real URLSession request stopped")
+        let completed = expectation(description: "request completion delivered exactly once")
+        HeldRequest.signals.configure(start: { started.fulfill() }, stop: { stopped.fulfill() })
+        defer { HeldRequest.signals.configure() }
+        let transport = PlaybackDiagnosticHTTPTransport(configuration: {
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.protocolClasses = [HeldRequest.self]
+            return configuration
+        })
+        transport.send(Data("{}".utf8)) { response in
+            XCTAssertFalse(response.accepted)
+            completed.fulfill()
+        }
+        await fulfillment(of: [started], timeout: 2)
+        transport.cancel()
+        await fulfillment(of: [stopped, completed], timeout: 2)
+    }
+
     func testRealSessionUsesOwnedHTTPSAndEphemeralNoCredentialConfiguration() async throws {
         let configurations = ConfigurationCapture()
         let transport = PlaybackDiagnosticHTTPTransport(configuration: {

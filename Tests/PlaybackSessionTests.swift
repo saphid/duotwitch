@@ -1,9 +1,38 @@
 import XCTest
 import WebKit
+import Network
 @testable import DuoTwitch
 
 @MainActor
 final class PlaybackSessionTests: XCTestCase {
+    func testProductionPlayerSendsGlobalPrivacyControlToFramesAndResources() async throws {
+        let server = try PrivacyProbeServer()
+        defer { server.stop() }
+        let deadline = Date().addingTimeInterval(10)
+        while server.port == nil {
+            if Date() > deadline { throw URLError(.timedOut) }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        let port = try XCTUnwrap(server.port)
+        let session = PlaybackSession(loadRequest: { _, _ in }, pauseMedia: { _ in })
+        // Use the production configuration, with no navigation delegate, only against loopback.
+        let view = WKWebView(frame: CGRect(x: 0, y: 0, width: 400, height: 400),
+                             configuration: session.webView.configuration)
+        defer { view.stopLoading() }
+        view.load(URLRequest(url: URL(string: "http://127.0.0.1:\(port)/main")!))
+        let paths = ["/main", "/pixel", "/fetch?gpc=true", "/frame", "/frame-fetch?gpc=true"]
+        while !paths.allSatisfy({ path in server.requests.contains { $0.path == path } }) {
+            if Date() > deadline { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let requests = server.requests
+        XCTAssertTrue(session.webView.configuration.defaultWebpagePreferences.globalPrivacyControlEnabled)
+        for path in paths {
+            let request = try XCTUnwrap(requests.first { $0.path == path }, "Missing actual WebKit request: \(path); received \(requests.map(\.path))")
+            XCTAssertEqual(request.gpc, "1", "GPC must be present before sending \(path)")
+        }
+    }
+
     func testSystemInactivityWithoutAnInterruptionDoesNotStopTheVideo() async throws {
         let events = AsyncStream<AudioDeactivation>.makeStream()
         var pauses = 0
@@ -560,4 +589,69 @@ final class PlaybackSessionTests: XCTestCase {
         }
     }
 
+}
+
+// A loopback-only HTTP fixture captures actual WebKit headers, not URLSession mocks.
+private final class PrivacyProbeServer: @unchecked Sendable {
+    struct Request { let path: String; let gpc: String? }
+    private let listener: NWListener
+    private let queue = DispatchQueue(label: "Foldstream.PrivacyProbe")
+    private let lock = NSLock()
+    private var readyPort: UInt16?
+    private var captured: [Request] = []
+    private var connections: [NWConnection] = []
+    var port: UInt16? { lock.lock(); defer { lock.unlock() }; return readyPort }
+    var requests: [Request] { lock.lock(); defer { lock.unlock() }; return captured }
+
+    init() throws {
+        let parameters = NWParameters.tcp
+        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: .any)
+        listener = try NWListener(using: parameters)
+        listener.stateUpdateHandler = { [weak self] state in
+            guard let self, case .ready = state else { return }
+            self.lock.lock(); self.readyPort = self.listener.port?.rawValue; self.lock.unlock()
+        }
+        listener.newConnectionHandler = { [weak self] connection in
+            guard let self else { connection.cancel(); return }
+            self.lock.lock(); self.connections.append(connection); self.lock.unlock()
+            connection.start(queue: self.queue)
+            self.receive(connection, accumulated: Data())
+        }
+        listener.start(queue: queue)
+    }
+
+    func stop() {
+        listener.cancel()
+        lock.lock(); let active = connections; lock.unlock()
+        active.forEach { $0.cancel() }
+    }
+
+    private func receive(_ connection: NWConnection, accumulated: Data) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, complete, error in
+            guard let self else { connection.cancel(); return }
+            var bytes = accumulated
+            if let data { bytes.append(data) }
+            guard bytes.count <= 32768, error == nil else { connection.cancel(); return }
+            if let text = String(data: bytes, encoding: .utf8), text.contains("\r\n\r\n") {
+                self.respond(connection, request: text)
+            } else if complete { connection.cancel() }
+            else { self.receive(connection, accumulated: bytes) }
+        }
+    }
+
+    private func respond(_ connection: NWConnection, request: String) {
+        let lines = request.components(separatedBy: "\r\n")
+        let path = lines.first?.split(separator: " ").dropFirst().first.map(String.init) ?? ""
+        let gpc = lines.first { $0.lowercased().hasPrefix("sec-gpc:") }?
+            .split(separator: ":", maxSplits: 1).last?.trimmingCharacters(in: .whitespaces)
+        lock.lock(); captured.append(Request(path: path, gpc: gpc)); lock.unlock()
+        let body: String
+        if path == "/main", let port {
+            body = "<html><img src='/pixel'><iframe src='http://localhost:\(port)/frame'></iframe><script>fetch('/fetch?gpc='+navigator.globalPrivacyControl)</script></html>"
+        } else if path == "/frame" {
+            body = "<html><script>fetch('/frame-fetch?gpc='+navigator.globalPrivacyControl)</script></html>"
+        } else { body = "ok" }
+        let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: \(body.utf8.count)\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n\(body)"
+        connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in connection.cancel() })
+    }
 }

@@ -89,6 +89,9 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
         super.init()
         let config = WKWebViewConfiguration()
+        // Send the standard privacy opt-out to the host, frames, and their resources.
+        // This signal does not by itself establish a third party's ATT behavior.
+        config.defaultWebpagePreferences.globalPrivacyControlEnabled = true
         config.allowsInlineMediaPlayback = true
         config.allowsPictureInPictureMediaPlayback = true
         config.allowsAirPlayForMediaPlayback = true

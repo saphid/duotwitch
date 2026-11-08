@@ -23,7 +23,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Foldstream automatically sends privacy-filtered playback diagnostics to Alex’s private log storage over Tailscale.</string>
+	<string>If you enable diagnostics, Foldstream sends privacy-filtered playback logs to the developer’s private storage over Tailscale.</string>
 	<key>TwitchClientID</key>
 	<string>$(TWITCH_CLIENT_ID)</string>
 	<key>TwitchPlayerHost</key>

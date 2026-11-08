@@ -17,6 +17,71 @@ final class PlaybackDiagnosticsTests: XCTestCase {
         try await super.tearDown()
     }
 
+    func testFreshConsentIsOffAndOptInThenWithdrawalControlsRecordingAndUploaderCreation() async throws {
+        let name = "Foldstream-diagnostic-consent-\(UUID().uuidString)"
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { preferences.removePersistentDomain(forName: name) }
+        let factory = DiagnosticFactory(directory: directory.appendingPathComponent("Upload"))
+        let queueFile = directory.appendingPathComponent("Upload/upload-queue.json")
+        try FileManager.default.createDirectory(at: queueFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("old unconsented spool".utf8).write(to: queueFile)
+        let store = PlaybackDiagnosticStore(directory: directory, recordingEnabled: false,
+            uploaderFactory: { factory.make() })
+        let recorder = PlaybackDiagnostics(store: store, preferences: preferences)
+        XCTAssertFalse(recorder.isRecordingEnabled)
+        recorder.record("native.play.requested")
+        do { _ = try await recorder.export(); XCTFail("Default-off must not record launch, playback or export events") }
+        catch { }
+        XCTAssertEqual(factory.count(), 0, "No uploader may restore/schedule before consent")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: queueFile.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("playback-0.jsonl").path))
+
+        let enabled = await recorder.setRecordingEnabled(true)
+        XCTAssertTrue(enabled)
+        XCTAssertTrue(preferences.bool(forKey: PlaybackDiagnostics.consentKey))
+        recorder.record("native.play.requested")
+        let recorded = try await rows(recorder)
+        XCTAssertEqual(recorded.map { $0["event"] as? String }, ["native.play.requested", "diagnostics.export"])
+        XCTAssertEqual(factory.count(), 1)
+
+        let disabled = await recorder.setRecordingEnabled(false)
+        XCTAssertTrue(disabled)
+        XCTAssertFalse(preferences.bool(forKey: PlaybackDiagnostics.consentKey))
+        recorder.record("native.pause.requested")
+        let afterWithdrawal = try await rows(recorder)
+        XCTAssertEqual(afterWithdrawal.count, recorded.count, "Neither new activity nor export may append after withdrawal")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: queueFile.path))
+        let restarted = PlaybackDiagnostics(store: PlaybackDiagnosticStore(directory: directory, recordingEnabled: false,
+            uploaderFactory: { factory.make() }), preferences: preferences)
+        XCTAssertFalse(restarted.isRecordingEnabled)
+        _ = try await rows(restarted)
+        XCTAssertEqual(factory.count(), 1, "Relaunch after withdrawal must not recreate an uploader")
+        let enabledAgain = await restarted.setRecordingEnabled(true)
+        XCTAssertTrue(enabledAgain)
+        XCTAssertEqual(factory.count(), 2, "A new opt-in needs a fresh uploader, not the permanently stopped one")
+        _ = await restarted.setRecordingEnabled(false)
+    }
+
+    private final class DiagnosticFactory: @unchecked Sendable {
+        private let lock = NSLock()
+        private var created = 0
+        private let directory: URL
+        init(directory: URL) { self.directory = directory }
+        func make() -> PlaybackDiagnosticUploader {
+            lock.lock(); created += 1; lock.unlock()
+            return PlaybackDiagnosticUploader(directory: directory, transport: NoNetworkTransport(), automaticallySchedules: false)
+        }
+        func count() -> Int { lock.lock(); defer { lock.unlock() }; return created }
+    }
+
+    private struct NoNetworkTransport: PlaybackDiagnosticTransport {
+        func send(_ body: Data, completion: @escaping @Sendable (PlaybackDiagnosticUploadResponse) -> Void) {
+            XCTFail("This fixture must never reach networking")
+            completion(PlaybackDiagnosticUploadResponse(status: nil))
+        }
+        func cancel() { }
+    }
+
     func testExportPersistsAcrossRecorderRecreationWithOrderedSubsecondRecords() async throws {
         let first = PlaybackDiagnostics(store: PlaybackDiagnosticStore(directory: directory))
         first.record("native.play.requested", ["allowed": .flag(true)])

@@ -119,7 +119,7 @@ final class MountedWatchLayoutTests: XCTestCase {
             let handle = try XCTUnwrap(resizeHandles(in: window).first,
                 "The same divider must remain available while composing")
             XCTAssertEqual(placement == .beside ? handle.bounds.width : handle.bounds.height, 44, accuracy: 1)
-            let before = player.webView.convert(player.webView.bounds, to: host.view).size
+            let before = handle.convert(handle.bounds, to: host.view)
             // Drive the same native pan-delta path; physical event delivery is
             // requires separate verification through the Simulator device surface.
             let key = placement == .beside ? "watchChatWidth" : "watchChatHeight"
@@ -129,10 +129,12 @@ final class MountedWatchLayoutTests: XCTestCase {
             }
             try await Task.sleep(for: .milliseconds(120))
             host.view.layoutIfNeeded()
-            let after = player.webView.convert(player.webView.bounds, to: host.view).size
-            XCTAssertNotEqual(placement == .beside ? before.width : before.height,
-                              placement == .beside ? after.width : after.height,
-                              "The divider must change the actual video allocation while composing")
+            let after = handle.convert(handle.bounds, to: host.view)
+            // Measure the actual pane boundary: aspect-fit video can retain its
+            // size while a divider consumes letterboxing on its other axis.
+            let movement = placement == .beside ? before.midX - after.midX : before.midY - after.midY
+            XCTAssertEqual(movement, 40, accuracy: 1,
+                           "The divider must move the actual pane boundary while composing")
             XCTAssertGreaterThan(preferences.double(forKey: placement == .beside ? "watchChatWidth" : "watchChatHeight"), 0)
             XCTAssertEqual(preferences.double(forKey: key), oldPreference + 40, accuracy: 1,
                 "Pan events before a layout pass must accumulate instead of dropping movement")
