@@ -1,6 +1,6 @@
 # App Privacy preparation — 8 November 2026
 
-This is an evidence inventory and answer plan for Foldstream, bundle `com.saphid.duotwitch`, app6831008730. **It is not an applied or published Apple label.** Executable candidate [029339d](https://github.com/saphid/duotwitch/commit/029339df86e87f4347aac2193f3c8abb15e37d8a), App Store1.0/build202611080727. The display-name rename to Foldstream requires a new build;1.0(202611080727) retains Duo Viewer. Keep [approval checklist](APP_STORE_APPROVAL.md) as the submission checkpoint.
+This is an evidence inventory and answer plan for Foldstream, bundle `com.saphid.duotwitch`, app6831008730. **It is not an applied or published Apple label.** Executable candidate [16f25c7](https://github.com/saphid/duotwitch/commit/16f25c71c29bb64841785866fe734f06be27a773), App Store1.0/build202611080806, VALID/APP_STORE_ELIGIBLE and attached with MANUAL release. This new build displays Foldstream; older1.0(202611080727) retains Duo Viewer. The rename changes no collection behavior. Keep [approval checklist](APP_STORE_APPROVAL.md) as the submission checkpoint.
 
 ## Rules verified from Apple
 

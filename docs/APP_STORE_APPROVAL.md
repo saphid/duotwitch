@@ -4,18 +4,32 @@ Goal: Apple approval of the exact submitted app/version/build, with manual relea
 
 Owning spine: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208); cross-app setup background: [#206](https://github.com/saphid/personal-ops/issues/206).
 
+## Foldstream rename — current candidate
+
+Alex authorized Foldstream as the public/on-device replacement on 8 November. Apple accepted the supported app-info localization update and live readback confirms **Foldstream**, subtitle **Live streams and flexible chat**. This establishes Apple metadata acceptance, not legal clearance. The previous Apple name was Saphid Duo Viewer; the previous native display name was Duo Viewer. Twitch’s external registration remains **Saphid Duo Viewer**; native sign-in, support/privacy and review notes explain this truthfully. No Twitch console mutation or third-party inquiry was sent.
+
+Source [16f25c7](https://github.com/saphid/duotwitch/commit/16f25c71c29bb64841785866fe734f06be27a773) changes public/native copy only. Repo/module/executable, bundle, team, public Client ID, redirect, player host, saved-session/configuration and diagnostic endpoint identities remain unchanged. Eight protected identity-source hashes match the pre-rename baseline. Fresh generic signed Simulator build **exit0**, built display **Foldstream**, strict/deep signature **exit0**. New runtime source manifest39files and exact Simulator bundle10files supersede old-candidate manifests for any future runtime pass. No UI launch/runtime/screenshots were attempted; the existing device-ownership blocker remains.
+
+Fresh independent review task **7522ea84-7465-42ae-a667-78c297ee47f9**, actual provider **claudeAgent**, model **claude-opus-5-5**, effort **high**, terminal **failed**: Claude API rate limit reached. No independent review occurred or findings returned. Nearest CODING_STANDARDS.md was absent from the owning primary repo/ancestors and existing linked worktrees. Continue under Alex’s best-effort rule.
+
+Public support/privacy pages were deployed through the Contents API, touching only the app’s two paths; website checkout/shared auth were untouched. Pages deployment at [9b26655](https://github.com/saphid/saphid.github.io/commit/9b26655100efc79a83cb3a01a7808c11168d2845) succeeded. At **2026-11-08T08:07:21Z**, both HTTPS200 responses exactly match this checkout: support2460bytes, privacy5634bytes. Apple description1518characters and review notes2198characters read back exactly; contact fields were preserved.
+
+New signed Release archive **1.0 (202611080806)** verifies display **Foldstream**, unchanged bundle/team/client/player host, privacy manifest present and non-exempt encryption false. Archive/signature/upload/attachment exits0. Live readback at **2026-11-08T08:11:16Z** confirms this new build **VALID / APP_STORE_ELIGIBLE**, attached to iOS version **fa4b6291-c62c-4b78-b4fc-54f8ac528bc6**, build ID **3d7054c7-aa01-4d48-acea-bab7ade713aa**, **PREPARE_FOR_SUBMISSION / MANUAL**, no review submission. The old build **1.0 (202611080727)** retains Duo Viewer and has not been relabeled. Evidence `build/app-store-approval-20261108/foldstream/`, especially `focused-verification.json`, `archive-status.json`, `website-https-readback.json` and `independent-review-attempt.json`. Do not upload the full evidence directory.
+
+Fresh authenticated deep validation against the new attached build and unchanged-archive validation-only IPA exits1 with exactly two blocking errors: missing screenshots and unpublished App Privacy. MANUAL is confirmed; the only warning repeats unknown agreement status, already separately investigated below. The new archive is iPhone-only (UIDeviceFamily[1]), with an exact9-file manifest. `final-state.json` records the live identity; `deep-validation.json` records blockers. Regulatory declarations readback shows only optional MEDICAL_DEVICE/PENDING_COLLECTION, required=false; no required pending declaration is reported. The narrower review doctor reports missing screenshots and NOT_SUBMITTED. Approval is not achieved. Silent runtime/playback acceptance, accurate embedded-player privacy/ATT assessment and screenshots remain open. Alex chose to keep [the Twitch inquiry](TWITCH_EMBED_PRIVACY_INQUIRY.md) as an unsent draft; no vendor reply is pending.
+
 ## Live identity and state
 
 - App **6831008730**, bundle **com.saphid.duotwitch**, resolved live by bundle ID.
-- iOS App Store **1.0**, version ID **fa4b6291-c62c-4b78-b4fc-54f8ac528bc6**, **PREPARE_FOR_SUBMISSION**. Build **1.0 (202611080727)** is attached; no App Review submission yet.
+- iOS App Store **1.0**, version ID **fa4b6291-c62c-4b78-b4fc-54f8ac528bc6**, **PREPARE_FOR_SUBMISSION**. Build **1.0 (202611080806)** is attached; no App Review submission yet.
 - Changed releaseType from AFTER_APPROVAL to **MANUAL** and verified live. Preserve MANUAL in every later readback; never call release.
-- Build ID **7a460d32-7c81-48d9-9a4c-a2e851560e13** is **VALID / APP_STORE_ELIGIBLE**, with non-exempt encryption false. Its prerelease relationship confirms **1.0 / IOS**. The eight older processed builds are INTERNAL_ONLY; **0.1.0 (202611060726)** remains the current internal beta.
-- Fresh live receipt `resume-state.json` records the exact app/version/build relationship and MANUAL release at **2026-11-08T07:39:32Z**; source API responses are `resume-{app,version,build}-readback.json`.
-- Apple accepted and read back public name **Saphid Duo Viewer** and subtitle **Live streams and flexible chat**. The shorter on-device name is Duo Viewer. Twitch trademark guidelines prohibit incorporating Twitch in app names without express permission; bundle/repo/module identity remains unchanged. The first alternative, Duo Viewer, was already taken on Apple.
+- Current build ID **3d7054c7-aa01-4d48-acea-bab7ade713aa** is **VALID / APP_STORE_ELIGIBLE**, with non-exempt encryption false. Its prerelease relationship confirms **1.0 / IOS**. The eight older processed builds are INTERNAL_ONLY; **0.1.0 (202611060726)** remains the current internal beta.
+- Fresh receipt `foldstream/final-state.json` records exact app/version/build and MANUAL release at **2026-11-08T08:11:16Z**. Earlier `resume-state.json` and `resume-{app,version,build}-readback.json` describe the superseded pre-rename build.
+- Earlier Apple readback accepted public name **Saphid Duo Viewer** and subtitle **Live streams and flexible chat**. This is superseded by the Foldstream rename above. The old upload’s on-device name remains Duo Viewer. Twitch trademark guidelines prohibit incorporating Twitch in app names without express permission; bundle/repo/module identity remains unchanged. The first alternative, Duo Viewer, was already taken on Apple.
 - Entertainment category, third-party-content declaration, copyright and source-backed listing text saved. Initial free price schedule and Australia-only availability created, automatic new-territory expansion off. These are initial submission settings; no existing price was changed and no paid/legal agreement was accepted.
 - Age questionnaire saved for Twitch UGC/ads/chat; live legacy rating **17+**, France/Brazil **18**. Initial prolonged-graphic-violence answer produced UNRATED; corrected to NONE for prohibited extreme/sadistic material, while retaining frequent realistic/cartoon violence, weapons, profanity and mature themes. This is a questionnaire answer, not a guarantee that Twitch UGC has no violations. Review this assumption before final submission.
 
-## Current source candidate
+## Previous source candidate — before Foldstream
 
 Executable candidate committed and pushed on `app-store-approval-20261108` at [029339d](https://github.com/saphid/duotwitch/commit/029339df86e87f4347aac2193f3c8abb15e37d8a). Marketing version **1.0**; signed archive build **202611080727**, exported with **testFlightInternalTestingOnly=false**. Later checkpoint-only documentation commits do not alter this executable candidate.
 
@@ -25,7 +39,7 @@ Executable candidate committed and pushed on `app-store-approval-20261108` at [0
 - Added required-reason manifest for app preferences and elapsed-time measurement. Local diagnostics use time since the app diagnostic run began; automatic upload projection zeros uptime. Canonical validation rejects old queued records containing raw device uptime. No receiver or shared network route was changed.
 - Public support/privacy source in `web-site/`; supporting Pages commits submitted using the Contents API, touching only `apps/duotwitch/`. Shared local website checkout had unrelated changes and was left untouched. Pages deployment completed at [21711ff](https://github.com/saphid/saphid.github.io/commit/21711ff9c87dbf8a6294510bf08d5fc32bbbe346). Exact-byte HTTPS readback succeeded for [support](https://saphid.app/apps/duotwitch/) and [privacy](https://saphid.app/apps/duotwitch/privacy/); hashes and byte lengths are in `site-http-readback.json`.
 
-## Verification
+## Previous candidate verification
 
 Evidence root: `build/app-store-approval-20261108/` (ignored; contains protected private contact/auth artifacts—do not upload the whole directory).
 
@@ -63,6 +77,16 @@ Fresh `age-rating-final-audit.json` confirms prohibited graphic-sex/prolonged-sa
 ## Authentication and remaining work
 
 A task-local ASC web cache was isolated under `apple-auth-private/session`; shared auth/config were not modified. The one private trusted-device code card timed out. Bounded login exited1 with no code supplied. That challenge was not reused. Public API-key reads/writes still work. After Alex returned, a second fresh challenge succeeded with private input. Isolated auth is true, passwordStored false; shared auth/config remain unchanged. Live catalog/pull now succeed. Current declaration is DATA_NOT_COLLECTED and **published=false**, so do not publish it. A live-token-validated incomplete draft and source-backed inventory are in [privacy preparation](APP_STORE_PRIVACY.md). Embedded-player collection/tracking assessment remains open; no accurate published label or completion is claimed.
+
+
+The non-secret invocation for another app owner’s authorized privacy operation to reference this existing authenticated session is below. Replace only the `asc` subcommand/app ID for that owner’s app. Do not copy/export session files, change shared auth/config, or initiate a new login:
+
+```sh
+env ASC_BYPASS_KEYCHAIN=1 ASC_WEB_NO_AUTO_LOGIN=1 \
+  ASC_WEB_SESSION_CACHE_BACKEND=file \
+  ASC_WEB_SESSION_CACHE_DIR=/Users/saphid/.t3/projects/duotwitch/build/app-store-approval-20261108/apple-auth-private/session \
+  asc web auth status --output json
+```
 
 - [x] Final independent review best effort attempted twice; both failed from Opus capacity. No independent review occurred.
 - [ ] Owning session must release the conflicting existing-simulator claim before further runtime attempts. Do not close/reuse it or bypass the tool failure. Then run Astra with explicit reasoningEffort=high through device_list/device_open/agent-device/device_screenshot; preserve data/Keychain/preferences. No desktop-browser/physical-device authorization.

@@ -2,7 +2,7 @@
 
 - Developer account: `saphid`.
 - Registration name: **Saphid Duo Viewer**. This external Twitch registration has not been renamed.
-- App Store branding: **Foldstream**, accepted by Apple on8November2026. The next native build changes the display name to Foldstream; the existing uploaded1.0(202611080727) still displays Duo Viewer. Repository/module/executable/bundle and this public client identity remain unchanged.
+- App Store branding: **Foldstream**, accepted by Apple on8November2026. The new uploaded/attached1.0(202611080806) displays Foldstream (VALID/APP_STORE_ELIGIBLE); the older1.0(202611080727) still displays Duo Viewer. Repository/module/executable/bundle and this public client identity remain unchanged.
 - Client ID (public configuration): `xuaoegs6v9yy1dw86gemt4gyuqtf1o`.
 - Type: **PUBLIC**; category: **Application Integration**.
 - Registered development redirect:
