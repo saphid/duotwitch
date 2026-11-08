@@ -1,6 +1,8 @@
 # App Privacy preparation — 8 November 2026
 
-This is an evidence inventory and answer plan for Foldstream, bundle `com.saphid.duotwitch`, app6831008730. **It is not an applied or published Apple label.** Executable candidate [16f25c7](https://github.com/saphid/duotwitch/commit/16f25c71c29bb64841785866fe734f06be27a773), App Store1.0/build202611080806, VALID/APP_STORE_ELIGIBLE and attached with MANUAL release. This new build displays Foldstream; older1.0(202611080727) retains Duo Viewer. The rename changes no collection behavior. Keep [approval checklist](APP_STORE_APPROVAL.md) as the submission checkpoint.
+This is an evidence inventory and answer plan for Foldstream, bundle `com.saphid.duotwitch`, app6831008730. **It is not an applied or published Apple label.** Current executable candidate [e5b0d7a](https://github.com/saphid/duotwitch/commit/e5b0d7abdac3747e5a3a68f26a6ffda82d267259), App Store1.0/build202611081041, is VALID/APP_STORE_ELIGIBLE and attached with MANUAL release. The stable-viewport fix changes no collection behavior. Older1.0(202611080727) retains Duo Viewer; the current archive displays Foldstream. Keep [approval checklist](APP_STORE_APPROVAL.md) as the submission checkpoint.
+
+Live readback at **2026-11-08T10:47:47Z** confirms App Privacy remains unpublished and DATA_NOT_COLLECTED. No apply/publish was run. With screenshots now delivered and the new build attached, authenticated deep validation reports exactly one blocking error: `privacy.publish_state.unpublished`. Evidence: `build/app-store-approval-20261108/recovery/rotation-fix/{privacy-pull-live.json,privacy-current-live.json,deep-validation.json,final-state.json}`. Neither the successful playback runtime nor Apple's VALID processing settles the partner privacy/ATT assessment below. The inquiry remains an unsent draft by Alex's explicit direction.
 
 ## Rules verified from Apple
 

@@ -1,3 +1,13 @@
+# Current App Store checkpoint — 8 November 2026, 10:47 UTC
+
+**Foldstream 1.0 (202611081041)** is attached to Apple app **6831008730**, bundle **com.saphid.duotwitch**. Live readback confirms build **decead6b-ea88-4e58-ba8a-7cd56fc37d6f**, **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, zero review submissions. Approval is not achieved. Executable source: [e5b0d7a](https://github.com/saphid/duotwitch/commit/e5b0d7abdac3747e5a3a68f26a6ffda82d267259).
+
+Fresh Astra/high cleaned-candidate silent acceptance passed both rotations (40.500s/35.100s portrait playback), deliberate Pause82.082s and gated Resume40.229s. Hashes/signatures match. Extended divider layouts occasionally differed by one-third point without observed pause/reload; exact all-layout geometry was not met. This is same-source Debug Simulator evidence, not uploaded Release execution or physical-fold/ad/authenticated-chat coverage. Full120tests pass; focused23pass; six silent-Play API cases pass. Opus5.5/high review task f29dd936-5fdb-4b50-9eab-79f52a15ef98 failed from API rate limits; no independent review occurred.
+
+New archive/signature/upload/attachment succeeded. Three selected native/developer-owned offline screenshots are COMPLETE in APP_IPHONE_61; live filenames/order/dimensions/checksums match. Authenticated deep validation now has **one blocking error: App Privacy unpublished**. DATA_NOT_COLLECTED is incompatible with automatic diagnostics. Native/support draft remains incomplete for embedded Twitch collection and ATT behavior; inquiry stays unsent by Alex's direction. Do not publish guessed answers or claim App Review submission/approval. Preserve MANUAL.
+
+Full evidence, exact receipts and remaining checklist: [approval checkpoint](docs/APP_STORE_APPROVAL.md). Ignored evidence: `build/app-store-approval-20261108/recovery/rotation-fix/final-state.json`, `deep-validation.json`, `screenshots-live-readback.json`, `runtime/{report.md,receipt.json}`, `archive-202611081041/`. Protected/private evidence remains local. Earlier checkpoints below are historical.
+
 # Stable logical viewport candidate — 8 November 2026
 
 Production source now retains a **1280×720 logical iframe**, fitting the complete player inside every positive native pane. No automatic Resume or player/private-API override. Temporary probe flags/geometry scripts and the failed settling prototype are removed; diagnostic/control sources match the prior committed baseline. Project-generation display/network copy now matches the existing Foldstream plist. Eight protected identity/config source hashes remain unchanged.

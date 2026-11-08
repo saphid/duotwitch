@@ -1,3 +1,27 @@
+# App Store checkpoint — 8 November 2026, 10:47 UTC
+
+**Foldstream 1.0 (202611081041)** is now attached to Apple app **6831008730**, bundle **com.saphid.duotwitch**. Live readback confirms build **decead6b-ea88-4e58-ba8a-7cd56fc37d6f**, **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, zero review submissions. **Approval is not achieved.** Executable source is [e5b0d7a](https://github.com/saphid/duotwitch/commit/e5b0d7abdac3747e5a3a68f26a6ffda82d267259); later checkpoint-only changes do not change the uploaded executable. Earlier checkpoints below are historical.
+
+Fresh cleaned-candidate Astra/high task **14486cb0-eadb-41ac-a34d-c5b856e703ec** passed bounded silent Simulator acceptance: two active Full-video landscape→portrait rotations (**40.500s / 35.100s** portrait playback), deliberate Pause held **82.082s** through rotation/layout changes, gated Resume **40.229s**. Source39/candidate10/installed10 hashes match before/after; strict/deep signatures exit0. Main rotations retained exact1280×720 native web bounds and the same session/load. Extended divider layouts occasionally measured one-third-point deviation (one physical pixel at3×), without observed pause/reload. **Exact bounds across every layout were not met.** The caller of the original pause remains unknown. This is same-source Debug evidence, not execution of the uploaded Release; separate ad behavior, iframe touch usability, authenticated keyboard/chat and physical fold remain untested. App/panel closed, portrait/preferences restored, data preserved.
+
+Archive, signature and upload all exit0; archive identity is Foldstream1.0(202611081041), unchanged bundle/team/client/player host, privacy manifest present, non-exempt encryption false. No duplicate upload. Three honest native/developer-owned offline screenshots are delivered **COMPLETE** in **APP_IPHONE_61**, set **3474e064-df08-4447-b6ee-c3ee578c7fd5**: offline watch2622×1206, layout1206×2622, welcome1206×2622. Live order, filenames, dimensions and source MD5 checksums match. No third-party live footage was used for listing media. Earlier raw candidates were not automatically publication-cleared; parent selected these three after visual/content review.
+
+Authenticated deep validation of the exact attached build and an unchanged-signed-archive validation-only IPA now has **one blocking error: App Privacy unpublished**. This IPA is a local validation repackaging, not a retained copy of the original upload. MANUAL release is verified. The existing unknown-agreement warning remains separate from the previously verified active Developer agreements/EU trader notice; no contract was accepted. Review notes remain accurate, including automatic filtered diagnostics, and contact/demo fields were preserved.
+
+Live privacy pull confirms unpublished **DATA_NOT_COLLECTED**. This must not be published because automatic diagnostics are collected. The seven-category native/support draft remains incomplete for Twitch’s embedded-player collection, purposes/linkage and ATT behavior on denial/revocation. Public embed documentation has not established a supported consent control or an app-wide no-tracking guarantee. Apple’s [functional-webview ATT guidance](https://developer.apple.com/app-store/user-privacy-and-data-use/) and [third-party/web collection disclosure guidance](https://developer.apple.com/app-store/app-privacy-details/) apply. No cosmetic ATT prompt, guessed label or unsupported player change was added. **Alex requires the Twitch inquiry remain an unsent draft; no vendor reply is pending.** Remaining dependency: supported evidence resolving those partner behaviors, or explicit direction enabling the already-prepared clarification. No new inquiry is sent or requested here.
+
+Full120tests pass (0failed/0skipped, runtimeWarnings empty), focused23pass, six fail-closed public mute/Play cases pass. Fresh different-model review task **f29dd936-5fdb-4b50-9eab-79f52a15ef98**, actual **claudeAgent / claude-opus-5-5 / high**, ended **failed** immediately from API rate limits. **No independent review occurred or findings returned.**
+
+Evidence root: `build/app-store-approval-20261108/recovery/rotation-fix/`. Current receipts: `final-state.json`, `version-attached-live.json`, `build-202611081041-live.json`, `screenshots-live-readback.json`, `deep-validation.json`, `privacy-pull-live.json`, `validation-only-ipa-receipt.json`, `runtime/{report.md,receipt.json}`, `archive-202611081041/`. Protected contact/session/preferences and private live-channel media remain local; never upload the whole evidence root.
+
+- [x] Production fix, focused/full tests and best-effort different-model review attempt.
+- [x] Fresh exact-source silent Simulator acceptance, with the stated precision/runtime limits.
+- [x] New signed eligible Release build processed, attached and read back; MANUAL preserved.
+- [x] Selected App Store screenshots uploaded and verified COMPLETE.
+- [ ] Resolve embedded-player privacy/ATT behavior; finish, apply, publish and pull back an accurate privacy label.
+- [ ] Revalidate and submit the exact version/build for App Review.
+- [ ] Handle feedback and verify live approved state for the exact submitted build, preserving manual release.
+
 # Stable logical viewport candidate — 8 November 2026
 
 Production source now retains a **1280×720 logical iframe**, fitting the complete player inside every positive native pane. No automatic Resume or player/private-API override. Temporary probe flags/geometry scripts and the failed settling prototype are removed; diagnostic/control sources match the prior committed baseline. Project-generation display/network copy now matches the existing Foldstream plist. Eight protected identity/config source hashes remain unchanged.
@@ -48,7 +72,7 @@ The existing privacy draft covers known native/developer-held flows but not a se
 
 Rename/public pages/build delivery and available safe checks are complete. No active child/job is waiting to finish; waiting for App Review would be false because nothing is submitted. Evidence `build/app-store-approval-20261108/blocked-audit-3/{audit.json,version.json,validation.json,device-ownership.txt}`. Sensitive ownership/session details remain local. Goal is blocked, not complete; preserve the objective and manual release when resumed.
 
-## Foldstream rename — current candidate
+## Foldstream rename — earlier candidate
 
 Alex authorized Foldstream as the public/on-device replacement on 8 November. Apple accepted the supported app-info localization update and live readback confirms **Foldstream**, subtitle **Live streams and flexible chat**. This establishes Apple metadata acceptance, not legal clearance. The previous Apple name was Saphid Duo Viewer; the previous native display name was Duo Viewer. Twitch’s external registration remains **Saphid Duo Viewer**; native sign-in, support/privacy and review notes explain this truthfully. No Twitch console mutation or third-party inquiry was sent.
 
@@ -62,7 +86,7 @@ New signed Release archive **1.0 (202611080806)** verifies display **Foldstream*
 
 Fresh authenticated deep validation against the new attached build and unchanged-archive validation-only IPA exits1 with exactly two blocking errors: missing screenshots and unpublished App Privacy. MANUAL is confirmed; the only warning repeats unknown agreement status, already separately investigated below. The new archive is iPhone-only (UIDeviceFamily[1]), with an exact9-file manifest. `final-state.json` records the live identity; `deep-validation.json` records blockers. Regulatory declarations readback shows only optional MEDICAL_DEVICE/PENDING_COLLECTION, required=false; no required pending declaration is reported. The narrower review doctor reports missing screenshots and NOT_SUBMITTED. Approval is not achieved. Silent runtime/playback acceptance, accurate embedded-player privacy/ATT assessment and screenshots remain open. Alex chose to keep [the Twitch inquiry](TWITCH_EMBED_PRIVACY_INQUIRY.md) as an unsent draft; no vendor reply is pending.
 
-## Live identity and state
+## Earlier live identity and state — 08:11 UTC
 
 - App **6831008730**, bundle **com.saphid.duotwitch**, resolved live by bundle ID.
 - iOS App Store **1.0**, version ID **fa4b6291-c62c-4b78-b4fc-54f8ac528bc6**, **PREPARE_FOR_SUBMISSION**. Build **1.0 (202611080806)** is attached; no App Review submission yet.
