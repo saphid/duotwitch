@@ -205,7 +205,7 @@ final class PlaybackSession: NSObject, WKNavigationDelegate, WKUIDelegate, WKScr
         }
     }
 
-    static func validChannel(_ input: String) -> String? {
+    nonisolated static func validChannel(_ input: String) -> String? {
         let value = input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard (1...25).contains(value.count),
               value.utf8.allSatisfy({ (97...122).contains($0) || (48...57).contains($0) || $0 == 95 }) else { return nil }

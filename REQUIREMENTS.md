@@ -71,3 +71,7 @@ controls must leave with focus, rather than becoming another permanent rail.
 - Keep the resize handle and accessible chat identification. Jump to latest must not reserve another full row.
 - Signed-out chat should offer one compact, actionable Sign in to chat prompt.
 - Keep the signed-out action legible in narrow or short panes at accessibility text sizes, and show complete layout choices without compressed value labels.
+
+## App Store approval scope — 8 November 2026
+
+Alex now authorizes the in-scope fixes, accurate metadata/media/privacy declarations, signing/upload, App Review submission and review-response resubmissions needed for Apple approval. This supersedes earlier setup/internal-beta-only boundaries. Preserve manual release; never automatically publish, make unrelated price changes or accept new paid/legal contracts. Approval must be verified live for the exact App Store version/build. Current public naming, source changes, evidence, unknowns and resumable checklist are in [APP_STORE_APPROVAL.md](docs/APP_STORE_APPROVAL.md).

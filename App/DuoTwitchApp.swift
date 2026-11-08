@@ -26,7 +26,7 @@ struct DuoTwitchApp: App {
                   let valid = PlaybackSession.validChannel(login) {
             // DEBUG-only entry to the real watch surface, without a fake
             // account, chat data, or any change to Release authorization.
-            DebugWatchEntry(app: model, login: valid)
+            NavigationStack { ChannelWatchEntry(app: model, login: valid) }
         } else {
             MainView(app: model)
         }
@@ -36,10 +36,9 @@ struct DuoTwitchApp: App {
     }
 }
 
-#if DEBUG
 /// Video can be inspected signed out, but authenticated chat needs a real
 /// broadcaster ID. Never substitute a login for Twitch's numeric identity.
-struct DebugWatchEntry: View {
+struct ChannelWatchEntry: View {
     @Bindable var app: AppModel
     let login: String
     @State private var user: TwitchUser?
@@ -52,15 +51,13 @@ struct DebugWatchEntry: View {
     }
 
     var body: some View {
-        NavigationStack {
-            WatchView(app: app, channel: channel)
+        WatchView(app: app, channel: channel)
                 .overlay(alignment: .top) {
                     if lookupFailed {
                         Button("Couldn’t load channel identity. Retry") { retry += 1 }
                             .buttonStyle(.bordered).padding().background(.regularMaterial)
                     }
                 }
-        }
         .task(id: "\(app.auth.sessionId)|\(app.auth.account?.id ?? "")|\(login)|\(retry)") {
             user = nil
             lookupFailed = false
@@ -75,4 +72,3 @@ struct DebugWatchEntry: View {
         }
     }
 }
-#endif

@@ -5,6 +5,66 @@ import XCTest
 final class ChatSessionTests: XCTestCase {
     override func tearDown() { StubTwitchProtocol.install(nil); super.tearDown() }
 
+    func testGuestChannelInputAndSwitchingDoNotNeedAnAccountOrReuseEmptyIdentity() throws {
+        XCTAssertEqual(GuestChannel("  Saphid  ")?.login, "saphid")
+        for value in ["", "https://twitch.tv/saphid", "bad/name", "a?token=value", "bad name"] {
+            XCTAssertNil(GuestChannel(value))
+        }
+        let app = AppModel(auth: TwitchAuth(clientId: "test-client", store: MemoryCredentialStore()))
+        let a = WatchedChannel(user: TwitchUser(id: "", login: "one", displayName: "One", description: "", profileImageUrl: "", offlineImageUrl: ""))
+        let b = WatchedChannel(user: TwitchUser(id: "", login: "two", displayName: "Two", description: "", profileImageUrl: "", offlineImageUrl: ""))
+        let old = app.watch(a)
+        app.watch(b)
+        XCTAssertEqual(app.selectedChannel?.login, "two")
+        app.leaveWatch(a, appearance: old)
+        XCTAssertTrue(app.isWatching)
+        XCTAssertNil(app.auth.account)
+        XCTAssertEqual(app.chat.connection, .signedOut)
+    }
+
+    func testBlockRemovesExistingAndFutureMessagesAndUnblockAllowsNewMessages() async throws {
+        let name = "DuoTwitch.ChatSafetyTests.\(UUID())"
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { preferences.removePersistentDomain(forName: name) }
+        let socket = FakeChatSocket(welcome: true)
+        let session = try await makeSession(sockets: [socket], preferences: preferences)
+        defer { session.stop(clear: true) }
+        socket.push(chatNotification(id: "first"))
+        try await waitUntil { session.messages.count == 1 }
+        let message = try XCTUnwrap(session.messages.first)
+        session.replyingTo = message
+        session.block(message)
+        XCTAssertTrue(session.messages.isEmpty)
+        XCTAssertNil(session.replyingTo)
+        socket.push(chatNotification(id: "blocked"))
+        socket.push(chatNotification(id: "allowed", user: "other"))
+        try await waitUntil { session.messages.contains { $0.id == "allowed" } }
+        XCTAssertEqual(session.messages.map(\.id), ["allowed"])
+        XCTAssertEqual(preferences.dictionary(forKey: "chatBlockedUsers") as? [String: String], ["viewer": "viewer"])
+        session.unblock(userId: "viewer")
+        socket.push(chatNotification(id: "unblocked"))
+        try await waitUntil { session.messages.contains { $0.id == "unblocked" } }
+        XCTAssertFalse(session.messages.contains { $0.id == "blocked" }, "Unblocking must not restore old messages")
+    }
+
+    func testBlocksSurviveSessionRecreationAndAreClearedOnSignOut() async throws {
+        let name = "DuoTwitch.ChatSafetyTests.\(UUID())"
+        let preferences = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { preferences.removePersistentDomain(forName: name) }
+        preferences.set(["viewer": "viewer"], forKey: "chatBlockedUsers")
+        let socket = FakeChatSocket(welcome: true)
+        let session = try await makeSession(sockets: [socket], preferences: preferences)
+        defer { session.stop(clear: true) }
+        socket.push(chatNotification(id: "hidden"))
+        socket.push(chatNotification(id: "visible", user: "other"))
+        try await waitUntil { session.messages.count == 1 }
+        XCTAssertEqual(session.messages.first?.id, "visible")
+        session.clearBlockedUsers()
+        XCTAssertNil(preferences.object(forKey: "chatBlockedUsers"))
+        socket.push(chatNotification(id: "visible-again"))
+        try await waitUntil { session.messages.count == 2 }
+    }
+
     func testSigningInToUnresolvedWatchWaitsForRealBroadcasterIdentity() async throws {
         let scopes = TwitchAuth.requestedScopes
         StubTwitchProtocol.install { request in
@@ -250,7 +310,7 @@ final class ChatSessionTests: XCTestCase {
         XCTAssertEqual(app.chat.draft, "Rejected message")
     }
 
-    private func makeSession(sockets: [FakeChatSocket], sendGate: DispatchSemaphore? = nil, isSent: Bool = true, subscriptions: RequestCounter? = nil, now: @escaping @MainActor () -> Date = { .now }, migrationTimeout: Duration = .seconds(25), sendStatus: Int? = nil) async throws -> ChatSession {
+    private func makeSession(sockets: [FakeChatSocket], sendGate: DispatchSemaphore? = nil, isSent: Bool = true, subscriptions: RequestCounter? = nil, now: @escaping @MainActor () -> Date = { .now }, migrationTimeout: Duration = .seconds(25), sendStatus: Int? = nil, preferences: UserDefaults = .standard) async throws -> ChatSession {
         StubTwitchProtocol.install { request in
             if request.url!.path.hasSuffix("/validate") {
                 return (200, ["client_id": "test-client", "user_id": "viewer", "login": "viewer", "expires_in": 3600, "scopes": ["user:read:chat", "user:write:chat", "user:read:follows"]])
@@ -272,7 +332,7 @@ final class ChatSessionTests: XCTestCase {
         await auth.restore()
         let api = TwitchAPI(auth: auth, http: http)
         var remaining = sockets
-        let session = ChatSession(api: api, makeSocket: { _ in remaining.removeFirst() }, now: now, watchdogInterval: .milliseconds(20), migrationTimeout: migrationTimeout)
+        let session = ChatSession(api: api, makeSocket: { _ in remaining.removeFirst() }, now: now, watchdogInterval: .milliseconds(20), migrationTimeout: migrationTimeout, preferences: preferences)
         session.start(broadcasterId: "channel")
         try await waitUntil { session.connection == .connected }
         return session
@@ -317,7 +377,7 @@ private func frame(type: String, id: String = UUID().uuidString, subscription: S
     return try! JSONSerialization.data(withJSONObject: ["metadata": metadata, "payload": payload])
 }
 
-private func chatNotification(id: String) -> Data {
-    let event: [String: Any] = ["broadcaster_user_id": "channel", "chatter_user_id": "viewer", "chatter_user_name": "Viewer", "chatter_user_login": "viewer", "message_id": id, "message": ["text": "Hello", "fragments": [["type": "text", "text": "Hello"]]], "color": "#FFFFFF", "badges": []]
+private func chatNotification(id: String, user: String = "viewer") -> Data {
+    let event: [String: Any] = ["broadcaster_user_id": "channel", "chatter_user_id": user, "chatter_user_name": user, "chatter_user_login": user, "message_id": id, "message": ["text": "Hello", "fragments": [["type": "text", "text": "Hello"]]], "color": "#FFFFFF", "badges": []]
     return frame(type: "notification", id: id, subscription: "channel.chat.message", payload: ["event": event])
 }

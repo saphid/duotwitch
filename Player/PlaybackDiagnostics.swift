@@ -95,6 +95,7 @@ final class PlaybackDiagnostics {
     }()
     private let store: PlaybackDiagnosticStore
     private let run = UUID().uuidString
+    private let runStartedAt = ProcessInfo.processInfo.systemUptime
     private var sequence = 0
 
     init(store: PlaybackDiagnosticStore) {
@@ -109,7 +110,7 @@ final class PlaybackDiagnostics {
     func record(_ event: String, _ values: [String: PlaybackDiagnosticValue] = [:]) {
         sequence += 1
         store.append(PlaybackDiagnosticRecord(run: run, sequence: sequence,
-            wallTime: Date().timeIntervalSince1970, uptime: ProcessInfo.processInfo.systemUptime,
+            wallTime: Date().timeIntervalSince1970, uptime: max(0, ProcessInfo.processInfo.systemUptime - runStartedAt),
             event: event, values: values))
     }
 

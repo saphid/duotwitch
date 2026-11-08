@@ -87,6 +87,28 @@ final class PlaybackDiagnosticUploadTests: XCTestCase {
         XCTAssertEqual(Set(safe.values.keys), ["kind", "time", "paused"])
         let data = try JSONEncoder().encode(safe)
         XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("private"))
+        XCTAssertEqual(safe.uptime, 0, "Device uptime must never cross the upload boundary")
+    }
+
+    func testLegacySpoolContainingDeviceUptimeIsNotTransmitted() async throws {
+        let first = uploader()
+        first.enqueue(record())
+        _ = await first.snapshot()
+        let file = directory.appendingPathComponent("upload-queue.json")
+        var state = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        var entries = try XCTUnwrap(state["entries"] as? [[String: Any]])
+        var legacy = try XCTUnwrap(entries[0]["record"] as? [String: Any])
+        legacy["uptime"] = 123456.0
+        entries[0]["record"] = legacy
+        entries[0]["line"] = String(decoding: try JSONSerialization.data(withJSONObject: legacy, options: .sortedKeys), as: UTF8.self)
+        state["entries"] = entries
+        try JSONSerialization.data(withJSONObject: state).write(to: file)
+        let restored = uploader()
+        let snapshot = await restored.snapshot()
+        XCTAssertEqual(snapshot.pending, 0)
+        clock.advance(60)
+        await restored.flush()
+        XCTAssertTrue(transport.bodies().isEmpty)
     }
 
     func testLayoutProjectionRetainsGeometryAndFixedModesWithoutFreeformStrings() throws {

@@ -1,3 +1,7 @@
+# App Store approval work — 8 November 2026
+
+The active goal now authorizes App Review submission and fixes while preserving manual release. The live1.0 listing remains PREPARE_FOR_SUBMISSION with no attached build; releaseType MANUAL is verified. The current uncommitted candidate adds privacy/support, chat safety and guest viewing, with119 signed Simulator tests passing. Public name Saphid Duo Viewer is saved; existing internal TestFlight delivery below is unchanged. Apple approval, eligible upload, fresh runtime/media and App Privacy publication remain pending. See [approval checkpoint](APP_STORE_APPROVAL.md).
+
 # Drag handle and Viewing options delivered — 6 November 2026
 
 **0.1.0 (202611060438)** from

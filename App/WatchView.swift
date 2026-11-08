@@ -106,6 +106,7 @@ struct WatchView: View {
         }
         .onAppear { app.watch(channel, appearance: appearance) }
         .onChange(of: channel.id) { _, _ in app.watch(channel, appearance: appearance) }
+        .onChange(of: channel.login) { _, _ in app.watch(channel, appearance: appearance) }
         .onDisappear { app.leaveWatch(channel, appearance: appearance) }
     }
     private var chatIsBeside: Bool { chatSize.width < watchSize.width - 1 }

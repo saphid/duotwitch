@@ -31,6 +31,8 @@ final class PlaybackDiagnosticsTests: XCTestCase {
         let time = try XCTUnwrap(result[0]["wallTime"] as? Double)
         XCTAssertNotEqual(time, time.rounded())
         XCTAssertGreaterThan(result[0]["uptime"] as? Double ?? 0, 0)
+        XCTAssertLessThan(result[0]["uptime"] as? Double ?? .infinity, 1,
+                          "A new diagnostic run must measure elapsed app time, not device uptime")
         let values = try XCTUnwrap(result[1]["values"] as? [String: Any])
         XCTAssertEqual(values["allowed"] as? Bool, true)
     }

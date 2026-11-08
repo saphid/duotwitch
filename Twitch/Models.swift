@@ -77,6 +77,15 @@ struct WatchedChannel: Identifiable, Codable, Equatable, Hashable {
     }
 }
 
+struct GuestChannel: Hashable {
+    let login: String
+
+    init?(_ input: String) {
+        guard let login = PlaybackSession.validChannel(input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) else { return nil }
+        self.login = login
+    }
+}
+
 struct ChatSendOutcome: Decodable {
     let messageId: String
     let isSent: Bool

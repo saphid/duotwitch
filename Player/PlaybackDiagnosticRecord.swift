@@ -117,7 +117,11 @@ enum PlaybackDiagnosticUploadProjection {
             default: break
             }
         }
+        // Earlier beta spools contained device uptime. Never transmit it,
+        // including after an upgrade. Canonical spool validation rejects old
+        // entries whose saved line contains that value. Wall time and sequence
+        // retain event ordering; current local logs use elapsed app-run time.
         return PlaybackDiagnosticRecord(run: input.run, sequence: input.sequence, wallTime: input.wallTime,
-                                        uptime: input.uptime, event: input.event, values: values)
+                                        uptime: 0, event: input.event, values: values)
     }
 }

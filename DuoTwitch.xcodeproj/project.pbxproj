@@ -17,6 +17,7 @@
 		3202CD3602F7EA072C5658F6 /* AuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78BB68DA6608EF643330FE7 /* AuthTests.swift */; };
 		3AF0D8AEAB77011E549484F3 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D403C8A054775F6335176065 /* LibraryView.swift */; };
 		3DEF217A708699F652BB2D49 /* TwitchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D05B756DFAE961E3CFFC3D9 /* TwitchAPI.swift */; };
+		434DECBC944CED581795713C /* SupportLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97001196DA49EEFA7A5D744E /* SupportLinks.swift */; };
 		475AD040E4659095FE3BC8DB /* WatchArrangement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF34CD0B3F8A92B8C7E614A /* WatchArrangement.swift */; };
 		49E77639E143FEFE6860FB8F /* TwitchHTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDA391EC4A5FA0BC1139E71 /* TwitchHTTP.swift */; };
 		5FA2EB2ED21936E7CF664851 /* PlayerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2BFEE3138AE29B724C7D12 /* PlayerConfiguration.swift */; };
@@ -43,6 +44,7 @@
 		D64366CD66F61079E8539996 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52409A6B647F5E14D4AFAC7 /* LibraryModel.swift */; };
 		DAD52532FD3F5DF6072B4F4F /* WatchGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5923EAFC3E8BAD56F4B146 /* WatchGeometryTests.swift */; };
 		DDE70D6653C6FBA6D6A9B555 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F0FDFB6F94FB28129912D /* MainView.swift */; };
+		DFA93C3B556597D2DFCF3373 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D13FB349A2EB5695CA1A9D95 /* PrivacyInfo.xcprivacy */; };
 		DFEDAD64DA2D3A4A75A30F62 /* PlaybackDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C81706BF4CD5C38417B56B8A /* PlaybackDiagnostics.swift */; };
 		E9116AD1DD31A87E7277B16A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A327F84010CFAB8ADA4303C0 /* Models.swift */; };
 		FAA400B07CAC507C05A7F3D5 /* PlaybackDiagnosticUploadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6786231E408B9C098D158E /* PlaybackDiagnosticUploadTests.swift */; };
@@ -85,6 +87,7 @@
 		6B1D5DBDA34E0EC895260370 /* MountedWatchLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountedWatchLayoutTests.swift; sourceTree = "<group>"; };
 		769AEF3A8907313F97215197 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		7D5923EAFC3E8BAD56F4B146 /* WatchGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchGeometryTests.swift; sourceTree = "<group>"; };
+		97001196DA49EEFA7A5D744E /* SupportLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportLinks.swift; sourceTree = "<group>"; };
 		A327F84010CFAB8ADA4303C0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		AAAD0DFE8C41E9F166F0D793 /* PlaybackDiagnosticScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnosticScript.swift; sourceTree = "<group>"; };
 		AD529E96F51ED8B0277BC696 /* FoldState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldState.swift; sourceTree = "<group>"; };
@@ -96,6 +99,7 @@
 		C81706BF4CD5C38417B56B8A /* PlaybackDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnostics.swift; sourceTree = "<group>"; };
 		CBE207ABF75AA7BF30495789 /* TwitchAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwitchAuth.swift; sourceTree = "<group>"; };
 		D010DA18C2A64F8F389E3763 /* PlaybackDiagnosticUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnosticUploader.swift; sourceTree = "<group>"; };
+		D13FB349A2EB5695CA1A9D95 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D403C8A054775F6335176065 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		D61626F1515ADFC1D1766615 /* PlaybackDiagnosticHTTPTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnosticHTTPTransportTests.swift; sourceTree = "<group>"; };
 		E9A8488983963FF5EB2A70A3 /* ChatBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBufferTests.swift; sourceTree = "<group>"; };
@@ -147,6 +151,8 @@
 				F52409A6B647F5E14D4AFAC7 /* LibraryModel.swift */,
 				D403C8A054775F6335176065 /* LibraryView.swift */,
 				1F5F0FDFB6F94FB28129912D /* MainView.swift */,
+				D13FB349A2EB5695CA1A9D95 /* PrivacyInfo.xcprivacy */,
+				97001196DA49EEFA7A5D744E /* SupportLinks.swift */,
 				42A9754685C342DA3D3B46F4 /* WatchView.swift */,
 			);
 			path = App;
@@ -314,6 +320,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FDF5FBEA5B52D7B54D4B981 /* Assets.xcassets in Resources */,
+				DFA93C3B556597D2DFCF3373 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +378,7 @@
 				5FA2EB2ED21936E7CF664851 /* PlayerConfiguration.swift in Sources */,
 				B96AD9714B3871F431BE23BC /* PlayerHost.swift in Sources */,
 				64591D64CF86539737FF9065 /* PlayerProbeView.swift in Sources */,
+				434DECBC944CED581795713C /* SupportLinks.swift in Sources */,
 				3DEF217A708699F652BB2D49 /* TwitchAPI.swift in Sources */,
 				8E426F32FB689187895C3EA4 /* TwitchAuth.swift in Sources */,
 				49E77639E143FEFE6860FB8F /* TwitchHTTP.swift in Sources */,
@@ -457,7 +465,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.1;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -543,7 +551,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.1;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

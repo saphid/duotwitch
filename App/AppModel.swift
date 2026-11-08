@@ -50,10 +50,11 @@ final class AppModel {
 
     @discardableResult
     func watch(_ channel: WatchedChannel, appearance: UUID = UUID()) -> UUID {
-        player.recordDiagnostic("watch.enter", values: ["appearance": .text(appearance.uuidString), "sameChannel": .flag(selectedChannel?.id == channel.id)])
+        let sameChannel = selectedChannel?.id == channel.id && selectedChannel?.login == channel.login
+        player.recordDiagnostic("watch.enter", values: ["appearance": .text(appearance.uuidString), "sameChannel": .flag(sameChannel)])
         watchAppearance = appearance
         isWatching = true
-        let changed = selectedChannel?.id != channel.id
+        let changed = !sameChannel
         if changed {
             if let previous = selectedChannel { drafts[previous.id] = chat.draft; draftErrors[previous.id] = chat.sendError }
             chat.stop(clear: true)
@@ -68,13 +69,14 @@ final class AppModel {
 
     func accountChanged() {
         chat.stop(clear: true)
+        if auth.account == nil { chat.clearBlockedUsers() }
         drafts.removeAll()
         draftErrors.removeAll()
         if isWatching, let selectedChannel, !selectedChannel.id.isEmpty, auth.account != nil { chat.start(broadcasterId: selectedChannel.id) }
     }
 
     func leaveWatch(_ channel: WatchedChannel, appearance: UUID) {
-        let accepted = selectedChannel?.id == channel.id && watchAppearance == appearance
+        let accepted = selectedChannel?.id == channel.id && selectedChannel?.login == channel.login && watchAppearance == appearance
         player.recordDiagnostic("watch.leave", values: ["appearance": .text(appearance.uuidString), "accepted": .flag(accepted)])
         guard accepted else { return }
         watchAppearance = nil

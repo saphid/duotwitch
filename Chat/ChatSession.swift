@@ -20,6 +20,8 @@ final class ChatSession {
     private(set) var messages: [ChatMessage] = []
     private(set) var connection: ChatConnection = .signedOut
     private(set) var gapNotice: String?
+    private(set) var blockedUsers: [String: String]
+    @ObservationIgnored private let preferences: UserDefaults
     private var pendingSends: [String: UUID] = [:]
     @ObservationIgnored private var pendingSendAccount: UUID?
     var isSending: Bool { broadcasterId.flatMap { pendingSends[$0] } != nil }
@@ -54,8 +56,11 @@ final class ChatSession {
     @ObservationIgnored private var sendTransaction = UUID()
 
     init(api: TwitchAPI, makeSocket: @escaping @MainActor (URL) -> any ChatSocket = { URLSessionChatSocket(url: $0) },
-         now: @escaping @MainActor () -> Date = { .now }, watchdogInterval: Duration = .seconds(2), migrationTimeout: Duration = .seconds(25)) {
+         now: @escaping @MainActor () -> Date = { .now }, watchdogInterval: Duration = .seconds(2), migrationTimeout: Duration = .seconds(25),
+         preferences: UserDefaults = .standard) {
         self.api = api
+        self.preferences = preferences
+        blockedUsers = preferences.dictionary(forKey: "chatBlockedUsers") as? [String: String] ?? [:]
         self.makeSocket = makeSocket
         self.now = now
         self.watchdogInterval = watchdogInterval
@@ -122,6 +127,24 @@ final class ChatSession {
     }
 
     func dismissGapNotice() { gapNotice = nil }
+
+    func block(_ message: ChatMessage) {
+        blockedUsers[message.userId] = message.login
+        preferences.set(blockedUsers, forKey: "chatBlockedUsers")
+        buffer.clear(userId: message.userId)
+        messages = buffer.messages
+        if replyingTo?.userId == message.userId { replyingTo = nil }
+    }
+
+    func unblock(userId: String) {
+        blockedUsers[userId] = nil
+        preferences.set(blockedUsers, forKey: "chatBlockedUsers")
+    }
+
+    func clearBlockedUsers() {
+        blockedUsers = [:]
+        preferences.removeObject(forKey: "chatBlockedUsers")
+    }
 
     func sendDraft() async {
         guard !isSending, let broadcasterId else { return }
@@ -345,7 +368,7 @@ final class ChatSession {
         case "channel.chat.message":
             let event = try TwitchHTTP.decode(ChatEvent.self, from: eventData)
             guard event.broadcasterUserId == broadcasterId else { return }
-            buffer.append(ChatMessage(event: event))
+            if blockedUsers[event.chatterUserId] == nil { buffer.append(ChatMessage(event: event)) }
         case "channel.chat.message_delete":
             struct Delete: Decodable { let messageId: String }
             buffer.delete(id: try TwitchHTTP.decode(Delete.self, from: eventData).messageId)

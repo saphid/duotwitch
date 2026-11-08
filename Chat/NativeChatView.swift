@@ -8,6 +8,8 @@ struct NativeChatView: View {
     let signIn: () -> Void
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var atBottom = true
+    @State private var reporting: ChatMessage?
+    @State private var blocking: ChatMessage?
     @FocusState private var composerFocused: Bool
 
     private var inputFocused: Bool {
@@ -49,6 +51,38 @@ struct NativeChatView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Chat")
         .onChange(of: composerVisible) { _, visible in if !visible { inputFocused = false } }
+        .sheet(item: $reporting) { message in
+            NavigationStack {
+                Form {
+                    Section("Report message from \(message.name)") {
+                        Text(message.text).textSelection(.enabled)
+                        Text("Describe the concern in an email to support. The message and its ID are included in the draft. Nothing is sent until you send the email.")
+                        if let url = SupportLinks.report(message) {
+                            Link("Email safety report", destination: url).frame(minHeight: 44)
+                        }
+                        Text(SupportLinks.email).textSelection(.enabled)
+                        Link("Report to Twitch", destination: URL(string: "https://safety.twitch.tv/s/article/Filing-a-Report")!)
+                    }
+                    Section {
+                        Button("Block \(message.name) in Duo Viewer", role: .destructive) {
+                            session.block(message)
+                            reporting = nil
+                        }
+                    } footer: {
+                        Text("Blocking removes this user’s messages here and hides future messages in this app. It does not change your Twitch account’s block list. Manage blocked users in Account.")
+                    }
+                }
+                .navigationTitle("Report message")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { reporting = nil } } }
+            }
+        }
+        .confirmationDialog("Block this user in Duo Viewer?", isPresented: Binding(
+            get: { blocking != nil }, set: { if !$0 { blocking = nil } }), titleVisibility: .visible) {
+            if let message = blocking {
+                Button("Block \(message.name)", role: .destructive) { session.block(message); blocking = nil }
+            }
+        } message: { Text("Their messages will be removed and hidden in this app. You can unblock them in Account.") }
     }
 
     private var timeline: some View {
@@ -69,6 +103,8 @@ struct NativeChatView: View {
                                         inputFocused = true
                                     }
                                     Link("View profile in Twitch", destination: URL(string: "https://www.twitch.tv/\(message.login)")!)
+                                    Button("Report message", systemImage: "flag") { reporting = message }
+                                    Button("Block user in Duo Viewer", systemImage: "person.crop.circle.badge.xmark", role: .destructive) { blocking = message }
                                 }
                         }
                         // Keep clearance inside the jump target so an explicit

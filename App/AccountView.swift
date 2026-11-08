@@ -45,9 +45,28 @@ struct AccountView: View {
                     } label: {
                         Label("Playback diagnostics", systemImage: "waveform.path.ecg")
                     }.frame(minHeight: 44)
+                    NavigationLink("Blocked chat users") {
+                        List {
+                            if app.chat.blockedUsers.isEmpty {
+                                Text("No users blocked in this app.").foregroundStyle(.secondary)
+                            }
+                            ForEach(app.chat.blockedUsers.keys.sorted(), id: \.self) { id in
+                                HStack {
+                                    Text(app.chat.blockedUsers[id] ?? id)
+                                    Spacer()
+                                    Button("Unblock") { app.chat.unblock(userId: id) }
+                                        .frame(minHeight: 44)
+                                }
+                            }
+                        }
+                        .navigationTitle("Blocked chat users")
+                    }.frame(minHeight: 44)
+                    Link("Privacy policy", destination: SupportLinks.privacy).frame(minHeight: 44)
+                    Link("Support & safety", destination: SupportLinks.support).frame(minHeight: 44)
                     DisclosureGroup("About your connection") {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("DuoTwitch connects to your Twitch account for discovery, following and chat. Your password stays with Twitch.")
+                            Text("Duo Viewer connects to your Twitch account for discovery, following and chat. Your password stays with Twitch.")
+                            Text("Duo Viewer is independent and is not sponsored or endorsed by Twitch. Long-press a chat message to report it or block its author in this app. Twitch’s moderators also control the channel chat.")
                             Text("Twitch’s video player manages its own account. If a stream requires a subscription or age check, the player may ask you to sign in separately.")
                             Text("Subscriptions, Bits, channel points and creator tools open in Twitch.")
                             Link("Twitch privacy policy", destination: URL(string: "https://www.twitch.tv/p/en/legal/privacy-notice/")!)
@@ -133,7 +152,7 @@ struct AccountView: View {
                     }.frame(maxWidth: .infinity).padding(.vertical, 10)
                 }.buttonStyle(.borderedProminent).controlSize(.large)
                     .disabled(app.auth.isAuthorizing || app.auth.isRestoring || !app.auth.isConfigured)
-                Text(app.auth.isConfigured ? "Twitch opens securely inside DuoTwitch. We never see your password." : "Twitch connection is unavailable in this build.")
+                Text(app.auth.isConfigured ? "Twitch opens securely inside Duo Viewer. We never see your password." : "Twitch connection is unavailable in this build.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }

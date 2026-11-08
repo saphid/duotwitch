@@ -6,6 +6,7 @@ struct LibraryView: View {
     var category: TwitchCategory?
     @State private var model = LibraryModel()
     @State private var query = ""
+    @State private var guestLogin = ""
     private var title: String { category?.name ?? section.rawValue }
     private var requestKey: String { "\(app.auth.sessionId)|\(app.auth.account?.id ?? "")|\(section)|\(category?.id ?? "")|\(query)" }
 
@@ -49,8 +50,24 @@ struct LibraryView: View {
                 Button { app.accountPresented = true } label: {
                     Text("Connect to Twitch").fontWeight(.semibold).frame(maxWidth: .infinity).padding(.vertical, 8)
                 }.buttonStyle(.borderedProminent).controlSize(.large)
-                Text("Sign in to browse Twitch and join chat. DuoTwitch is an independent viewer.")
+                Text("Sign in to browse Twitch and join chat. Duo Viewer is an independent viewer.")
                     .font(.footnote).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Watch without signing in").font(.headline)
+                    TextField("Twitch channel name", text: $guestLogin)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityIdentifier("guestChannelName")
+                    if let channel = GuestChannel(guestLogin) {
+                        NavigationLink(value: channel) { Label("Watch channel", systemImage: "play.rectangle") }
+                            .buttonStyle(.bordered).controlSize(.large)
+                    } else {
+                        Label("Enter a channel name to watch", systemImage: "play.rectangle")
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("Enter the channel’s name, not a web address. Availability, ads and restrictions are controlled by Twitch. Chat requires sign-in.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 if let error = app.auth.errorMessage {
                     Text(error).font(.callout).foregroundStyle(.orange)
                 }
