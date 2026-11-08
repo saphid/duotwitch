@@ -1,6 +1,10 @@
 # App Store approval work — 8 November 2026
 
-The active goal now authorizes App Review submission and fixes while preserving manual release. The live1.0 listing remains PREPARE_FOR_SUBMISSION with no attached build; releaseType MANUAL is verified. The current uncommitted candidate adds privacy/support, chat safety and guest viewing, with119 signed Simulator tests passing. Public name Saphid Duo Viewer is saved; existing internal TestFlight delivery below is unchanged. Apple approval, eligible upload, fresh runtime/media and App Privacy publication remain pending. See [approval checkpoint](docs/APP_STORE_APPROVAL.md).
+Live Apple readback at **2026-11-08T07:39:32Z** confirms **1.0 (202611080727)** attached to iOS version **fa4b6291-c62c-4b78-b4fc-54f8ac528bc6**, **VALID / APP_STORE_ELIGIBLE**, **PREPARE_FOR_SUBMISSION**, release **MANUAL**. App **6831008730**, bundle **com.saphid.duotwitch**, public name **Saphid Duo Viewer**. Approval is not achieved and no review submission exists.
+
+Executable candidate [029339d](https://github.com/saphid/duotwitch/commit/029339df86e87f4347aac2193f3c8abb15e37d8a) has119 signed Simulator tests passing; archive/sign/upload succeeded. Support/privacy pages are live and exact-byte verified; review contact and accurate guest notes are saved. Deep validation has one blocking error: screenshot sets missing. Fresh isolated Apple sign-in succeeded; live App Privacy is **unpublished** and currently DATA_NOT_COLLECTED. A source-backed incomplete draft is prepared; Twitch embedded-player collection/tracking assessment remains open before publication.
+
+Astra's runtime task stopped after the new simulator was absent through discovery refresh and one retry.39source hashes, exact13bundle files and strict/deep signature passed; **no install, launch, playback or screenshots occurred**. Historical playback freezes/Pause and final-candidate runtime acceptance remain unresolved. Two Opus/high independent review attempts failed from rate limits; no independent review occurred. See [approval checkpoint](docs/APP_STORE_APPROVAL.md) for receipts, privacy preparation and resumable checklist. Existing internal TestFlight delivery below remains separate.
 
 # DuoTwitch delivery
 
