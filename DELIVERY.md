@@ -1,3 +1,13 @@
+# Approval goal blocked — 9 November 2026
+
+Three consecutive resumed goal-turn audits reconfirm the same unresolved Twitch embed privacy/ATT dependency. Live Apple **Foldstream 1.0 (202611081041)**, build **decead6b-ea88-4e58-ba8a-7cd56fc37d6f**, remains **VALID / PREPARE_FOR_SUBMISSION / MANUAL**, without a review submission. Approval is not achieved.
+
+The isolated Apple web session is expired; current privacy publication is unverified. Last authenticated readback was unpublished DATA_NOT_COLLECTED, which is incompatible with automatic diagnostics. The native/support draft remains incomplete for embedded partner collection, purposes/linkage and ATT denial/revocation. No supported implementation was established from the available evidence. Alex's inquiry-must-remain-draft instruction remains in force; nothing was sent and no reply is pending.
+
+Unblocking dependency: supported embed-specific evidence, or explicit direction enabling the prepared clarification. Then finish truthful declarations and any required supported consent behavior, renew isolated Apple authentication, publish/read back privacy, validate/submit MANUAL, handle review feedback and verify the exact approved build live. No guessed declarations, new login challenge, source/Apple changes or automatic release. Earlier runtime limits/review unavailability remain disclosed.
+
+Evidence: `build/app-store-approval-20261108/resumed-audit-20261109-{1,2,3}/audit.json`; audit3 includes current `version.json` and `validation-summary.json`. The goal is blocked, not complete; original approval scope is preserved.
+
 # Current App Store checkpoint — 8 November 2026, 10:47 UTC
 
 **Foldstream 1.0 (202611081041)** is attached to Apple app **6831008730**, bundle **com.saphid.duotwitch**. Live readback confirms build **decead6b-ea88-4e58-ba8a-7cd56fc37d6f**, **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, zero review submissions. Approval is not achieved. Executable source: [e5b0d7a](https://github.com/saphid/duotwitch/commit/e5b0d7abdac3747e5a3a68f26a6ffda82d267259).
