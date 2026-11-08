@@ -37,7 +37,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: Duo Viewer
+        CFBundleDisplayName: Foldstream
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UIBackgroundModes: [audio]
@@ -46,7 +46,7 @@ targets:
         UILaunchScreen: {}
         TwitchClientID: $(TWITCH_CLIENT_ID)
         TwitchPlayerHost: $(TWITCH_PLAYER_HOST)
-        NSLocalNetworkUsageDescription: DuoTwitch automatically sends privacy-filtered playback diagnostics to Alex’s private log storage over Tailscale.
+        NSLocalNetworkUsageDescription: Foldstream automatically sends privacy-filtered playback diagnostics to Alex’s private log storage over Tailscale.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.saphid.duotwitch

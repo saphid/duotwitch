@@ -7,6 +7,66 @@ import XCTest
 /// physical hinge tests and do not imply live Twitch continuity.
 @MainActor
 final class MountedWatchLayoutTests: XCTestCase {
+    func testProductionPlayerKeepsLogicalViewportAcrossRotationAndSplitChanges() async throws {
+        var nonce: String?
+        var loads = 0
+        var pauses = 0
+        var plays = 0
+        let session = PlaybackSession(configuration: PlayerConfiguration(hostURL: URL(string: "https://player.example.org/player"), probeEnabled: false),
+            loadRequest: { _, request in
+                loads += 1
+                nonce = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "session" }?.value
+            }, pauseMedia: { _ in pauses += 1 }, requestPlay: { _, _ in plays += 1; return true })
+        let channel = WatchedChannel(channel: TwitchChannel(id: "fixture", broadcasterLogin: "fixture", displayName: "Fixture", gameName: "", title: "", thumbnailUrl: "", isLive: true))
+        session.open(channel: channel.login)
+        let host = UIHostingController(rootView: WatchVideoPanel(session: session, channel: channel).ignoresSafeArea())
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        let container = UIViewController()
+        window.rootViewController = container
+        window.makeKeyAndVisible()
+        container.addChild(host)
+        container.view.addSubview(host.view)
+        host.view.frame = CGRect(x: 0, y: 0, width: 750, height: 304)
+        host.didMove(toParent: container)
+        defer { window.isHidden = true; window.rootViewController = nil }
+        try await Task.sleep(for: .milliseconds(150))
+        let browser = try XCTUnwrap(session.webView)
+        let attachedHost = try XCTUnwrap(browser.superview)
+        let logicalSize = browser.bounds.size
+        XCTAssertGreaterThanOrEqual(logicalSize.width, 400)
+        XCTAssertGreaterThanOrEqual(logicalSize.height, 300)
+        let currentNonce = try XCTUnwrap(nonce)
+        session.handleHostMessage(["session": currentNonce, "event": "READY"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+        await session.play()
+        session.handleHostMessage(["session": currentNonce, "event": "PLAYING"], scheme: "https", host: "player.example.org", port: 443, isMainFrame: true)
+        // Exact failing rotation allocations, then a split and keyboard-sized pane.
+        for size in [CGSize(width: 874, height: 252), CGSize(width: 402, height: 724),
+                     CGSize(width: 750, height: 304), CGSize(width: 498, height: 304),
+                     CGSize(width: 750, height: 160)] {
+            host.view.frame.size = size
+            host.view.layoutIfNeeded()
+            try await Task.sleep(for: .milliseconds(100))
+            XCTAssertEqual(browser.bounds.size, logicalSize, "Native layout must not resize the remote iframe")
+            XCTAssertTrue(browser.superview === attachedHost)
+            let presented = browser.convert(browser.bounds, to: host.view)
+            XCTAssertGreaterThan(presented.width, 0)
+            XCTAssertGreaterThan(presented.height, 0)
+            XCTAssertGreaterThanOrEqual(presented.minX, -1)
+            XCTAssertGreaterThanOrEqual(presented.minY, -1)
+            XCTAssertLessThanOrEqual(presented.maxX, size.width + 1)
+            XCTAssertLessThanOrEqual(presented.maxY, size.height + 1)
+            XCTAssertTrue(session.isPlaying)
+        }
+        XCTAssertEqual(pauses, 0)
+        await session.pause()
+        host.view.frame.size = CGSize(width: 402, height: 724)
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertFalse(session.isPlaying)
+        XCTAssertEqual(plays, 1, "Resizing must not resume an intentional Pause")
+        XCTAssertEqual(loads, 1)
+    }
+
     func testKeyboardHandleResizeKeepsComposerFocusDraftAndSelection() async throws {
         // Restore fixture credentials entirely in memory; no account or socket
         // traffic is used to mount the actual production composer and toolbar.
@@ -243,19 +303,30 @@ final class MountedWatchLayoutTests: XCTestCase {
                 XCTAssertEqual(loads, 1)
                 XCTAssertGreaterThanOrEqual(session.webView.bounds.width, 400)
                 XCTAssertGreaterThanOrEqual(session.webView.bounds.height, 300)
-                extents.append(placement == .beside ? session.webView.bounds.width : session.webView.bounds.height)
+                let presented = session.webView.convert(session.webView.bounds, to: host.view)
+                let panes = WatchPaneGeometry(size: CGSize(width: width, height: height), compact: false,
+                    division: nil, mode: .balanced, chatLeading: false, placement: placement,
+                    chatWidth: placement == .beside ? amount : 240, chatHeight: placement == .below ? amount : 240)
+                XCTAssertGreaterThanOrEqual(presented.minX, panes.video.minX - 1)
+                XCTAssertGreaterThanOrEqual(presented.minY, panes.video.minY - 1)
+                XCTAssertLessThanOrEqual(presented.maxX, panes.video.maxX + 1)
+                XCTAssertLessThanOrEqual(presented.maxY, panes.video.maxY + 1)
+                extents.append(placement == .beside ? presented.width : presented.height)
             }
-            XCTAssertGreaterThan(extents[0], extents[1], "Growing chat must shrink the actual production player allocation")
+            XCTAssertGreaterThanOrEqual(extents[0], extents[1], "Growing chat cannot enlarge the fitted player")
+            XCTAssertGreaterThan(extents[1], extents[2], "An extreme chat allocation must shrink the visible player")
             XCTAssertEqual(extents[0], extents[3], accuracy: 1, "Reset split must restore the original allocation")
             preferences.set(WatchMode.slim.rawValue, forKey: "watchMode")
             try await Task.sleep(for: .milliseconds(180))
-            let slimExtent = placement == .beside ? session.webView.bounds.width : session.webView.bounds.height
-            XCTAssertGreaterThan(slimExtent, extents[0], "Slim chat must visibly reserve more room for video by default")
+            let slimPresentation = session.webView.convert(session.webView.bounds, to: host.view)
+            let slimExtent = placement == .beside ? slimPresentation.width : slimPresentation.height
+            XCTAssertGreaterThanOrEqual(slimExtent, extents[0] - 1, "Slim chat cannot reduce the fitted video; letterboxing may keep its size equal")
             preferences.set(320.0, forKey: placement == .beside ? "watchSlimChatWidth" : "watchSlimChatHeight")
             try await Task.sleep(for: .milliseconds(180))
             preferences.set(WatchMode.balanced.rawValue, forKey: "watchMode")
             try await Task.sleep(for: .milliseconds(180))
-            let restored = placement == .beside ? session.webView.bounds.width : session.webView.bounds.height
+            let restoredPresentation = session.webView.convert(session.webView.bounds, to: host.view)
+            let restored = placement == .beside ? restoredPresentation.width : restoredPresentation.height
             XCTAssertEqual(restored, extents[0], accuracy: 1, "Resizing Slim must preserve the saved regular split")
             XCTAssertTrue(session.isPlaying)
             XCTAssertEqual(pauses, baseline)

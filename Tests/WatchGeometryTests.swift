@@ -117,8 +117,8 @@ final class WatchGeometryTests: XCTestCase {
             XCTAssertLessThanOrEqual(viewport.size.height * viewport.scale, available.height + 0.001)
         }
         let large = WatchVideoViewport(available: CGSize(width: 800, height: 600))
-        XCTAssertEqual(large.scale, 1)
-        XCTAssertEqual(large.size, CGSize(width: 800, height: 600))
+        XCTAssertEqual(large.scale, 0.625)
+        XCTAssertEqual(large.size, CGSize(width: 1280, height: 720))
         for empty in [CGSize.zero, CGSize(width: 100, height: 0), CGSize(width: CGFloat.nan, height: 40)] {
             let viewport = WatchVideoViewport(available: empty)
             XCTAssertFalse(viewport.visible)

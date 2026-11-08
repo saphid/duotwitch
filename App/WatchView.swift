@@ -230,26 +230,17 @@ private struct WatchLayoutSnapshot: Equatable {
     }
 }
 
-/// The public embed keeps its supported logical viewport while the native
-/// presentation scales to any positive allocation. Cap extreme viewport aspect
-/// ratios so a one-point pane cannot create an enormous WebKit backing view.
+/// Keep the public embed's logical viewport stable: resizing it during rotation
+/// can stop the remote player. Fit the complete player inside each native pane.
 struct WatchVideoViewport {
-    let size: CGSize
+    let size = CGSize(width: 1280, height: 720)
     let scale: CGFloat
     let visible: Bool
 
     init(available: CGSize) {
         visible = available.width.isFinite && available.height.isFinite
             && available.width > 0 && available.height > 0
-        guard visible else { size = CGSize(width: 400, height: 300); scale = 0; return }
-        if available.width >= 400 && available.height >= 300 {
-            size = available; scale = 1
-        } else {
-            let aspect = min(4, max(0.25, available.width / available.height))
-            let height = max(300, 400 / aspect)
-            size = CGSize(width: max(400, height * aspect), height: height)
-            scale = min(available.width / size.width, available.height / size.height)
-        }
+        scale = visible ? min(available.width / size.width, available.height / size.height) : 0
     }
 }
 
