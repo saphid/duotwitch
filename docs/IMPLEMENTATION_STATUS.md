@@ -6,6 +6,9 @@ Executable candidate [029339d](https://github.com/saphid/duotwitch/commit/029339
 
 Astra's runtime task stopped after the new simulator was absent through discovery refresh and one retry.39source hashes, exact13bundle files and strict/deep signature passed; **no install, launch, playback or screenshots occurred**. Historical playback freezes/Pause and final-candidate runtime acceptance remain unresolved. Two Opus/high independent review attempts failed from rate limits; no independent review occurred. See [approval checkpoint](APP_STORE_APPROVAL.md) for receipts, privacy preparation and resumable checklist. Existing internal TestFlight delivery below remains separate.
 
+Astra’s second pass installed and identity-verified the exact candidate but stopped before launch because another agent-device session owns the authorized simulator. No playback or screenshots occurred;744saved preferences matched after restoration and its own panel was closed. Actual effort was medium, not requested high; the next allowed pass must explicitly set reasoningEffort=high after the owning session releases its claim. The Twitch privacy inquiry remains unsent by Alex’s direction.
+
+
 # Drag handle and Viewing options delivered — 6 November 2026
 
 **0.1.0 (202611060438)** from

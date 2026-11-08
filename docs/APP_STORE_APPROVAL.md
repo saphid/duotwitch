@@ -40,12 +40,32 @@ Evidence root: `build/app-store-approval-20261108/` (ignored; contains protected
 - Review contact and **2061-character** notes created and read back, review-detail ID **e97ea6d5-efaf-42aa-9fd1-199b3844123f**. Existing live contact reused without printing it; private receipts0600. Notes explain guest entry, Twitch-dependent features, safety/reporting, optional diagnostics and manual release. `demoAccountRequired=false`; no dedicated Twitch reviewer account or authenticated runtime coverage is claimed.
 - `deep-validation.json`: **1 blocking error** (no screenshot sets), **1 warning** (no cached web session); MANUAL confirmed, App Privacy publication unverified. No other API-detectable blockers. Keyword overlap warnings resolved. This validation does not establish runtime readiness.
 
+## Existing-simulator attempt and remaining runtime boundary
+
+Astra task **55745e97-e34b-47c2-92b1-49baa62b1467** completed after a tool-ownership blocker, actual provider **codex**, model **gpt-6-astra**, actual effort **medium** (not the requested high). `target.options` was empty; refreshed capabilities identify the required next-run setting as **reasoningEffort=high**. No high-effort runtime claim is made. A further pass must specify that option explicitly and must wait for the owning session to release the device.
+
+The target panel opened, candidate installed in place, and candidate/installed exact13-file sets, hashes, identities and strict/deep signatures matched; all39source hashes matched before/after. The pinned launch with the silent argument failed before launch:
+
+> Error (DEVICE_IN_USE): the authorized iOS simulator is owned by another session.
+
+This is a sanitized summary; the exact owning session/workspace and full error are preserved in the app-local runtime report. The owner belongs to a different project; do not publish its session details or interfere with it.
+
+The advised `device status` also failed because that command reads local claims and is unavailable through the pinned host command. The task stopped, left the owner's claim untouched, restored/verifiably matched **744/744** saved preference files (including correcting for app-container relocation), and closed its own panel without shutdown. No app launch, playback, silent-gate proof, recording or screenshots occurred. Runtime/media readiness remains unproven. Evidence: `proof-existing-simulator/report.md`, `receipt.json`, `preference-final.json`; private preference backups must remain local. No task remains running from this pass. Do not bypass the repeated device-tool failure with direct simctl/SSH UI or close/reuse the other session.
+
+[Current Apple screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/) require an iPhone Dynamic Island **medium-display** screenshot; iPhone18Pro is explicitly listed, with1179×2556 or1206×2622 portrait sizes (and corresponding landscape). Thus the authorized existing target is a suitable device class; still verify actual captured dimensions/slot delivery. The signed archive has UIDeviceFamily **[1]** (iPhone only), so iPad screenshots are not required. No screenshot was generated or uploaded. Official source fetches are in `privacy-research/metadata-source-readback.json`.
+
+Fresh `age-rating-final-audit.json` confirms prohibited graphic-sex/prolonged-sadistic-violence answers NONE, frequent realistic/cartoon violence, weapons, profanity/mature themes, and no native parental-control/age-assurance claim. The [Apple definitions](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions/) and [Twitch Community Guidelines](https://safety.twitch.tv/articles/en_US/Knowledge/Community-Guidelines) were reviewed. Twitch prohibits content focused on extreme/gratuitous gore and violence; this supports the intended content-policy distinction, not a guarantee about every UGC violation. No answer was changed during this audit, and final submission still needs a truthful platform-content assessment.
+
+## Authenticated readiness follow-up
+
+`deep-validation-authenticated.json` now confirms **2 blocking errors**: screenshots missing and **App Privacy unpublished**; release MANUAL remains verified. No subscriptions exist. The agreement warning was inspected with `asc web agreements status --developer-team NJZUMEA4BN`: both visible Developer agreements are active/accepted and no pending agreement ID is identified. The ASC contract message is the **EU trader-status** notice. Current app availability is Australia-only; do not invent an unpaid agreement blocker or accept/reaccept a legal contract. Protected source receipt: `apple-auth-private/agreements-status.json`. EU availability/compliance is outside the present territory setup.
+
 ## Authentication and remaining work
 
 A task-local ASC web cache was isolated under `apple-auth-private/session`; shared auth/config were not modified. The one private trusted-device code card timed out. Bounded login exited1 with no code supplied. That challenge was not reused. Public API-key reads/writes still work. After Alex returned, a second fresh challenge succeeded with private input. Isolated auth is true, passwordStored false; shared auth/config remain unchanged. Live catalog/pull now succeed. Current declaration is DATA_NOT_COLLECTED and **published=false**, so do not publish it. A live-token-validated incomplete draft and source-backed inventory are in [privacy preparation](APP_STORE_PRIVACY.md). Embedded-player collection/tracking assessment remains open; no accurate published label or completion is claimed.
 
 - [x] Final independent review best effort attempted twice; both failed from Opus capacity. No independent review occurred.
-- [ ] Current-candidate silent Simulator acceptance through Astra and device_list/device_open/agent-device/device_screenshot only; preserve Simulator data/Keychain/preferences. No desktop browser/physical-device authorization.
+- [ ] Owning session must release the conflicting existing-simulator claim before further runtime attempts. Do not close/reuse it or bypass the tool failure. Then run Astra with explicit reasoningEffort=high through device_list/device_open/agent-device/device_screenshot; preserve data/Keychain/preferences. No desktop-browser/physical-device authorization.
 - [ ] Verify sustained visible video and recovery; investigate a repeatable failure before claiming readiness.
 - [ ] Capture honest App Store screenshots from the exact candidate, with documented content rights and no personal accounts/data.
 - [x] Exact live HTTPS support/privacy readback after Pages deployment.

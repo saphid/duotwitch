@@ -39,6 +39,12 @@ Before final label publication:
 - Host page delivery uses GitHub Pages; its network/hosting collection is governed by [GitHub's policy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). Do not attribute the diagnostic receiver's no-IP-log implementation to GitHub or Twitch.
 - Capture no private account/session data into public artifacts. No permission is granted to sign into a desktop browser, a personal Twitch account or a physical device.
 
+## Research and communication decision
+
+A bounded official-source search and static read of Twitch's public embed wrapper/video documentation found **no documented embed consent or ATT-state control**. This is limited search evidence, not proof that no supported integration exists. The current cookie notice explicitly discusses operational, analytics and advertising cookies, regional consent controls, and mobile-platform limitations; it does not settle the specific iOS embed contract. Public wrapper/page code was fetched but not executed, modified or used as an undocumented API. Saved sources live under `privacy-research/`.
+
+A [single technical inquiry](TWITCH_EMBED_PRIVACY_INQUIRY.md) is prepared for the privacy contact published by Twitch, with the exact canonical host checked against App.xcconfig. **Alex explicitly chose “Keep it as a draft.” Nothing was sent; no vendor reply is pending.** Respect that direction; do not send or create a public forum/GitHub post as a substitute. The partner assessment remains unresolved. Do not represent an unsent question as verification or publish guessed declarations.
+
 ## Apply and verify after authentication
 
 The first trusted-device challenge expired. A **fresh second challenge succeeded** with Alex’s private code. Task-local cache authentication readback is true, passwordStored false, and provider selection matches the existing team. The one-use secret file and FIFO were removed; shared auth/config remain unchanged. Private auth evidence is protected under `apple-auth-private/attempt-2/`.
