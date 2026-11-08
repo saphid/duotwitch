@@ -1,3 +1,7 @@
+# Approval blocked — 8 November 2026
+
+Three consecutive goal-turn audits confirm the same blockers. Live Apple **1.0 (202611080806)** remains **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, no review submission. Missing screenshots and unpublished privacy still block submission. Supported host-local status proves another session’s ownership of the authorized simulator is live; its owner must release it, or another usable target must be authorized. Embedded Twitch collection/ATT evidence remains unresolved; Alex requires the inquiry stay unsent. Available independent delivery work is complete. Goal is blocked, not approved. [Resumable checkpoint](docs/APP_STORE_APPROVAL.md).
+
 # Foldstream rename — 8 November 2026
 
 Apple accepted **Foldstream** and live name, description and review-notes readbacks match. Source [16f25c7](https://github.com/saphid/duotwitch/commit/16f25c71c29bb64841785866fe734f06be27a773) updates native/public branding while preserving app/Twitch/session/config identities. Support/privacy pages are deployed and exact-byte HTTPS verified. Twitch’s external registration remains Saphid Duo Viewer and is explained in the app/reviewer copy. The inquiry remains unsent.

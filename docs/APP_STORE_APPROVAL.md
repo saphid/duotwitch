@@ -4,6 +4,16 @@ Goal: Apple approval of the exact submitted app/version/build, with manual relea
 
 Owning spine: [personal-ops #208](https://github.com/saphid/personal-ops/issues/208); cross-app setup background: [#206](https://github.com/saphid/personal-ops/issues/206).
 
+## Blocked audit — 2026-11-08T08:16:03Z
+
+The same genuine runtime/privacy blockers persisted across three consecutive goal turns after the Foldstream delivery work. Fresh readback confirms app6831008730, iOS **1.0 (202611080806)**, build **3d7054c7-aa01-4d48-acea-bab7ade713aa**, **VALID / APP_STORE_ELIGIBLE / PREPARE_FOR_SUBMISSION / MANUAL**, no review submission. Authenticated deep validation still has exactly two blocking errors: screenshots missing and App Privacy unpublished. No approval is claimed.
+
+Supported host-local `agent-device device status` proves the authorized discoverable simulator’s other-session owner is **live**. The status command is read-only and starts no daemon. Do not release/reuse the claim, close its session, bypass with simctl/SSH UI, or infer that the empty Device panel inventory means availability. The other newly created app-owned target remains absent from T3 discovery. Runtime/screenshot work needs the owning session to release its device through its own controller, or authorization for another usable target.
+
+The existing privacy draft covers known native/developer-held flows but not a settled embedded-Twitch assessment. A further bounded official-doc/forum search did not resolve retained data, purposes/linkage or ATT-compatible behavior including denial/revocation. This does not prove that no supported integration exists. Alex requires the inquiry remain unsent; no vendor answer is pending. Do not publish DATA_NOT_COLLECTED, guessed partner declarations, or introduce a narrower substitute app. Supported privacy evidence or user direction enabling that clarification is required.
+
+Rename/public pages/build delivery and available safe checks are complete. No active child/job is waiting to finish; waiting for App Review would be false because nothing is submitted. Evidence `build/app-store-approval-20261108/blocked-audit-3/{audit.json,version.json,validation.json,device-ownership.txt}`. Sensitive ownership/session details remain local. Goal is blocked, not complete; preserve the objective and manual release when resumed.
+
 ## Foldstream rename — current candidate
 
 Alex authorized Foldstream as the public/on-device replacement on 8 November. Apple accepted the supported app-info localization update and live readback confirms **Foldstream**, subtitle **Live streams and flexible chat**. This establishes Apple metadata acceptance, not legal clearance. The previous Apple name was Saphid Duo Viewer; the previous native display name was Duo Viewer. Twitch’s external registration remains **Saphid Duo Viewer**; native sign-in, support/privacy and review notes explain this truthfully. No Twitch console mutation or third-party inquiry was sent.
