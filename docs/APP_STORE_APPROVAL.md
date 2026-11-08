@@ -1,3 +1,29 @@
+# Submitted for App Review — 9 November 2026, 10:22 AEDT
+
+**Foldstream 1.0 (202611082110) is WAITING_FOR_REVIEW with MANUAL release**, verified by live version, build and review-submission reads. This is App Store review, not TestFlight approval. Approval has not yet been achieved. Apple app 6831008730 / bundle com.saphid.duotwitch; version ID fa4b6291-c62c-4b78-b4fc-54f8ac528bc6; build ID d12c6cc6-94d5-4a49-b831-0ef5b876036e; review submission **f65e4abe-bd69-45c1-a829-34345baa5d63**, submitted 2026-11-08T23:22:40.35Z. Submission item resolves to that exact version, and that version remains attached to the exact new build. No release command was run.
+
+Alex explicitly authorized getting this app sent even if rejected, without speaking to Twitch or Apple support. We removed the previous vendor-confirmation/full-runtime holds as preconditions of submission. No support message, inquiry or public substitute post was sent. This accepts review risk; it is not a claim that ATT compliance or the incomplete runtime checks are verified. The inquiry remains UNSENT DRAFT.
+
+The existing signed IPA was uploaded once, processed VALID/APP_STORE_ELIGIBLE, attached and submitted with the supported review-submit command. Exact IPA SHA256 4e45a7188651d2cb561ba79a2dd8b8cc3428a90aad542092854b4124b83ec4ff; all 39 archived source hashes match executable-source commit [bc8452d](https://github.com/saphid/duotwitch/commit/bc8452da54a029cb94328feee786b7666d6b6fcb). No native code changed or new archive was built. Native 125 tests and Foundation 20 tests remain the applicable verification, with earlier runtime limits retained.
+
+The isolated Apple web login succeeded without a new code, authenticated=true/passwordStored=false. Shared auth/config were untouched. App Privacy is now **published=true/publishedKnown=true** and matches all 33 tuples across 12 categories in the [canonical declaration](APP_STORE_PRIVACY_DECLARATION.json). The initial request committed 26 before timing out; live readback showed 7 remaining and the idempotent retry succeeded. Final plan: zero additions/deletions/stale tokens. This is a conservative source-based assessment of the actual native flows and Twitch’s published possible partner practices, not a no-tracking guarantee. See [privacy rationale](APP_STORE_PRIVACY.md).
+
+[Reviewer notes](APP_STORE_REVIEW_NOTES.txt) explicitly disclose no ATT prompt/verified Twitch denial interface and incomplete sustained moving-video rotation/Resume acceptance. Apple trimmed one trailing newline; all other notes match and contact/demo fields are unchanged. The authenticated deep validation of this exact attached IPA reports **0 errors/0 blocking, 1 warning/1 info**. Warning: agreement status empty/unknown; info: MANUAL release. No agreement was accepted, pricing changed or automatic release enabled. Three previously verified COMPLETE screenshots are retained.
+
+Privacy/support site source was updated in [e7a0a0b](https://github.com/saphid/saphid.github.io/commit/e7a0a0b08b27c8643c6069078c3c032cf98ca283), restricted to apps/duotwitch/privacy/index.html. The public URL returns 200 but still serves the earlier copy while GitHub Pages [deployment 42534388357](https://github.com/saphid/saphid.github.io/actions/runs/42534388357) is queued; exact new-byte readback is **pending**, not claimed. The existing policy already links Twitch’s practices; the new copy clarifies diagnostic default-off and the explicit partner/ATT limits.
+
+Fresh best-effort disclosure review task **d2d9494b-d364-4439-99a8-5f8f7000b79f**, full ID in `review-attempt/independent-review/attempt.json`, resolved claudeAgent / claude-opus-5-5 / high, final **failed** immediately from API rate limit. No independent review occurred and no findings were returned. We continued under the best-effort exception.
+
+Evidence root: `build/app-store-approval-20261109/review-attempt/`; current `final-state.json`, `submission.json`, `submission-live.json`, `submission-items-version-live.json`, `version-submitted-live.json`, `candidate-build-live.json`, `privacy-{pull-published,plan-final,publish}.json`, `validation.json`, `review-notes-readback.json`, `privacy-page-readback.json`. Private auth/contact exports remain protected/local; live media was not published.
+
+- [x] Upload/process/attach exact candidate, MANUAL readback.
+- [x] Publish/read back policy-based App Privacy, preserve review contact/demo fields.
+- [x] Submit exact version/build and read back WAITING_FOR_REVIEW.
+- [ ] Verify updated public privacy page once Pages deployment finishes.
+- [ ] Handle App Review feedback/resubmit as required; verify exact approved version/build live, preserving manual release.
+
+Earlier hold checkpoints below are historical and superseded as to submission authority/readiness. Their runtime/privacy uncertainty remains disclosed.
+
 # Current approval hold — 9 November 2026
 
 Foldstream approval is **not achieved**. Live Apple app6831008730, bundle com.saphid.duotwitch, version1.0 remains **PREPARE_FOR_SUBMISSION / MANUAL** with VALID old build202611081041 (decead6b-ea88-4e58-ba8a-7cd56fc37d6f), no version submission. Evidence: `build/app-store-approval-20261109/changing-content/version-live.json`. Signed candidate1.0(202611082110) remains **HELD / NOT UPLOADED**. Public policy and revised reviewer notes remain undeployed/draft, respectively. Neither default nor app-isolated CLI web cache is authenticated; no login challenge was started or shared configuration changed.

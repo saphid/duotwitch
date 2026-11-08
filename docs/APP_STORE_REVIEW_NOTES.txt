@@ -1,0 +1,17 @@
+Foldstream is an independent native viewer using Twitch’s official embedded player, public device-code authorization and Helix/EventSub APIs. It does not extract playback URLs or bypass Twitch ads, subscriptions or age checks.
+
+Guest viewing: on the welcome screen, scroll to Watch without signing in, enter a Twitch channel name (not a URL), then tap Watch channel. Twitch controls live availability. Use Viewing options to Play/Pause and Layout to choose video/chat, slim or full video, place chat beside/below, and drag the divider. No separate developer account or purchase is required for guest viewing.
+
+Personalized discovery, followed channels and native chat require a Twitch account. Account → Continue with Twitch opens Twitch’s system-hosted approval page. Twitch’s approval page still identifies this existing connection as Saphid Duo Viewer; its registered public client and redirect are unchanged. The native app never receives a Twitch password. Twitch’s embedded player manages its own account and can require a separate player sign-in for restricted streams. No reviewer credentials are invented or included; please contact us if a dedicated Twitch review account is required.
+
+Chat safety: long-press a chat message to open Report message or block its author locally. The report action prepares an email draft; the user must send it. Local blocking removes displayed messages and suppresses future messages in this app. Account → Blocked chat users reverses a local block. Twitch and channel moderators also remove chat messages. Account exposes Privacy policy and Support & safety before sign-in.
+
+This app contains no subscription, Bits or channel-point purchase flow. Those features and creator tools remain on Twitch. Picture in Picture is not advertised as supported.
+
+Playback diagnostics are off by default. Account → Playback diagnostics → Record and share diagnostics provides explicit opt-in to local logs and automatic delivery of a filtered subset to the developer’s private HTTPS receiver over Tailscale. Turning it off stops new recording, cancels uploads and clears unsent queued records; earlier local logs remain available for deliberate sharing. Viewing works with diagnostics off and without access to the private receiver. The privacy policy describes fields and retention. Twitch processes media, chat and advertising under its own policies.
+
+Privacy and test limitations: App Privacy conservatively includes Twitch partner identifiers, viewing/search interactions and advertising data as linked/used to track, based on Twitch’s published privacy and cookie policies. The native app does not access IDFA and this build has no ATT prompt or verified embed consent/denial interface. It sends the public WebKit Global Privacy Control signal; this is not a claim that Twitch prevents every ATT-covered use. We are submitting this integration for assessment rather than asserting that the unresolved partner behavior is verified.
+
+Local tests: 125 native and 20 transport tests pass. Diagnostic default-off, opt-in and withdrawal were verified on Simulator. Sustained moving-video rotation/Resume acceptance remains incomplete after capture and automation limitations; no physical-device or uploaded-Release runtime pass is claimed.
+
+Please retain manual release after approval.

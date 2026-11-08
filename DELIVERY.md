@@ -1,3 +1,7 @@
+# App Review submitted — 9 November 2026, 10:22 AEDT
+
+Live Apple **Foldstream 1.0 (202611082110)** is **WAITING_FOR_REVIEW / MANUAL**, submission f65e4abe-bd69-45c1-a829-34345baa5d63. Published App Privacy matches the conservative source-backed declaration; candid notes disclose the absent ATT integration and incomplete runtime acceptance. Alex authorized sending for review accepting rejection risk; no Twitch/Apple support correspondence was sent. Approval remains pending. Exact state, evidence, website-deployment limit and remaining checklist: [approval checkpoint](docs/APP_STORE_APPROVAL.md).
+
 # Current approval hold — 9 November 2026
 
 Live Foldstream1.0(202611081041) remains **PREPARE_FOR_SUBMISSION / MANUAL**; candidate1.0(202611082110) is **HELD / NOT UPLOADED**. Diagnostics default-off/opt-in/withdrawal and125native/20Foundation tests are verified. GPC is a supported signal, not an established remote ATT-denial contract. Partner purposes/linkage and advertising-measurement behavior remain unresolved; inquiry stays **UNSENT DRAFT**. Both CLI web caches report unauthenticated; no new challenge started.
